@@ -15,6 +15,8 @@ import com.intellij.openapi.vcs.history.VcsHistoryProvider;
 import com.intellij.openapi.vcs.history.VcsHistorySession;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindowAnchor;
+import com.intellij.openapi.wm.ToolWindowManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -29,19 +31,25 @@ public class TestTimeMachineAction extends AnAction
     final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
     //////////////////////////////
     Project project = null;
+    TestTimeMachineWindow mainWindow = null;
 
     @Override
     public void actionPerformed(AnActionEvent e)
     {
+        if(mainWindow!=null) return;
+
         project = e.getProject();
 
         VirtualFile[] chosenVirtualFiles = getSubjectAndTestVirtualFiles();
+        VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider();
+        ArrayList<List<VcsFileRevision>> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles);
 
-        ProjectLevelVcsManager mgr = ProjectLevelVcsManager.getInstance( project );
-        AbstractVcs[] allActiveVcss = mgr.getAllActiveVcss();
-        AbstractVcs myGit = allActiveVcss[0];
-        VcsHistoryProvider vcsHistoryProvider = myGit.getVcsHistoryProvider();
+        mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, _fileRevisionsLists);
+        ToolWindowManager.getInstance(project).registerToolWindow("TTM", mainWindow.getComponent(), ToolWindowAnchor.RIGHT);
+    }
 
+    private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
+    {
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(2);
 
         for(int i=0; i<2; i++)
@@ -50,17 +58,24 @@ public class TestTimeMachineAction extends AnAction
             VcsHistorySession sessionFor = null;
             try
             {
-                sessionFor = vcsHistoryProvider.createSessionFor(filePathOn);
+                sessionFor = myGitVcsHistoryProvider.createSessionFor(filePathOn);
             } catch (VcsException e1)
             {
                 e1.printStackTrace();
             }
             _fileRevisionsLists.add(sessionFor.getRevisionList());
         }
-
+        return _fileRevisionsLists;
     }
 
-    @NotNull
+    private VcsHistoryProvider getGitHistoryProvider()
+    {
+        ProjectLevelVcsManager mgr = ProjectLevelVcsManager.getInstance( project );
+        AbstractVcs[] allActiveVcss = mgr.getAllActiveVcss();
+        AbstractVcs myGit = allActiveVcss[0];
+        return myGit.getVcsHistoryProvider();
+    }
+
     public VirtualFile[] getSubjectAndTestVirtualFiles()
     {
         VirtualFile[] chosenVirtualFiles = null;
