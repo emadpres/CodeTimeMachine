@@ -8,7 +8,7 @@ public class TestTimeMachineActionTest
 {
 
     @Test
-    public void runningTestTimeMachineAction()
+    public void testInstantiating()
     {
         TestTimeMachineAction testTimeMachineAction = new TestTimeMachineAction();
         assertNotEquals(testTimeMachineAction, null);
