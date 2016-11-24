@@ -73,7 +73,10 @@ public class TestTimeMachineWindow
 
     private class CommitsBar
     {
+        private void activateCommit(int commitIndex)
+        {
 
+        }
     }
 
     private class CommitItem
