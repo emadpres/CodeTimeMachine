@@ -694,7 +694,8 @@ public class TestTimeMachineWindow
             int index=-1;
             boolean isVisible=true;
             float depth;
-            Color myColor=Color.WHITE, myBorderColor=Color.GRAY;
+            Color DEFAULT_BORDER_COLOR = Color.GRAY;
+            Color myColor=Color.WHITE, myBorderColor=DEFAULT_BORDER_COLOR;
             int xCenterDefault, yCenterDefault, wDefault, hDefault;
             Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
             ////////
@@ -729,6 +730,7 @@ public class TestTimeMachineWindow
             public void updateDepth(float depth)
             {
                 this.depth = depth;
+
                 float calculatingDepth = depth + BASE_DEPTH;
                 Rectangle rect = new Rectangle(0, 0, 0, 0);
                 /////// Color
@@ -737,19 +739,22 @@ public class TestTimeMachineWindow
                 int newAlpha = 255;
 
 
-                /*if(calculatingDepth-BASE_DEPTH< LAYER_DISTANCE)
-                {
-                    newAlpha = (int)((calculatingDepth-BASE_DEPTH)* (255/LAYER_DISTANCE));
 
+
+                if(index == topLayerIndex)
+                {
+                    newAlpha = 255;
+                    myBorderColor = Color.RED;
                 }
                 else
                 {
-                    newAlpha = (int)(1.3*BASE_DEPTH*255.0/(calculatingDepth));
+                    myBorderColor = new Color(DEFAULT_BORDER_COLOR.getRed(), DEFAULT_BORDER_COLOR.getGreen(), DEFAULT_BORDER_COLOR.getBlue(), newAlpha);
+                    newAlpha = (int)(BASE_DEPTH*255.0/(calculatingDepth));
                     if(newAlpha>255) newAlpha=255;
-                }*/
+                }
 
                 myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), newAlpha);
-                myBorderColor = new Color(myBorderColor.getRed(), myBorderColor.getGreen(), myBorderColor.getBlue(), newAlpha);
+
                 /////// Size
                 rect.width = (int) (wDefault / calculatingDepth);
                 rect.height = (int) (hDefault / calculatingDepth);
