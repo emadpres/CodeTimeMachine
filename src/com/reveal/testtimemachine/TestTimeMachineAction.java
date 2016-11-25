@@ -28,7 +28,8 @@ import java.util.List;
  */
 public class TestTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
+    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
+    final int NUM_OF_FILES____TEMP = 1;
     //////////////////////////////
     Project project = null;
     TestTimeMachineWindow mainWindow = null;
@@ -52,7 +53,7 @@ public class TestTimeMachineAction extends AnAction
     {
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(2);
 
-        for(int i=0; i<2; i++)
+        for(int i=0; i<NUM_OF_FILES____TEMP; i++)
         {
             FilePath filePathOn = VcsContextFactory.SERVICE.getInstance().createFilePathOn(chosenVirtualFiles[i]);
             VcsHistorySession sessionFor = null;
@@ -83,12 +84,12 @@ public class TestTimeMachineAction extends AnAction
         if(AUTOMATICALLY_CHOOSE_SAMPLE_FILES)
         {
             chosenVirtualFiles = new VirtualFile[2];
-            chosenVirtualFiles[0] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/testSrc/ATest.java"));
-            chosenVirtualFiles[1] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/src/A.java"));
+            chosenVirtualFiles[0] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/src/A.java"));
+            chosenVirtualFiles[1] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/testSrc/ATest.java"));
         }
         else
         {
-            while(chosenVirtualFiles == null || chosenVirtualFiles.length !=2 )
+            while(chosenVirtualFiles == null || chosenVirtualFiles.length !=NUM_OF_FILES____TEMP )
             {
                 chosenVirtualFiles = FileChooser.chooseFiles(
                         new FileChooserDescriptor(true, false, false, false, false, true),
