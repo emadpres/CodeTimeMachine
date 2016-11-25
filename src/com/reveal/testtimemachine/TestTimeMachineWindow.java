@@ -42,7 +42,10 @@ public class TestTimeMachineWindow
         setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
 
-        //CommitsBar leftBar = new CommitsBar(CommitBarDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
+        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
+
+        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
+        groupLayout.setVerticalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
 
         //CommitsBar rightBar = new CommitsBar(CommitBarDirection.RTL, SubjectOrTest.TEST, fileRevisionLists.get(1), this);
 
@@ -71,13 +74,72 @@ public class TestTimeMachineWindow
         return myJComponent;
     }
 
+    private void navigateToCommit(SubjectOrTest s, int commitIndex)
+    {
+        // TODO: implemenet me
+    }
+
+
     private class CommitsBar
     {
-        private void activateCommit(int commitIndex)
+        ///////// ++ UI ++ /////////
+        private TestTimeMachineWindow TTMWindow;
+        private JPanel myComponent;
+        private CommitItem[] commitItems;
+        ///////// ++ UI -- /////////
+
+        private SubjectOrTest s = SubjectOrTest.NONE;
+        private int activeCommitIndex = -1;
+
+        public CommitsBar(CommitItemDirection direction, SubjectOrTest s, List<VcsFileRevision> fileRevisionsList,
+                          TestTimeMachineWindow TTMWindow)
         {
+            this.TTMWindow = TTMWindow;
+            this.s= s;
+
+            createEmptyJComponent();
+            creatingCommitsItem(direction, fileRevisionsList);
+            myComponent.repaint();
 
         }
+
+        private void creatingCommitsItem(CommitItemDirection direction, List<VcsFileRevision> fileRevisionsList)
+        {
+            commitItems = new CommitItem[fileRevisionsList.size()];
+
+            for(int i=0; i< fileRevisionsList.size(); i++)
+            {
+                commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this);
+                myComponent.add(commitItems[i].getComponent());
+                myComponent.add(Box.createRigidArea(new Dimension(1,10)));
+            }
+        }
+
+        private void createEmptyJComponent()
+        {
+            myComponent = new JPanel();
+            BoxLayout boxLayout = new BoxLayout(myComponent, BoxLayout.Y_AXIS);
+            myComponent.setLayout(boxLayout);
+            if(DEBUG_MODE_UI)
+                myComponent.setBackground(Color.RED);
+        }
+
+
+        private void activateCommit(int commitIndex)
+        {
+            if(activeCommitIndex!=-1)
+                commitItems[activeCommitIndex].setActivated(false);
+            activeCommitIndex = commitIndex;
+            commitItems[activeCommitIndex].setActivated(true);
+            TTMWindow.navigateToCommit(s, commitIndex);
+        }
+
+        public JPanel getComponent()
+        {
+            return myComponent;
+        }
     }
+
 
     private class CommitItem
     {
@@ -117,7 +179,13 @@ public class TestTimeMachineWindow
         private void setupUI(VcsFileRevision fileRevision)
         {
             createEmptyJComponent();
+            if(direction == CommitItemDirection.LTR)
+                myComponent.setAlignmentX(Component.LEFT_ALIGNMENT); // make it left_align within parent layout (Hbox)
+            else
+                myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
             myComponent.setToolTipText(fileRevision.getCommitMessage());
+
             if(DEBUG_MODE_UI)
                 myComponent.setBackground(Color.GREEN);
 
@@ -212,7 +280,7 @@ public class TestTimeMachineWindow
                 public void mouseEntered(MouseEvent e)
                 {
                     if(!isActive)
-                        updateToHoveredUI();
+                        updateToActiveUI();
                 }
 
                 @Override
@@ -233,7 +301,7 @@ public class TestTimeMachineWindow
             myComponent.setMaximumSize(COMPONENT_SIZE);
         }
 
-        public String getMonthName(int month){
+        private String getMonthName(int month){
             //String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
             String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
             return monthNames[month];
@@ -249,7 +317,7 @@ public class TestTimeMachineWindow
             updateCommitInfoLocation();
         }
 
-        private void updateToHoveredUI()
+        private void updateToActiveUI()
         {
             marker.setSize(MARKER_HOVERED_SIZE);
             marker.setBackground(HOVERED_COLOR);
@@ -284,10 +352,18 @@ public class TestTimeMachineWindow
             }
         }
 
-        JPanel getComponent()
+        private void setActivated(boolean newStatus)
+        {
+            isActive = newStatus;
+            if(isActive)
+                updateToActiveUI();
+            else
+                updateToNormalUI();
+        }
+
+        public JPanel getComponent()
         {
             return myComponent;
         }
-
     }
 }
