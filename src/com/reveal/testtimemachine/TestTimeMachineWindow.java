@@ -42,12 +42,12 @@ public class TestTimeMachineWindow
         setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
 
+
         CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
         groupLayout.setVerticalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
 
-        //CommitsBar rightBar = new CommitsBar(CommitBarDirection.RTL, SubjectOrTest.TEST, fileRevisionLists.get(1), this);
 
     }
 
@@ -78,7 +78,6 @@ public class TestTimeMachineWindow
     {
         // TODO: implemenet me
     }
-
 
     private class CommitsBar
     {
@@ -139,7 +138,6 @@ public class TestTimeMachineWindow
             return myComponent;
         }
     }
-
 
     private class CommitItem
     {
