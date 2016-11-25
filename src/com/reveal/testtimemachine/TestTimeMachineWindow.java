@@ -1,6 +1,7 @@
 package com.reveal.testtimemachine;
 
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
@@ -52,7 +53,7 @@ public class TestTimeMachineWindow
 
         CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
 
-        myLeftEditor = new Commits3DView(virtualFiles[0], project);
+        myLeftEditor = new Commits3DView(project, fileRevisionsLists.get(0));
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING).addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
@@ -439,7 +440,6 @@ public class TestTimeMachineWindow
         ///////// ++ UI: 3D Stuff ++ /////////
         final boolean COLORFUL = true;
         final int TICK_INTERVAL_MS = 50;
-        final int NUMBER_OF_VIRTUAL_WINDOWS = 10;
         final float LAYER_DISTANCE = 0.2f;
         float N_PASSED_LAYERS_PER_SEC = 4f;
         //////
@@ -452,15 +452,16 @@ public class TestTimeMachineWindow
         ///////// -- UI: 3D Stuff -- /////////
 
         Project project;
-        VirtualFile inputVirtualFile;
+        List<VcsFileRevision> commitList;
 
 
-        public Commits3DView(VirtualFile vFile, Project project)
+
+        public Commits3DView( Project project, List<VcsFileRevision> commitList)
         {
             super();
 
             this.project = project;
-            this.inputVirtualFile = vFile;
+            this.commitList = commitList;
 
             this.setLayout(null);
             this.addComponentListener(this);
@@ -469,23 +470,24 @@ public class TestTimeMachineWindow
             this.setOpaque(true);
 
 
-            mainEditorWindow = new EditorTextField(FileDocumentManager.getInstance().getDocument(inputVirtualFile),
-                    project, inputVirtualFile.getFileType(), true);
+            mainEditorWindow = new EditorTextField("import com.a; public class Emad{} ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
             mainEditorWindow.setEnabled(true);
             mainEditorWindow.setRequestFocusEnabled(true);
             mainEditorWindow.setOneLineMode(false);
             add(mainEditorWindow); // we setBound in ComponentResized() event
 
             setup3DAnimationStuff();
+
+
             componentResized(null);
         }
 
         private void setup3DAnimationStuff()
         {
 
-            virtualEditorWindows = new VirtualEditorWindow[NUMBER_OF_VIRTUAL_WINDOWS];
+            virtualEditorWindows = new VirtualEditorWindow[commitList.size()];
 
-            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+            for (int i = 0; i< commitList.size() ; i++)
             {
                 virtualEditorWindows[i] = new VirtualEditorWindow();
             }
@@ -504,7 +506,7 @@ public class TestTimeMachineWindow
 
         private void setVirtualWindowsDefaultValues()
         {
-            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+            for (int i = 0; i< commitList.size() ; i++)
             {
                 int xCenter, yCenter, w, h;
                 w = mainEditorWindow.getSize().width;
@@ -536,7 +538,7 @@ public class TestTimeMachineWindow
             topLayerOffset = 0;
             topLayerIndex=0;
             // Don't forget to call `setVirtualWindowsDefaultValues()` before
-            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+            for (int i = 0; i< commitList.size() ; i++)
                 virtualEditorWindows[i].updateDepth(i* LAYER_DISTANCE);
             repaint();
         }
@@ -571,9 +573,9 @@ public class TestTimeMachineWindow
 
             if(virtualEditorWindows!=null)
             {
-                for(int i = NUMBER_OF_VIRTUAL_WINDOWS-1; i>=0; i--)
+                for(int i = commitList.size()-1; i>=0; i--)
                 {
-                    int layerIndex_ith_after_topLayer = (topLayerIndex+i)%NUMBER_OF_VIRTUAL_WINDOWS;
+                    int layerIndex_ith_after_topLayer = (topLayerIndex+i)%commitList.size();
                     virtualEditorWindows[layerIndex_ith_after_topLayer].draw(g);
 
                 }
@@ -602,7 +604,7 @@ public class TestTimeMachineWindow
                 topLayerOffset = topLayerOffset%LAYER_DISTANCE;
                 topLayerIndex--;
                 if(topLayerIndex < 0)
-                    topLayerIndex=NUMBER_OF_VIRTUAL_WINDOWS;
+                    topLayerIndex=commitList.size();
             }
 
             if(topLayerOffset < 0)
@@ -610,13 +612,13 @@ public class TestTimeMachineWindow
                 if(stopAnimationIfRequstedAndReturnTrue()) return;
                 topLayerOffset = (topLayerOffset+LAYER_DISTANCE)%LAYER_DISTANCE;
                 topLayerIndex++;
-                if(topLayerIndex >= NUMBER_OF_VIRTUAL_WINDOWS)
+                if(topLayerIndex >= commitList.size())
                     topLayerIndex=0;
             }
 
-            for(int i=0; i<NUMBER_OF_VIRTUAL_WINDOWS; i++)
+            for(int i=0; i<commitList.size(); i++)
             {
-                int layerIndex_ith_after_topLayer = (topLayerIndex+i)%NUMBER_OF_VIRTUAL_WINDOWS;
+                int layerIndex_ith_after_topLayer = (topLayerIndex+i)%commitList.size();
                 virtualEditorWindows[layerIndex_ith_after_topLayer].updateDepth(i*LAYER_DISTANCE + topLayerOffset);
             }
 
