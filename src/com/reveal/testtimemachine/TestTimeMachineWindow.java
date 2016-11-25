@@ -33,7 +33,6 @@ public class TestTimeMachineWindow
 
     ///////// ++ Constant ++ /////////
     final boolean DEBUG_MODE_UI = true;
-    private final int MIN_ANIMATION_DURATION_MS=1500, MAX_EXTRA_ANIMATION_DURATION_MS=1000;
     ///////// -- Constant -- /////////
 
     ///////// ++ UI ++ /////////
@@ -56,8 +55,6 @@ public class TestTimeMachineWindow
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING).addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
-
-
     }
 
     private void setupToolTipSetting()
@@ -570,18 +567,6 @@ public class TestTimeMachineWindow
 
                 }
             }
-            repaint();
-
-            /*if(dummyWindow!=null)
-            {
-                g.fillRect((int) dummyWindow.currentX, (int) dummyWindow.currentY,
-                        (int) dummyWindow.currentW, (int) dummyWindow.currentH);
-            }*/
-
-
-
-            //btn.paint(g);
-            //g.dispose();
         }
 
         private void updateVirtualWindowsInfo(float dt_sec)
@@ -780,10 +765,13 @@ public class TestTimeMachineWindow
                 /// Border
                 g.setColor( this.myBorderColor);
                 g.drawRect(x, y, w, h);
+                /// TopBar
+                g.setColor( Color.LIGHT_GRAY);
+                g.fillRect(x, y, w, 25);
                 /// Name
+                g.setColor(Color.WHITE);
                 String text = new String(">>> "+Integer.toString(index)+"   <<<");
-                g.setColor(Color.black);
-                g.drawChars(text.toCharArray(), 0, text.length(), x+10, y+10);
+                g.drawChars(text.toCharArray(), 0, text.length(), x+w/2, y+15);
             }
 
         } // End of VirtualEditorWindow class
