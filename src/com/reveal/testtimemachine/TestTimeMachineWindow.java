@@ -1,18 +1,18 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.EditorTextField;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 ///////// ++ UI ++ /////////
 ///////// ++ UI -- /////////
@@ -29,9 +29,9 @@ public class TestTimeMachineWindow
     public enum SubjectOrTest {NONE, SUBJECT, TEST};
     ///////// -- CommitBar and CommitItem -- /////////
 
-    ///////// ++ Debugging ++ /////////
+    ///////// ++ Constant ++ /////////
     final boolean DEBUG_MODE_UI = true;
-    ///////// -- Debugging -- /////////
+    ///////// -- Constant -- /////////
 
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
     {
@@ -364,4 +364,307 @@ public class TestTimeMachineWindow
             return myComponent;
         }
     }
-}
+
+    protected class Commits3DView extends JComponent implements ComponentListener
+    {
+        ///////// ++ Constant ++ /////////
+        ///////// -- Constant -- /////////
+
+        ///////// ++ UI ++ /////////
+        EditorTextField mainEditorWindow;
+        Point centerOfComponent;
+        ///////// -- UI -- /////////
+
+        ///////// ++ UI: 3D Stuff ++ /////////
+        final boolean COLORFUL = true;
+        final int TICK_INTERVAL_MS = 50;
+        final int NUMBER_OF_VIRTUAL_WINDOWS = 10;
+        final float LAYER_DISTANCE = 0.2f;
+        float N_PASSED_LAYERS_PER_SEC = 4f;
+        //////
+        int topLayerIndex;
+        float topLayerOffset;
+        int demoFactor = +1;
+        VirtualEditorWindow[] virtualEditorWindows = null;
+        Timer playing3DAnimationTimer;
+        boolean stop3dAnimationRequested = false;
+        ///////// -- UI: 3D Stuff -- /////////
+
+        Project project;
+        VirtualFile inputVirtualFile;
+
+
+        public Commits3DView(VirtualFile vFile, Project project)
+        {
+            super();
+
+            this.project = project;
+            this.inputVirtualFile = vFile;
+
+            this.setLayout(null);
+            this.addComponentListener(this);
+            if (DEBUG_MODE_UI)
+                this.setBackground(Color.ORANGE);
+            this.setOpaque(true);
+
+
+            mainEditorWindow = new EditorTextField(FileDocumentManager.getInstance().getDocument(inputVirtualFile),
+                    project, inputVirtualFile.getFileType(), true);
+            mainEditorWindow.setEnabled(true);
+            mainEditorWindow.setRequestFocusEnabled(true);
+            mainEditorWindow.setOneLineMode(false);
+            add(mainEditorWindow); // we setBound in ComponentResized() event
+
+            //setup3DAnimationStuff();
+
+            componentResized(null);
+        }
+
+        private void setup3DAnimationStuff()
+        {
+
+            virtualEditorWindows = new VirtualEditorWindow[NUMBER_OF_VIRTUAL_WINDOWS];
+
+            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+            {
+                virtualEditorWindows[i] = new VirtualEditorWindow();
+            }
+
+            setVirtualWindowsDefaultValues();
+            placeVirtualWindowsInStandardPosition();
+
+
+            playing3DAnimationTimer = new Timer(TICK_INTERVAL_MS, new ActionListener(){
+                public void actionPerformed(ActionEvent e)
+                {
+                    updateVirtualWindows();
+                }
+            });
+        }
+
+        private void setVirtualWindowsDefaultValues()
+        {
+            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+            {
+                int xCenter, yCenter, w, h;
+                w = mainEditorWindow.getSize().width;
+                h = mainEditorWindow.getSize().height;
+                xCenter = mainEditorWindow.getLocation().x + w/2;
+                yCenter = mainEditorWindow.getLocation().y + h/2;
+                virtualEditorWindows[i].setDefaultValues(xCenter, yCenter, w, h);
+            }
+        }
+
+        private void placeVirtualWindowsInStandardPosition()
+        {
+            topLayerOffset = 0;
+            topLayerIndex=0;
+            // Don't forget to call `setVirtualWindowsDefaultValues()` before
+            for (int i = 0; i< NUMBER_OF_VIRTUAL_WINDOWS ; i++)
+                virtualEditorWindows[i].updateDepth(i* LAYER_DISTANCE);
+            repaint();
+        }
+
+        @Override
+        public void componentResized(ComponentEvent e)
+        {
+            Dimension size = getSize();
+            centerOfComponent = new Point(size.width/2, size.height/2);
+            //////
+            updateMainEditorWidnowPositionAndScale();
+            setVirtualWindowsDefaultValues();
+        }
+
+        @Override
+        public void componentMoved(ComponentEvent e) {}
+
+        @Override
+        public void componentShown(ComponentEvent e) {}
+
+        @Override
+        public void componentHidden(ComponentEvent e) {}
+
+        @Override
+        protected void paintComponent(Graphics g)
+        {
+            super.paintComponent(g);
+
+            g.setColor(new Color(255,0,0));
+            if(DEBUG_MODE_UI)
+                g.fillOval(getSize().width/2-10, getSize().height/2-10,20,20); //Show Center
+
+            if(virtualEditorWindows!=null)
+            {
+                for(int i = NUMBER_OF_VIRTUAL_WINDOWS-1; i>=0; i--)
+                {
+                    int layerIndex_ith_after_topLayer = (topLayerIndex+i)%NUMBER_OF_VIRTUAL_WINDOWS;
+                    virtualEditorWindows[layerIndex_ith_after_topLayer].draw(g);
+
+                }
+            }
+            repaint();
+
+            /*if(dummyWindow!=null)
+            {
+                g.fillRect((int) dummyWindow.currentX, (int) dummyWindow.currentY,
+                        (int) dummyWindow.currentW, (int) dummyWindow.currentH);
+            }*/
+
+
+
+            //btn.paint(g);
+            //g.dispose();
+        }
+
+        private void updateVirtualWindows()
+        {
+            topLayerOffset += N_PASSED_LAYERS_PER_SEC * demoFactor * (TICK_INTERVAL_MS/1000.f) * LAYER_DISTANCE;
+
+            if(topLayerOffset > LAYER_DISTANCE)
+            {
+                if(stopAnimationIfRequstedAndReturnTrue()) return;
+                topLayerOffset = topLayerOffset%LAYER_DISTANCE;
+                topLayerIndex--;
+                if(topLayerIndex < 0)
+                    topLayerIndex=NUMBER_OF_VIRTUAL_WINDOWS;
+            }
+
+            if(topLayerOffset < 0)
+            {
+                if(stopAnimationIfRequstedAndReturnTrue()) return;
+                topLayerOffset = (topLayerOffset+LAYER_DISTANCE)%LAYER_DISTANCE;
+                topLayerIndex++;
+                if(topLayerIndex >= NUMBER_OF_VIRTUAL_WINDOWS)
+                    topLayerIndex=0;
+            }
+
+            for(int i=0; i<NUMBER_OF_VIRTUAL_WINDOWS; i++)
+            {
+                int layerIndex_ith_after_topLayer = (topLayerIndex+i)%NUMBER_OF_VIRTUAL_WINDOWS;
+                virtualEditorWindows[layerIndex_ith_after_topLayer].updateDepth(i*LAYER_DISTANCE + topLayerOffset);
+            }
+
+            repaint();
+        }
+
+        private boolean stopAnimationIfRequstedAndReturnTrue()
+        {
+            if(stop3dAnimationRequested)
+            {
+                stop3dAnimation();
+                return true;
+            }
+            return false;
+        }
+
+        public void stop3dAnimation()
+        {
+            stop3dAnimationRequested=false;
+            playing3DAnimationTimer.stop();
+            mainEditorWindow.setVisible(true);
+        }
+
+        private void updateMainEditorWidnowPositionAndScale()
+        {
+            final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
+            ////
+            Dimension mainEditorWindowsSize = new Dimension(getSize().width - FREE_SPACE_HORIZONTAL /*Almost Fill Width*/,
+                    2*getSize().height/3 /*2/3 of whole vertical*/);
+            Point positionOfLeftTopOfMainEditor = new Point(centerOfComponent.x - mainEditorWindowsSize.width/2,
+                    getSize().height/6 /*Fit from bottom*/);
+
+            mainEditorWindow.setBounds(new Rectangle(positionOfLeftTopOfMainEditor, mainEditorWindowsSize));
+            ////
+            placeVirtualWindowsInStandardPosition();
+        }
+
+        protected class VirtualEditorWindow
+        {
+            final float BASE_DEPTH = 2; // Min:1.0
+            final float Y_OFFSET_FACTOR = 200;
+            ////////
+            float depth;
+            Color myColor=Color.WHITE, myBorderColor=Color.GRAY;
+            int xCenterDefault, yCenterDefault, wDefault, hDefault;
+            Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
+            ////////
+
+            public VirtualEditorWindow()
+            {
+                if(COLORFUL || DEBUG_MODE_UI)
+                {
+                    Random rand = new Random();
+                    float r = rand.nextFloat();
+                    float g = rand.nextFloat();
+                    float b = rand.nextFloat();
+                    this.myColor = new Color(r,g,b);
+                }
+            }
+
+            // this function should be called on each size change
+            public void setDefaultValues(int xCenterDefault, int yCenterDefault, int wDefault, int hDefault)
+            {
+                if(wDefault<=0 || hDefault<=0) return; //Window is not intialized corerctly yet
+
+                this.xCenterDefault = xCenterDefault;
+                this.yCenterDefault = yCenterDefault;
+                this.wDefault = (int) (wDefault*BASE_DEPTH);
+                this.hDefault = (int) (hDefault*BASE_DEPTH);
+
+                updateDepth(depth);
+            }
+
+            public void updateDepth(float depth)
+            {
+                this.depth = depth;
+                float calculatingDepth = depth + BASE_DEPTH;
+                Rectangle rect = new Rectangle(0, 0, 0, 0);
+                /////// Color
+                final int N_TRANSPARENT_LAYERS = 3;
+                final int MIN_ALPHA = 100;
+                int newAlpha = 255;
+
+
+                if(calculatingDepth-BASE_DEPTH< LAYER_DISTANCE)
+                {
+                    newAlpha = (int)((calculatingDepth-BASE_DEPTH)* (255/LAYER_DISTANCE));
+
+                }
+                else
+                {
+                    newAlpha = (int)(1.3*BASE_DEPTH*255.0/(calculatingDepth));
+                    if(newAlpha>255) newAlpha=255;
+                }
+
+                myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), newAlpha);
+                myBorderColor = new Color(myBorderColor.getRed(), myBorderColor.getGreen(), myBorderColor.getBlue(), newAlpha);
+                /////// Size
+                rect.width = (int) (wDefault / calculatingDepth);
+                rect.height = (int) (hDefault / calculatingDepth);
+                //
+                rect.x = xCenterDefault;
+                rect.y = yCenterDefault - (int) (Math.log(calculatingDepth - BASE_DEPTH + Math.exp(0)) * Y_OFFSET_FACTOR);
+
+                drawingRect = rect;
+            }
+
+            public void draw(Graphics g)
+            {
+                int x,y,w,h;
+                w = this.drawingRect.width;
+                h = this.drawingRect.height;
+                x = this.drawingRect.x - w/2;
+                y = this.drawingRect.y - h/2;
+                /// Rect
+                g.setColor( this.myColor);
+                g.fillRect(x, y, w, h);
+                /// Border
+                g.setColor( this.myBorderColor);
+                g.drawRect(x, y, w, h);
+            }
+
+        } // End of VirtualEditorWindow class
+
+    } // End of Commits3DView class
+
+} // End of class
