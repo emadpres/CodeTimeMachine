@@ -80,47 +80,9 @@ public class TestTimeMachineWindow
         return myJComponent;
     }
 
-    private String getStringFromCommits(SubjectOrTest _s, int _commitId)
-    {
-        String content="";
-        try
-        {
-            List<VcsFileRevision> vcsFileRevisions;
-            if(_s==SubjectOrTest.SUBJECT)
-                vcsFileRevisions = fileRevisionLists.get(0);
-            else
-                vcsFileRevisions = fileRevisionLists.get(1);
-            ///
-            VcsFileRevision vcsFileRevision = vcsFileRevisions.get(_commitId);
-            byte[] selectedCommitContent = vcsFileRevision.loadContent();
-            content = new String(selectedCommitContent);
-        } catch (IOException e1)
-        {
-            e1.printStackTrace();
-        } catch (VcsException e1)
-        {
-            e1.printStackTrace();
-        }
-        return content;
-    }
-
     private void navigateToCommit(SubjectOrTest s, int commitIndex)
     {
-        //Random rand = new Random();
-        //int t = rand.nextInt(MIN_ANIMATION_DURATION_MS+MAX_EXTRA_ANIMATION_DURATION_MS);
         myLeftEditor.showCommitByIndexNumber(commitIndex, true);
-        /*Timer stoppingAnimationTimer = new Timer(t, new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                String content = getStringFromCommits(s, commitIndex);
-                myLeftEditor.mainEditorWindow.setText(content);
-                myLeftEditor.requestStop3dAnimation();
-            }
-        });
-        stoppingAnimationTimer.setRepeats(false);
-        stoppingAnimationTimer.start();*/
     }
 
     private class CommitsBar
@@ -427,19 +389,19 @@ public class TestTimeMachineWindow
         final float LAYER_DISTANCE = 0.2f;
 
         //////
+        final int TOP_BAR_HEIGHT = 25;
         int topLayerIndex, targetLayerIndex /*if equals to topLayerIndex it means no animation is running*/;
         float topLayerOffset;
         VirtualEditorWindow[] virtualEditorWindows = null;
         Timer playing3DAnimationTimer;
-        boolean stop3dAnimationRequested = false;
         int numberOfPassingLayersPerSec_forAnimation = 1;
+        //
+        Dimension topLayerDimention = new Dimension(0,0);
+        Point topLayerCenterPos = new Point(0,0);
         ///////// -- UI: 3D Stuff -- /////////
 
         Project project;
-        List<VcsFileRevision> commitList;
-
-
-
+        List<VcsFileRevision> commitList = null;
 
 
         public Commits3DView( Project project, List<VcsFileRevision> commitList)
@@ -456,11 +418,11 @@ public class TestTimeMachineWindow
             this.setOpaque(true);
 
 
-            mainEditorWindow = new EditorTextField("import com.a; public class Emad{} ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
+            mainEditorWindow = new EditorTextField("First commit did not load correctly! ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
             mainEditorWindow.setEnabled(true);
             mainEditorWindow.setRequestFocusEnabled(true);
             mainEditorWindow.setOneLineMode(false);
-            //add(mainEditorWindow); // we setBound in ComponentResized() event
+            add(mainEditorWindow); // we setBound in ComponentResized() event
 
 
             setup3DAnimationStuff();
@@ -496,28 +458,12 @@ public class TestTimeMachineWindow
             for (int i = 0; i< commitList.size() ; i++)
             {
                 int xCenter, yCenter, w, h;
-                w = mainEditorWindow.getSize().width;
-                h = mainEditorWindow.getSize().height;
-                xCenter = mainEditorWindow.getLocation().x + w/2;
-                yCenter = mainEditorWindow.getLocation().y + h/2;
+                w = topLayerDimention.width;
+                h = topLayerDimention.height;
+                xCenter = topLayerCenterPos.x;
+                yCenter = topLayerCenterPos.y;
                 virtualEditorWindows[i].setDefaultValues(xCenter, yCenter, w, h);
             }
-        }
-
-        public void requestStop3dAnimation()
-        {
-//            N_PASSED_LAYERS_PER_SEC = 4;
-            Timer fullStopTimer = new Timer(1000, new ActionListener()
-            {
-                @Override
-                public void actionPerformed(ActionEvent e)
-                {
-                    stop3dAnimationRequested=true;
-                }
-            });
-            fullStopTimer.setRepeats(false);
-            fullStopTimer.start();
-
         }
 
         private void placeVirtualWindowsInStandardPosition()
@@ -591,7 +537,7 @@ public class TestTimeMachineWindow
                 // TODO: Still the result of sum may be negative
                 topLayerOffset = (topLayerOffset+LAYER_DISTANCE)%LAYER_DISTANCE;
                 topLayerIndex++;
-                //assert topLayerIndex >= commitList.size();
+                //assert topLayerIndex >= commitList.size(); // TODO
                 if(topLayerIndex >= commitList.size())
                     topLayerIndex=0;
             }
@@ -602,7 +548,7 @@ public class TestTimeMachineWindow
             {
                 topLayerOffset = topLayerOffset%LAYER_DISTANCE;
                 topLayerIndex--;
-                //assert topLayerIndex < 0;
+                //assert topLayerIndex < 0; // TODO
                 if(topLayerIndex < 0)
                     topLayerIndex=commitList.size()-1;
             }
@@ -611,7 +557,7 @@ public class TestTimeMachineWindow
             {
                 int layerIndex_ith_after_topLayer = (topLayerIndex+i)%commitList.size();
 
-                if(layerIndex_ith_after_topLayer < topLayerIndex)
+                if(layerIndex_ith_after_topLayer < topLayerIndex || layerIndex_ith_after_topLayer>topLayerIndex+9 )
                     virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = false;
                 else
                     virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = true;
@@ -621,7 +567,7 @@ public class TestTimeMachineWindow
             repaint();
 
             if(topLayerIndex == targetLayerIndex)
-                playing3DAnimationTimer.stop();
+                stopAnimation();
 
         }
 
@@ -640,20 +586,30 @@ public class TestTimeMachineWindow
             playing3DAnimationTimer.start();
         }
 
-        private boolean stopAnimationIfRequstedAndReturnTrue()
+        private String getStringFromCommits(int commitIndex)
         {
-            if(stop3dAnimationRequested)
+            String content="";
+            try
             {
-                stop3dAnimation();
-                return true;
+
+                VcsFileRevision vcsFileRevision = commitList.get(commitIndex);
+                byte[] selectedCommitContent = vcsFileRevision.loadContent();
+                content = new String(selectedCommitContent);
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            } catch (VcsException e1)
+            {
+                e1.printStackTrace();
             }
-            return false;
+            return content;
         }
 
-        public void stop3dAnimation()
+        public void stopAnimation()
         {
-            stop3dAnimationRequested=false;
             playing3DAnimationTimer.stop();
+            String content = getStringFromCommits(topLayerIndex);
+            myLeftEditor.mainEditorWindow.setText(content);
             mainEditorWindow.setVisible(true);
         }
 
@@ -661,12 +617,13 @@ public class TestTimeMachineWindow
         {
             final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
             ////
-            Dimension mainEditorWindowsSize = new Dimension(getSize().width - FREE_SPACE_HORIZONTAL /*Almost Fill Width*/,
+            topLayerDimention = new Dimension(getSize().width - FREE_SPACE_HORIZONTAL /*Almost Fill Width*/,
                     2*getSize().height/3 /*2/3 of whole vertical*/);
-            Point positionOfLeftTopOfMainEditor = new Point(centerOfComponent.x - mainEditorWindowsSize.width/2,
-                    getSize().height/6 /*Fit from bottom*/);
-
-            mainEditorWindow.setBounds(new Rectangle(positionOfLeftTopOfMainEditor, mainEditorWindowsSize));
+            topLayerCenterPos = new Point(centerOfComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
+            ////
+            Point mainEditorWindow_topLeftPos = new Point(topLayerCenterPos.x - topLayerDimention.width/2, topLayerCenterPos.y-topLayerDimention.height/2+TOP_BAR_HEIGHT);
+            Dimension mainEditorWindow_dimension = new Dimension(topLayerDimention.width, topLayerDimention.height - TOP_BAR_HEIGHT);
+            mainEditorWindow.setBounds(new Rectangle(mainEditorWindow_topLeftPos, mainEditorWindow_dimension));
             ////
             placeVirtualWindowsInStandardPosition();
         }
@@ -674,7 +631,7 @@ public class TestTimeMachineWindow
         protected class VirtualEditorWindow
         {
             final float BASE_DEPTH = 2; // Min:1.0
-            final float Y_OFFSET_FACTOR = 200;
+            final float Y_OFFSET_FACTOR = 250;
             ////////
             int index=-1;
             boolean isVisible=true;
@@ -718,13 +675,7 @@ public class TestTimeMachineWindow
 
                 float calculatingDepth = depth + BASE_DEPTH;
                 Rectangle rect = new Rectangle(0, 0, 0, 0);
-                /////// Color
-                final int N_TRANSPARENT_LAYERS = 3;
-                final int MIN_ALPHA = 100;
                 int newAlpha = 255;
-
-
-
 
                 if(index == topLayerIndex)
                 {
@@ -733,14 +684,14 @@ public class TestTimeMachineWindow
                 }
                 else
                 {
-                    myBorderColor = new Color(DEFAULT_BORDER_COLOR.getRed(), DEFAULT_BORDER_COLOR.getGreen(), DEFAULT_BORDER_COLOR.getBlue(), newAlpha);
                     newAlpha = (int)(BASE_DEPTH*255.0/(calculatingDepth));
                     if(newAlpha>255) newAlpha=255;
+                    myBorderColor = new Color(DEFAULT_BORDER_COLOR.getRed(), DEFAULT_BORDER_COLOR.getGreen(), DEFAULT_BORDER_COLOR.getBlue(), newAlpha);
                 }
 
                 myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), newAlpha);
 
-                /////// Size
+                /////// Size    
                 rect.width = (int) (wDefault / calculatingDepth);
                 rect.height = (int) (hDefault / calculatingDepth);
                 //
@@ -766,11 +717,11 @@ public class TestTimeMachineWindow
                 g.setColor( this.myBorderColor);
                 g.drawRect(x, y, w, h);
                 /// TopBar
-                g.setColor( Color.LIGHT_GRAY);
-                g.fillRect(x, y, w, 25);
+                g.setColor( this.myBorderColor);
+                g.fillRect(x, y, w, TOP_BAR_HEIGHT);
                 /// Name
-                g.setColor(Color.WHITE);
-                String text = new String(">>> "+Integer.toString(index)+"   <<<");
+                g.setColor(Color.BLACK);
+                String text = new String("Number: "+Integer.toString(index)+" ");
                 g.drawChars(text.toCharArray(), 0, text.length(), x+w/2, y+15);
             }
 
