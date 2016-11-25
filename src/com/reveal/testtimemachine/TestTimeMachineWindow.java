@@ -33,6 +33,9 @@ public class TestTimeMachineWindow
     final boolean DEBUG_MODE_UI = true;
     ///////// -- Constant -- /////////
 
+    ///////// ++ UI ++ /////////
+    ///////// -- UI -- /////////
+
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
     {
         this.project = project;
@@ -45,8 +48,10 @@ public class TestTimeMachineWindow
 
         CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
 
-        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
-        groupLayout.setVerticalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()));
+        Commits3DView myLeftEditor = new Commits3DView(virtualFiles[0], project);
+
+        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
+        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING).addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
 
 
     }
@@ -415,8 +420,7 @@ public class TestTimeMachineWindow
             mainEditorWindow.setOneLineMode(false);
             add(mainEditorWindow); // we setBound in ComponentResized() event
 
-            //setup3DAnimationStuff();
-
+            setup3DAnimationStuff();
             componentResized(null);
         }
 
