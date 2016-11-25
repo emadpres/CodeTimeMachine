@@ -42,6 +42,9 @@ public class TestTimeMachineAction extends AnAction
         project = e.getProject();
 
         VirtualFile[] chosenVirtualFiles = getSubjectAndTestVirtualFiles();
+        if(chosenVirtualFiles == null || chosenVirtualFiles.length !=NUM_OF_FILES____TEMP )
+            return;
+
         VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider();
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles);
 
@@ -89,12 +92,9 @@ public class TestTimeMachineAction extends AnAction
         }
         else
         {
-            while(chosenVirtualFiles == null || chosenVirtualFiles.length !=NUM_OF_FILES____TEMP )
-            {
-                chosenVirtualFiles = FileChooser.chooseFiles(
-                        new FileChooserDescriptor(true, false, false, false, false, true),
-                        project, null);
-            }
+            chosenVirtualFiles = FileChooser.chooseFiles(
+                    new FileChooserDescriptor(true, false, false, false, false, true),
+                    project, null);
         }
 
         return chosenVirtualFiles;
