@@ -2,6 +2,7 @@ package com.reveal.testtimemachine;
 
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
@@ -9,6 +10,7 @@ import com.intellij.ui.EditorTextField;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -31,9 +33,11 @@ public class TestTimeMachineWindow
 
     ///////// ++ Constant ++ /////////
     final boolean DEBUG_MODE_UI = true;
+    private final int MIN_ANIMATION_DURATION_MS=1500, MAX_EXTRA_ANIMATION_DURATION_MS=1000;
     ///////// -- Constant -- /////////
 
     ///////// ++ UI ++ /////////
+    Commits3DView myLeftEditor = null;
     ///////// -- UI -- /////////
 
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
@@ -48,7 +52,7 @@ public class TestTimeMachineWindow
 
         CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
 
-        Commits3DView myLeftEditor = new Commits3DView(virtualFiles[0], project);
+        myLeftEditor = new Commits3DView(virtualFiles[0], project);
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING).addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
@@ -79,9 +83,60 @@ public class TestTimeMachineWindow
         return myJComponent;
     }
 
+    private String getStringFromCommits(SubjectOrTest _s, int _commitId)
+    {
+        String content="";
+        try
+        {
+            List<VcsFileRevision> vcsFileRevisions;
+            if(_s==SubjectOrTest.SUBJECT)
+                vcsFileRevisions = fileRevisionLists.get(0);
+            else
+                vcsFileRevisions = fileRevisionLists.get(1);
+            ///
+            VcsFileRevision vcsFileRevision = vcsFileRevisions.get(_commitId);
+            byte[] selectedCommitContent = vcsFileRevision.loadContent();
+            content = new String(selectedCommitContent);
+        } catch (IOException e1)
+        {
+            e1.printStackTrace();
+        } catch (VcsException e1)
+        {
+            e1.printStackTrace();
+        }
+        return content;
+    }
+
     private void navigateToCommit(SubjectOrTest s, int commitIndex)
     {
-        // TODO: implemenet me
+        Random rand = new Random();
+        int t = rand.nextInt(MIN_ANIMATION_DURATION_MS+MAX_EXTRA_ANIMATION_DURATION_MS);
+        if(s==SubjectOrTest.SUBJECT)
+            myLeftEditor.show3dAnimation();
+       /* else
+            myRightEditor.show3dAnimation();*/
+        Timer stoppingAnimationTimer = new Timer(t, new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                String content = getStringFromCommits(s, commitIndex);
+
+                if( s==SubjectOrTest.SUBJECT)
+                {
+                    myLeftEditor.mainEditorWindow.setText(content);
+                    myLeftEditor.requestStop3dAnimation();
+                }
+                /*else
+                {
+                    myRightEditor.mainEditorWindow.setText(content);
+                    myRightEditor.requestStop3dAnimation();
+                }*/
+
+            }
+        });
+        stoppingAnimationTimer.setRepeats(false);
+        stoppingAnimationTimer.start();
     }
 
     private class CommitsBar
@@ -172,6 +227,7 @@ public class TestTimeMachineWindow
         {
             this.commitsBar = commitBar;
             this.direction = direction;
+            this.commitIndex = commitIndex;
 
             setupUI(fileRevision);
 
@@ -459,6 +515,22 @@ public class TestTimeMachineWindow
             }
         }
 
+        public void requestStop3dAnimation()
+        {
+            N_PASSED_LAYERS_PER_SEC = 4;
+            Timer fullStopTimer = new Timer(1000, new ActionListener()
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    stop3dAnimationRequested=true;
+                }
+            });
+            fullStopTimer.setRepeats(false);
+            fullStopTimer.start();
+
+        }
+
         private void placeVirtualWindowsInStandardPosition()
         {
             topLayerOffset = 0;
@@ -549,6 +621,17 @@ public class TestTimeMachineWindow
             }
 
             repaint();
+        }
+
+        public void show3dAnimation()
+        {
+            ///////////////////////////////
+            double rand = Math.random();
+            if(rand>0.5) demoFactor = demoFactor*-1;
+            N_PASSED_LAYERS_PER_SEC = 8;
+            ///////////////////////////////
+            playing3DAnimationTimer.start();
+            mainEditorWindow.setVisible(false);
         }
 
         private boolean stopAnimationIfRequstedAndReturnTrue()
