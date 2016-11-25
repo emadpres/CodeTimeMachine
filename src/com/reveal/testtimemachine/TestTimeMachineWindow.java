@@ -8,13 +8,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
 ///////// ++ UI ++ /////////
 ///////// ++ UI -- /////////
@@ -28,11 +27,12 @@ public class TestTimeMachineWindow
 
     ///////// ++ CommitBar and CommitItem ++ /////////
     private enum CommitItemDirection {NONE, LTR, RTL};
-    public enum SubjectOrTest {NONE, SUBJECT, TEST};
+    private enum SubjectOrTest {NONE, SUBJECT, TEST};
+    private enum CommitItemInfoType {NONE, DATE, TIME}
     ///////// -- CommitBar and CommitItem -- /////////
 
     ///////// ++ Constant ++ /////////
-    final boolean DEBUG_MODE_UI = true;
+    final boolean DEBUG_MODE_UI = false;
     ///////// -- Constant -- /////////
 
     ///////// ++ UI ++ /////////
@@ -112,16 +112,31 @@ public class TestTimeMachineWindow
         {
             commitItems = new CommitItem[fileRevisionsList.size()];
 
+            Calendar lastCommitCal = Calendar.getInstance();
+            Calendar currentCommitCal = Calendar.getInstance();
+
+            lastCommitCal.setTime(new Date(Long.MIN_VALUE));
+
             for(int i=0; i< fileRevisionsList.size(); i++)
             {
-                commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this);
+                currentCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
+                boolean sameDay = lastCommitCal.get(Calendar.YEAR) == currentCommitCal.get(Calendar.YEAR) &&
+                        lastCommitCal.get(Calendar.DAY_OF_YEAR) == currentCommitCal.get(Calendar.DAY_OF_YEAR);
+                /////
+                if(sameDay)
+                    commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.TIME);
+                else
+                    commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.DATE);
                 myComponent.add(commitItems[i].getComponent());
                 myComponent.add(Box.createRigidArea(new Dimension(1,10)));
+                ///
+                lastCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
             }
         }
 
         private void createEmptyJComponent()
         {
+            // Size of this component according to children's components = CommitItem
             myComponent = new JPanel();
             BoxLayout boxLayout = new BoxLayout(myComponent, BoxLayout.Y_AXIS);
             myComponent.setLayout(boxLayout);
@@ -143,235 +158,259 @@ public class TestTimeMachineWindow
         {
             return myComponent;
         }
-    }
 
-    // TODO: Move class as a inner calss of CommitsBar
-    private class CommitItem
-    {
-        ///////// ++ Constant ++ /////////
-        private final Dimension COMPONENT_SIZE = new Dimension( 120,20 );
-        private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );
-        private final Dimension MARKER_HOVERED_SIZE = new Dimension( 15,8 );
-        //
-        private final Color NORMAL_COLOR = Color.LIGHT_GRAY;
-        private final Color HOVERED_COLOR = new Color(255,0,0,150);
-        ///////// ++ Constant -- /////////
-
-        ///////// ++ UI ++ /////////
-        private JPanel myComponent;
-        private JLabel marker, commitInfo;
-        ///////// ++ UI -- /////////
-
-
-        private int commitIndex=-1;
-        private CommitItemDirection direction;
-        private boolean isActive=false;
-        private CommitsBar commitsBar=null;
-
-
-
-        public CommitItem(CommitItemDirection direction, int commitIndex,  VcsFileRevision fileRevision, CommitsBar commitBar)
+        private class CommitItem
         {
-            this.commitsBar = commitBar;
-            this.direction = direction;
-            this.commitIndex = commitIndex;
+            ///////// ++ Constant ++ /////////
+            private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
+            private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );
+            private final Dimension MARKER_HOVERED_SIZE = new Dimension( 15,8 );
+            //
+            private final Color NORMAL_COLOR = Color.LIGHT_GRAY;
+            private final Color HOVERED_COLOR = new Color(255,0,0,150);
+            ///////// ++ Constant -- /////////
 
-            setupUI(fileRevision);
+            ///////// ++ UI ++ /////////
+            private JPanel myComponent;
+            private JLabel marker, commitInfo;
+            ///////// ++ UI -- /////////
 
-            setupMouseBeahaviour();
-            setupComponentResizingBehaviour();
-        }
 
-        private void setupUI(VcsFileRevision fileRevision)
-        {
-            createEmptyJComponent();
-            if(direction == CommitItemDirection.LTR)
-                myComponent.setAlignmentX(Component.LEFT_ALIGNMENT); // make it left_align within parent layout (Hbox)
-            else
-                myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            private int commitIndex=-1;
+            private CommitItemDirection direction;
+            private boolean isActive=false;
+            private CommitsBar commitsBar=null;
 
-            myComponent.setToolTipText(fileRevision.getCommitMessage());
 
-            if(DEBUG_MODE_UI)
-                myComponent.setBackground(Color.GREEN);
 
-            setupUI_marker();
-            setupUI_commitInfo(fileRevision);
-
-            updateToNormalUI();
-        }
-
-        private void setupComponentResizingBehaviour()
-        {
-            myComponent.addComponentListener(new ComponentListener()
+            public CommitItem(CommitItemDirection direction, int commitIndex,  VcsFileRevision fileRevision, CommitsBar commitBar, CommitItemInfoType infoType)
             {
-                @Override
-                public void componentResized(ComponentEvent e)
+                this.commitsBar = commitBar;
+                this.direction = direction;
+                this.commitIndex = commitIndex;
+
+                setupUI(fileRevision, infoType);
+
+                setupMouseBeahaviour();
+                setupComponentResizingBehaviour();
+            }
+
+            private void setupUI(VcsFileRevision fileRevision, CommitItemInfoType infoType)
+            {
+                createEmptyJComponent();
+                if(direction == CommitItemDirection.LTR)
+                    myComponent.setAlignmentX(Component.LEFT_ALIGNMENT); // make it left_align within parent layout (Hbox)
+                else
+                    myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+                myComponent.setToolTipText(fileRevision.getCommitMessage());
+
+                if(DEBUG_MODE_UI)
+                    myComponent.setBackground(Color.GREEN);
+
+                setupUI_marker();
+                setupUI_commitInfo(fileRevision, infoType);
+
+                updateToNormalUI();
+            }
+
+            private void setupComponentResizingBehaviour()
+            {
+                myComponent.addComponentListener(new ComponentListener()
                 {
+                    @Override
+                    public void componentResized(ComponentEvent e)
+                    {
                     /*
                     Since myComponent may change (since it belongs to a layout AND we didn't limit the maximum size),
                     we need to reaarange objects when size chnages.
                     if myComponent had layout (for its children) we wouldn't manage its children after each size change.
                      */
-                    int sd=0;
-                    sd++;
-                    updateToNormalUI();
-                }
-
-                @Override
-                public void componentMoved(ComponentEvent e)
-                {
-                    int sd=0;
-                    sd++;
-                }
-
-                @Override
-                public void componentShown(ComponentEvent e)
-                {
-                    int sd=0;
-                    sd++;
-                }
-
-                @Override
-                public void componentHidden(ComponentEvent e)
-                {
-                    int sd=0;
-                    sd++;
-                }
-            });
-        }
-
-        private void setupUI_marker()
-        {
-            marker = new JLabel("");
-            marker.setOpaque(true);
-            myComponent.add(marker);
-        }
-
-        private void setupUI_commitInfo(VcsFileRevision fileRevision)
-        {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(fileRevision.getRevisionDate());
-            String m = getMonthName(fileRevision.getRevisionDate().getMonth());
-            commitInfo = new JLabel(m+" "+fileRevision.getRevisionDate().getDay()+", "+ cal.get(Calendar.YEAR));
-            commitInfo.setSize(30,10); //updated in ComponentSizeChanged
-            if(DEBUG_MODE_UI)
-                commitInfo.setBackground(Color.CYAN);
-            commitInfo.setOpaque(true);
-            Font font = commitInfo.getFont();
-            Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
-            commitInfo.setFont(boldFont);
-            commitInfo.setHorizontalAlignment(SwingConstants.CENTER);
-            commitInfo.setSize(myComponent.getSize().width-30,10);
-            myComponent.add(commitInfo);
-        }
-
-        private void setupMouseBeahaviour()
-        {
-            myComponent.addMouseListener(new MouseListener()
-            {
-                @Override
-                public void mouseClicked(MouseEvent e) {}
-
-                @Override
-                public void mousePressed(MouseEvent e) {}
-
-                @Override
-                public void mouseReleased(MouseEvent e)
-                {
-                    commitsBar.activateCommit(commitIndex);
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e)
-                {
-                    if(!isActive)
-                        updateToActiveUI();
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e)
-                {
-                    if(!isActive)
+                        int sd=0;
+                        sd++;
                         updateToNormalUI();
+                    }
+
+                    @Override
+                    public void componentMoved(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+
+                    @Override
+                    public void componentShown(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+
+                    @Override
+                    public void componentHidden(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+                });
+            }
+
+            private void setupUI_marker()
+            {
+                marker = new JLabel("");
+                marker.setOpaque(true);
+                myComponent.add(marker);
+            }
+
+            private void setupUI_commitInfo(VcsFileRevision fileRevision,  CommitItemInfoType infoType)
+            {
+                String commitInfoStr = "";
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(fileRevision.getRevisionDate());
+
+                if(infoType == CommitItemInfoType.DATE)
+                {
+                    // Month
+                    int mInt = cal.get(Calendar.MONTH);
+                    String mStr = getMonthName(mInt);
+                    commitInfoStr = mStr;
+                    // Day
+                    commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
+                    // Year
+                    commitInfoStr += ", "+ cal.get(Calendar.YEAR);
                 }
-            });
-        }
+                else if(infoType == CommitItemInfoType.TIME)
+                {
+                    // Time
+                    commitInfoStr = cal.get(Calendar.HOUR_OF_DAY)+":"+cal.get(Calendar.MINUTE);
+                }
 
-        private void createEmptyJComponent()
-        {
-            myComponent = new JPanel(null);
-            myComponent.setSize(COMPONENT_SIZE);
-            myComponent.setPreferredSize(COMPONENT_SIZE);
-            myComponent.setMinimumSize(COMPONENT_SIZE);
-            myComponent.setMaximumSize(COMPONENT_SIZE);
-        }
 
-        private String getMonthName(int month){
-            //String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-            String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-            return monthNames[month];
-        }
 
-        private void updateToNormalUI()
-        {
-            marker.setSize(MARKERT_NORMAL_SIZE);
-            marker.setBackground(NORMAL_COLOR);
-            updateMarkerLocation();
-
-            commitInfo.setForeground(NORMAL_COLOR);
-            updateCommitInfoLocation();
-        }
-
-        private void updateToActiveUI()
-        {
-            marker.setSize(MARKER_HOVERED_SIZE);
-            marker.setBackground(HOVERED_COLOR);
-            updateMarkerLocation();
-
-            updateCommitInfoLocation();
-            commitInfo.setForeground(HOVERED_COLOR);
-        }
-
-        private void updateMarkerLocation()
-        {
-            if(direction== CommitItemDirection.LTR)
-                marker.setLocation( 0/*Align Left*/,
-                                    myComponent.getSize().height/2 - marker.getSize().height/2);
-            else
-            {
-                marker.setLocation( myComponent.getSize().width - marker.getSize().width/*Align Right*/,
-                                    myComponent.getSize().height / 2 - marker.getSize().height / 2);
+                commitInfo = new JLabel(commitInfoStr);
+                commitInfo.setSize(30,10); //updated in ComponentSizeChanged
+                if(DEBUG_MODE_UI)
+                    commitInfo.setBackground(Color.CYAN);
+                commitInfo.setOpaque(true);
+                Font font = commitInfo.getFont();
+                Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+                commitInfo.setFont(boldFont);
+                if(direction == CommitItemDirection.LTR)
+                    commitInfo.setHorizontalAlignment(SwingConstants.LEFT);
+                else
+                    commitInfo.setHorizontalAlignment(SwingConstants.RIGHT);
+                commitInfo.setSize(myComponent.getSize().width-30,10);
+                myComponent.add(commitInfo);
             }
-        }
 
-        private void updateCommitInfoLocation()
-        {
-            final int DELTA_DIS_FROM_MARKER = 1;
-            if(direction== CommitItemDirection.LTR)
-                commitInfo.setLocation( marker.getLocation().x+marker.getSize().width+DELTA_DIS_FROM_MARKER,
-                                        marker.getLocation().y+marker.getSize().height/2-commitInfo.getSize().height/2);
-            else
+            private void setupMouseBeahaviour()
             {
-                commitInfo.setLocation( marker.getLocation().x - DELTA_DIS_FROM_MARKER - commitInfo.getSize().width,
-                                        marker.getLocation().y + marker.getSize().height / 2 - commitInfo.getSize().height / 2);
+                myComponent.addMouseListener(new MouseListener()
+                {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {}
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {}
+
+                    @Override
+                    public void mouseReleased(MouseEvent e)
+                    {
+                        commitsBar.activateCommit(commitIndex);
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e)
+                    {
+                        if(!isActive)
+                            updateToActiveUI();
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e)
+                    {
+                        if(!isActive)
+                            updateToNormalUI();
+                    }
+                });
             }
-        }
 
-        private void setActivated(boolean newStatus)
-        {
-            isActive = newStatus;
-            if(isActive)
-                updateToActiveUI();
-            else
-                updateToNormalUI();
-        }
+            private void createEmptyJComponent()
+            {
+                myComponent = new JPanel(null);
+                myComponent.setSize(COMPONENT_SIZE);
+                myComponent.setPreferredSize(COMPONENT_SIZE);
+                myComponent.setMinimumSize(COMPONENT_SIZE);
+                myComponent.setMaximumSize(COMPONENT_SIZE);
+            }
 
-        public JPanel getComponent()
-        {
-            return myComponent;
+            private String getMonthName(int month){
+                //String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+                String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                return monthNames[month];
+            }
+
+            private void updateToNormalUI()
+            {
+                marker.setSize(MARKERT_NORMAL_SIZE);
+                marker.setBackground(NORMAL_COLOR);
+                updateMarkerLocation();
+
+                commitInfo.setForeground(NORMAL_COLOR);
+                updateCommitInfoLocation();
+            }
+
+            private void updateToActiveUI()
+            {
+                marker.setSize(MARKER_HOVERED_SIZE);
+                marker.setBackground(HOVERED_COLOR);
+                updateMarkerLocation();
+
+                updateCommitInfoLocation();
+                commitInfo.setForeground(HOVERED_COLOR);
+            }
+
+            private void updateMarkerLocation()
+            {
+                if(direction== CommitItemDirection.LTR)
+                    marker.setLocation( 0/*Align Left*/,
+                            myComponent.getSize().height/2 - marker.getSize().height/2);
+                else
+                {
+                    marker.setLocation( myComponent.getSize().width - marker.getSize().width/*Align Right*/,
+                            myComponent.getSize().height / 2 - marker.getSize().height / 2);
+                }
+            }
+
+            private void updateCommitInfoLocation()
+            {
+                final int DELTA_DIS_FROM_MARKER = 1;
+                if(direction== CommitItemDirection.LTR)
+                    commitInfo.setLocation( marker.getLocation().x+marker.getSize().width+DELTA_DIS_FROM_MARKER,
+                            marker.getLocation().y+marker.getSize().height/2-commitInfo.getSize().height/2);
+                else
+                {
+                    commitInfo.setLocation( marker.getLocation().x - DELTA_DIS_FROM_MARKER - commitInfo.getSize().width,
+                            marker.getLocation().y + marker.getSize().height / 2 - commitInfo.getSize().height / 2);
+                }
+            }
+
+            private void setActivated(boolean newStatus)
+            {
+                isActive = newStatus;
+                if(isActive)
+                    updateToActiveUI();
+                else
+                    updateToNormalUI();
+            }
+
+            public JPanel getComponent()
+            {
+                return myComponent;
+            }
         }
     }
+
 
     protected class Commits3DView extends JComponent implements ComponentListener
     {
