@@ -80,9 +80,9 @@ public class TestTimeMachineWindow
         return myJComponent;
     }
 
-    private void navigateToCommit(SubjectOrTest s, int commitIndex)
+    private boolean navigateToCommit(SubjectOrTest s, int commitIndex)
     {
-        myLeftEditor.showCommitByIndexNumber(commitIndex, true);
+        return myLeftEditor.showCommitByIndexNumber(commitIndex, true);
     }
 
     private class CommitsBar
@@ -145,13 +145,16 @@ public class TestTimeMachineWindow
         }
 
 
-        private void activateCommit(int commitIndex)
+        private void activateCommit(int newCommitIndex)
         {
+            boolean possible = TTMWindow.navigateToCommit(s, newCommitIndex);
+            if(!possible) return;
+
             if(activeCommitIndex!=-1)
                 commitItems[activeCommitIndex].setActivated(false);
-            activeCommitIndex = commitIndex;
+            activeCommitIndex = newCommitIndex;
             commitItems[activeCommitIndex].setActivated(true);
-            TTMWindow.navigateToCommit(s, commitIndex);
+
         }
 
         public JPanel getComponent()
@@ -610,13 +613,14 @@ public class TestTimeMachineWindow
 
         }
 
-        public void showCommitByIndexNumber(int newCommitIndex, boolean withAnimation)
+        public boolean showCommitByIndexNumber(int newCommitIndex, boolean withAnimation) // TODO: without animation
         {
-            if(topLayerIndex != targetLayerIndex)
-                return;
+            if( targetLayerIndex==newCommitIndex || topLayerIndex != targetLayerIndex)
+                return false;
 
             playAnimation(newCommitIndex);
             mainEditorWindow.setVisible(false);
+            return true;
         }
 
         private void playAnimation(int newCommitIndex)
