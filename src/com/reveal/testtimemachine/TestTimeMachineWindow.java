@@ -426,7 +426,7 @@ public class TestTimeMachineWindow
         ///////// -- UI -- /////////
 
         ///////// ++ UI: 3D Stuff ++ /////////
-        final boolean COLORFUL = true;
+        final boolean COLORFUL = false;
         final int TICK_INTERVAL_MS = 50;
         final float LAYER_DISTANCE = 0.2f;
 
@@ -654,6 +654,12 @@ public class TestTimeMachineWindow
             String content = getStringFromCommits(topLayerIndex);
             myLeftEditor.mainEditorWindow.setText(content);
             mainEditorWindow.setVisible(true);
+            int x,y,w,h;
+            w = virtualEditorWindows[topLayerIndex].drawingRect.width;
+            h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
+            x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2;
+            y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
+            mainEditorWindow.setBounds(x,y,w,h);
         }
 
         private void updateMainEditorWidnowPositionAndScale()
