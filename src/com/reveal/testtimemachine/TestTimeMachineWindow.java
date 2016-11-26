@@ -1,11 +1,16 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -421,7 +426,7 @@ public class TestTimeMachineWindow
         ///////// -- Constant -- /////////
 
         ///////// ++ UI ++ /////////
-        EditorTextField mainEditorWindow;
+        CustomEditorTextField mainEditorWindow;
         Point centerOfComponent;
         ///////// -- UI -- /////////
 
@@ -461,7 +466,7 @@ public class TestTimeMachineWindow
             this.setOpaque(true);
 
 
-            mainEditorWindow = new EditorTextField("First commit did not load correctly! ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
+            mainEditorWindow = new CustomEditorTextField("First commit did not load correctly! ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
             mainEditorWindow.setEnabled(true);
             mainEditorWindow.setRequestFocusEnabled(true);
             mainEditorWindow.setOneLineMode(false);
@@ -798,6 +803,30 @@ public class TestTimeMachineWindow
             }
 
         } // End of VirtualEditorWindow class
+
+        class CustomEditorTextField extends EditorTextField
+        {
+            // >>>>>>>> Scroll for EditorTextField
+            // https://intellij-support.jetbrains.com/hc/en-us/community/posts/206759275-EditorTextField-and-surrounding-JBScrollPane
+
+            public CustomEditorTextField(Document document, Project project, FileType fileType, boolean isViewer, boolean oneLineMode)
+            {
+                super(document,project,fileType,isViewer,oneLineMode);
+            }
+
+            public CustomEditorTextField(@NotNull String text, Project project, FileType fileType) {
+                this(EditorFactory.getInstance().createDocument(text), project, fileType, false, true);
+            }
+
+            @Override
+            protected EditorEx createEditor()
+            {
+                EditorEx editor = super.createEditor();
+                editor.setVerticalScrollbarVisible(true);
+                return editor;
+            }
+
+        }
 
     } // End of Commits3DView class
 
