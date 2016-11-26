@@ -431,6 +431,7 @@ public class TestTimeMachineWindow
         final float LAYER_DISTANCE = 0.2f;
 
         //////
+        boolean onChangingCommitProcess = false;
         final int TOP_BAR_HEIGHT = 25;
         int topLayerIndex, targetLayerIndex /*if equals to topLayerIndex it means no animation is running*/;
         float topLayerOffset;
@@ -559,11 +560,14 @@ public class TestTimeMachineWindow
 
         private void updateVirtualWindowsInfo(float dt_sec)
         {
+            final int LAST_STEP_SPEED = 4;
             int sign = (int) Math.signum(topLayerIndex - targetLayerIndex);
             int diff = Math.abs(targetLayerIndex - topLayerIndex);
-            if(diff < 1)
-                numberOfPassingLayersPerSec_forAnimation = 1*sign;
-            if(diff<5)
+            if(targetLayerIndex == topLayerIndex)
+                numberOfPassingLayersPerSec_forAnimation = -LAST_STEP_SPEED;
+            else if(diff < 2)
+                numberOfPassingLayersPerSec_forAnimation = LAST_STEP_SPEED*sign;
+            else if(diff<6)
                 numberOfPassingLayersPerSec_forAnimation = 6*sign;
             else
                 numberOfPassingLayersPerSec_forAnimation = 9*sign;
@@ -606,18 +610,23 @@ public class TestTimeMachineWindow
                 virtualEditorWindows[layerIndex_ith_after_topLayer].updateDepth(i*LAYER_DISTANCE + topLayerOffset);
             }
 
-            repaint();
-
-            if(topLayerIndex == targetLayerIndex)
+            float d = topLayerOffset - 0;
+            float abs = Math.abs(d);
+            if(topLayerIndex == targetLayerIndex && abs<0.06)
+            {
                 stopAnimation();
+                virtualEditorWindows[topLayerIndex].highlightTopLayer();
+            }
 
+            repaint();
         }
 
         public boolean showCommitByIndexNumber(int newCommitIndex, boolean withAnimation) // TODO: without animation
         {
-            if( targetLayerIndex==newCommitIndex || topLayerIndex != targetLayerIndex)
+            if( targetLayerIndex==newCommitIndex || onChangingCommitProcess == true)
                 return false;
 
+            onChangingCommitProcess = true;
             playAnimation(newCommitIndex);
             mainEditorWindow.setVisible(false);
             return true;
@@ -660,6 +669,7 @@ public class TestTimeMachineWindow
             x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2;
             y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
             mainEditorWindow.setBounds(x,y,w,h);
+            onChangingCommitProcess = false;
         }
 
         private void updateMainEditorWidnowPositionAndScale()
@@ -718,27 +728,26 @@ public class TestTimeMachineWindow
                 updateDepth(depth);
             }
 
+            public void applyAlpha(int newAlpha)
+            {
+                if(newAlpha>255)
+                    newAlpha=255;
+                myBorderColor = new Color(myBorderColor.getRed(), myBorderColor.getGreen(), myBorderColor.getBlue(), newAlpha);
+                myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), newAlpha);
+            }
+
             public void updateDepth(float depth)
             {
                 this.depth = depth;
 
                 float calculatingDepth = depth + BASE_DEPTH;
                 Rectangle rect = new Rectangle(0, 0, 0, 0);
+
+                myBorderColor = DEFAULT_BORDER_COLOR; //change to RED by highlightTopLayer()
                 int newAlpha = 255;
+                newAlpha = (int)(BASE_DEPTH*255.0/(calculatingDepth));
+                applyAlpha(newAlpha);
 
-                if(index == topLayerIndex)
-                {
-                    newAlpha = 255;
-                    myBorderColor = Color.RED;
-                }
-                else
-                {
-                    newAlpha = (int)(BASE_DEPTH*255.0/(calculatingDepth));
-                    if(newAlpha>255) newAlpha=255;
-                    myBorderColor = new Color(DEFAULT_BORDER_COLOR.getRed(), DEFAULT_BORDER_COLOR.getGreen(), DEFAULT_BORDER_COLOR.getBlue(), newAlpha);
-                }
-
-                myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), newAlpha);
 
                 /////// Size    
                 rect.width = (int) (wDefault / calculatingDepth);
@@ -750,6 +759,14 @@ public class TestTimeMachineWindow
                 drawingRect = rect;
             }
 
+            public void highlightTopLayer()
+            {
+                if(index == topLayerIndex && onChangingCommitProcess==false)
+                {
+                    myBorderColor = Color.RED;
+                    applyAlpha(255);
+                }
+            }
             public void draw(Graphics g)
             {
                 if(this.isVisible!=true) return;
