@@ -1,5 +1,12 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.execution.*;
+import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.impl.RunManagerImpl;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -29,7 +36,7 @@ public class TestTimeMachineWindow
     private JPanel myJComponent;
     private Project project;
     private VirtualFile[] virtualFiles = new VirtualFile[2];
-    private ArrayList<List<VcsFileRevision>> fileRevisionLists = new ArrayList<List<VcsFileRevision>>();
+    private ArrayList<List<VcsFileRevision>> fileRevisionsLists = new ArrayList<List<VcsFileRevision>>();
 
     ///////// ++ CommitBar and CommitItem ++ /////////
     private enum CommitItemDirection {NONE, LTR, RTL};
@@ -44,22 +51,23 @@ public class TestTimeMachineWindow
     ///////// ++ UI ++ /////////
     Commits3DView leftEditor = null;
     Commits3DView rightEditor = null;
+    JTextArea textArea = null;
     ///////// -- UI -- /////////
 
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
     {
         this.project = project;
         this.virtualFiles = virtualFiles;
-        this.fileRevisionLists = fileRevisionsLists;
+        this.fileRevisionsLists = fileRevisionsLists;
         ////////////////////////////////////////////////////
         setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
 
 
-        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
-        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  fileRevisionLists.get(1), this);
+        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionsLists.get(0), this);
+        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  fileRevisionsLists.get(1), this);
 
-        JTextArea  textArea = new JTextArea("Ready.",2,3);
+        textArea = new JTextArea("Ready.",2,3);
         textArea.setEditable(false);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(false);
@@ -75,9 +83,11 @@ public class TestTimeMachineWindow
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                //RunIt();
+                RunIt();
             }
         });
+
+
 
         leftEditor = new Commits3DView(project, fileRevisionsLists.get(0));
         rightEditor = new Commits3DView(project, fileRevisionsLists.get(1));
@@ -133,6 +143,38 @@ public class TestTimeMachineWindow
         groupLayout.setHonorsVisibility(false);
 
         return groupLayout;
+    }
+
+    private void RunIt()
+    {
+        RunManager runManager = RunManager.getInstance(project);
+        RunManagerImpl runManagerImp = (RunManagerImpl) RunManager.getInstance(project);
+
+        RunnerAndConfigurationSettings selectedConfiguration1 = runManager.getSelectedConfiguration();
+        RunConfiguration runConfiguration = selectedConfiguration1.getConfiguration();
+        Executor executor = DefaultRunExecutor.getRunExecutorInstance();
+
+
+        ProgramRunner runner = RunnerRegistry.getInstance().getRunner(executor.getId(),runConfiguration);
+        ExecutionEnvironment environment = new ExecutionEnvironment(executor, runner, selectedConfiguration1, project);
+
+        try {
+            runner.execute(environment, new ProgramRunner.Callback()
+            {
+                @Override
+                public void processStarted(RunContentDescriptor descriptor)
+                {
+                    int runningStarted = 23;
+                    textArea.setText("(Execution Started) \n ID:"+descriptor.getExecutionId()+" \n Display Name:"+descriptor.getDisplayName()+
+                            " "+descriptor.toString());
+                }
+            });
+
+        } catch (ExecutionException e1) {
+            textArea.setText("(Execution Exception) "+e1.getMessage()+" \n "+ e1.toString());
+            JavaExecutionUtil.showExecutionErrorMessage(e1, "We faced some compilation Error", project);
+        }
+
     }
 
     public JPanel getComponent()
