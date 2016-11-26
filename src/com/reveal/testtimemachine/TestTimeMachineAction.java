@@ -19,6 +19,7 @@ import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,12 +50,22 @@ public class TestTimeMachineAction extends AnAction
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles);
 
         ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[2];
+        CommitWrapper aCommitWrapper = null;
         for(int i=0; i< NUM_OF_FILES____TEMP; i++)
         {
             int realCommitsSize = _fileRevisionsLists.get(i).size();
             subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
             ///// First Fake
-            CommitWrapper aCommitWrapper = new CommitWrapper("Fake Content", "Message",new Date(),"k23jk23l12321klh3jkl21");
+            byte[] bytes = new byte[0];
+            try
+            {
+                bytes = chosenVirtualFiles[i].contentsToByteArray();
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
+            String s = new String(bytes);
+            aCommitWrapper = new CommitWrapper(s, "",new Date(),"Last change");
             subjectAndTestClassCommitsList[i].add(aCommitWrapper);
             ///// Other Real
             for(int j=0; j< realCommitsSize; j++)
@@ -64,7 +75,7 @@ public class TestTimeMachineAction extends AnAction
             }
         }
 
-        mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, _fileRevisionsLists);
+        mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, subjectAndTestClassCommitsList);
         ToolWindowManager.getInstance(project).registerToolWindow("TTM", mainWindow.getComponent(), ToolWindowAnchor.RIGHT);
     }
 

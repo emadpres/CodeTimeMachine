@@ -36,7 +36,8 @@ public class TestTimeMachineWindow
     private JPanel myJComponent;
     private Project project;
     private VirtualFile[] virtualFiles = new VirtualFile[2];
-    private ArrayList<List<VcsFileRevision>> fileRevisionsLists = new ArrayList<List<VcsFileRevision>>();
+    //private ArrayList<List<VcsFileRevision>> fileRevisionsLists = new ArrayList<List<VcsFileRevision>>();
+    private ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = null;
 
     ///////// ++ CommitBar and CommitItem ++ /////////
     private enum CommitItemDirection {NONE, LTR, RTL};
@@ -54,18 +55,18 @@ public class TestTimeMachineWindow
     JTextArea textArea = null;
     ///////// -- UI -- /////////
 
-    TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
+    TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList)
     {
         this.project = project;
         this.virtualFiles = virtualFiles;
-        this.fileRevisionsLists = fileRevisionsLists;
+        this.subjectAndTestClassCommitsList = subjectAndTestClassCommitsList;
         ////////////////////////////////////////////////////
         setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
 
 
-        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionsLists.get(0), this);
-        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  fileRevisionsLists.get(1), this);
+        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  subjectAndTestClassCommitsList[0], this);
+        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  subjectAndTestClassCommitsList[1], this);
 
         textArea = new JTextArea("Ready.",2,3);
         textArea.setEditable(false);
@@ -89,8 +90,8 @@ public class TestTimeMachineWindow
 
 
 
-        leftEditor = new Commits3DView(project, fileRevisionsLists.get(0));
-        rightEditor = new Commits3DView(project, fileRevisionsLists.get(1));
+        leftEditor = new Commits3DView(project, subjectAndTestClassCommitsList[0]);
+        rightEditor = new Commits3DView(project, subjectAndTestClassCommitsList[1]);
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
                                             .addComponent(leftBar.getComponent())
@@ -201,41 +202,41 @@ public class TestTimeMachineWindow
         private SubjectOrTest s = SubjectOrTest.NONE;
         private int activeCommitIndex = -1;
 
-        public CommitsBar(CommitItemDirection direction, SubjectOrTest s, List<VcsFileRevision> fileRevisionsList,
+        public CommitsBar(CommitItemDirection direction, SubjectOrTest s, ArrayList<CommitWrapper> commitList,
                           TestTimeMachineWindow TTMWindow)
         {
             this.TTMWindow = TTMWindow;
             this.s= s;
 
             createEmptyJComponent();
-            creatingCommitsItem(direction, fileRevisionsList);
+            creatingCommitsItem(direction, commitList);
             myComponent.repaint();
 
         }
 
-        private void creatingCommitsItem(CommitItemDirection direction, List<VcsFileRevision> fileRevisionsList)
+        private void creatingCommitsItem(CommitItemDirection direction, ArrayList<CommitWrapper> commitList)
         {
-            commitItems = new CommitItem[fileRevisionsList.size()];
+            commitItems = new CommitItem[commitList.size()];
 
             Calendar lastCommitCal = Calendar.getInstance();
             Calendar currentCommitCal = Calendar.getInstance();
 
             lastCommitCal.setTime(new Date(Long.MIN_VALUE));
 
-            for(int i=0; i<fileRevisionsList.size() ; i++)
+            for(int i=0; i<commitList.size() ; i++)
             {
-                currentCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
+                currentCommitCal.setTime(commitList.get(i).getDate());
                 boolean sameDay = lastCommitCal.get(Calendar.YEAR) == currentCommitCal.get(Calendar.YEAR) &&
                         lastCommitCal.get(Calendar.DAY_OF_YEAR) == currentCommitCal.get(Calendar.DAY_OF_YEAR);
                 /////
                 if(sameDay)
-                    commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.TIME);
+                    commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
                 else
-                    commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.DATE);
+                    commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.DATE);
                 ///
-                lastCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
+                lastCommitCal.setTime(commitList.get(i).getDate());
             }
-            for(int i=fileRevisionsList.size()-1; i>=0 ; i--)
+            for(int i=commitList.size()-1; i>=0 ; i--)
             {
                 myComponent.add(commitItems[i].getComponent());
                 myComponent.add(Box.createRigidArea(new Dimension(1, 10)));
@@ -303,20 +304,20 @@ public class TestTimeMachineWindow
 
 
 
-            public CommitItem(CommitItemDirection direction, int commitIndex,  VcsFileRevision fileRevision, CommitsBar commitBar, CommitItemInfoType infoType)
+            public CommitItem(CommitItemDirection direction, int commitIndex, CommitWrapper commitWrapper, CommitsBar commitBar, CommitItemInfoType infoType)
             {
                 this.commitsBar = commitBar;
                 this.direction = direction;
                 this.commitIndex = commitIndex;
                 this.infoType = infoType;
 
-                setupUI(fileRevision, infoType);
+                setupUI(commitWrapper, infoType);
 
                 setupMouseBeahaviour();
                 setupComponentResizingBehaviour();
             }
 
-            private void setupUI(VcsFileRevision fileRevision, CommitItemInfoType infoType)
+            private void setupUI(CommitWrapper commitWrapper, CommitItemInfoType infoType)
             {
                 createEmptyJComponent();
                 if(direction == CommitItemDirection.LTR)
@@ -324,13 +325,13 @@ public class TestTimeMachineWindow
                 else
                     myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-                myComponent.setToolTipText(fileRevision.getCommitMessage());
+                myComponent.setToolTipText(commitWrapper.getCommitMessage());
 
                 if(DEBUG_MODE_UI)
                     myComponent.setBackground(Color.GREEN);
 
                 setupUI_marker();
-                setupUI_commitInfo(fileRevision, infoType);
+                setupUI_commitInfo(commitWrapper, infoType);
 
                 updateToNormalUI();
             }
@@ -382,23 +383,39 @@ public class TestTimeMachineWindow
                 myComponent.add(marker);
             }
 
-            private void setupUI_commitInfo(VcsFileRevision fileRevision, CommitItemInfoType infoType)
+            private void setupUI_commitInfo(CommitWrapper commitWrapper, CommitItemInfoType infoType)
             {
                 String commitInfoStr = "";
 
                 Calendar cal = Calendar.getInstance();
-                cal.setTime(fileRevision.getRevisionDate());
+                cal.setTime(commitWrapper.getDate());
 
                 if(infoType == CommitItemInfoType.DATE)
                 {
-                    // Month
-                    int mInt = cal.get(Calendar.MONTH);
-                    String mStr = getMonthName(mInt);
-                    commitInfoStr = mStr;
-                    // Day
-                    commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
-                    // Year
-                    commitInfoStr += ", "+ cal.get(Calendar.YEAR);
+                    long tillCommit = commitWrapper.getDate().getTime();
+                    long tillToday = new Date().getTime();
+                    long daysTillCommit = tillCommit  / (24 * 60 * 60 * 1000);
+                    long daysTillToday = tillToday / (24 * 60 * 60 * 1000);
+
+                    if(daysTillToday - daysTillCommit == 0)
+                    {
+                        commitInfoStr = "Now";
+                    }
+                    else if(daysTillToday - daysTillCommit == 1)
+                    {
+                        commitInfoStr = "Yesterday";
+                    }
+                    else
+                    {
+                        // Month
+                        int mInt = cal.get(Calendar.MONTH);
+                        String mStr = getMonthName(mInt);
+                        commitInfoStr = mStr;
+                        // Day
+                        commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
+                        // Year
+                        commitInfoStr += ", "+ cal.get(Calendar.YEAR);
+                    }
                 }
                 else if(infoType == CommitItemInfoType.TIME)
                 {
@@ -575,10 +592,10 @@ public class TestTimeMachineWindow
         ///////// -- UI: 3D Stuff -- /////////
 
         Project project;
-        List<VcsFileRevision> commitList = null;
+        List<CommitWrapper> commitList = null;
 
 
-        public Commits3DView( Project project, List<VcsFileRevision> commitList)
+        public Commits3DView( Project project, List<CommitWrapper> commitList)
         {
             super();
 
@@ -783,20 +800,7 @@ public class TestTimeMachineWindow
 
         private String getStringFromCommits(int commitIndex)
         {
-            String content="";
-            try
-            {
-
-                VcsFileRevision vcsFileRevision = commitList.get(commitIndex);
-                byte[] selectedCommitContent = vcsFileRevision.loadContent();
-                content = new String(selectedCommitContent);
-            } catch (IOException e1)
-            {
-                e1.printStackTrace();
-            } catch (VcsException e1)
-            {
-                e1.printStackTrace();
-            }
+            String content= commitList.get(commitIndex).getFileContent();
             return content;
         }
 
@@ -842,7 +846,7 @@ public class TestTimeMachineWindow
             final float Y_OFFSET_FACTOR = 250;
             ////////
             int index=-1;
-            VcsFileRevision fileRevision = null;
+            CommitWrapper commitWrapper = null;
 
             boolean isVisible=true;
             float depth;
@@ -852,10 +856,10 @@ public class TestTimeMachineWindow
             Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
             ////////
 
-            public VirtualEditorWindow(int index, VcsFileRevision fileRevision)
+            public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
             {
                 this.index = index;
-                this.fileRevision = fileRevision;
+                this.commitWrapper = commitWrapper;
 
 
                 if(COLORFUL || DEBUG_MODE_UI)
@@ -942,7 +946,7 @@ public class TestTimeMachineWindow
                 g.setColor(Color.BLACK);
                 g.setFont(new Font("Courier", Font.BOLD, 10));
                 //String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
-                String text = new String("#"+Integer.toString(index+1)+"| Commit "+fileRevision.getRevisionNumber());
+                String text = new String("#"+Integer.toString(index+1)+"| Commit "+commitWrapper.getHash());
                 final int CHAR_WIDTH = 6;
                 int textLengthInPixel = text.length()*CHAR_WIDTH;
                 g.drawString(text,x+w/2-textLengthInPixel/2, y+15);
