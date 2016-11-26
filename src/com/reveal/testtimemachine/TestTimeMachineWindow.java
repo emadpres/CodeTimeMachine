@@ -235,10 +235,14 @@ public class TestTimeMachineWindow
         {
             ///////// ++ Constant ++ /////////
             private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
+            private final int LONG_FACTOR = 5;
             private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );
             private final Dimension MARKER_HOVERED_SIZE = new Dimension( 15,8 );
+            private final Dimension MARKERT_NORMAL_SIZE_LONG = new Dimension( 10+LONG_FACTOR,5 );
+            private final Dimension MARKER_HOVERED_SIZE_LONG = new Dimension( 15+LONG_FACTOR,8 );
             //
             private final Color NORMAL_COLOR = Color.LIGHT_GRAY;
+            private final Color NORMAL_COLOR_LONG = Color.GRAY; //TODO : LONG ==> BOLD_COMMITS
             private final Color HOVERED_COLOR = new Color(255,0,0,150);
             ///////// ++ Constant -- /////////
 
@@ -250,6 +254,8 @@ public class TestTimeMachineWindow
 
             private int commitIndex=-1;
             private CommitItemDirection direction;
+            CommitItemInfoType infoType;
+
             private boolean isActive=false;
             private CommitsBar commitsBar=null;
 
@@ -260,6 +266,7 @@ public class TestTimeMachineWindow
                 this.commitsBar = commitBar;
                 this.direction = direction;
                 this.commitIndex = commitIndex;
+                this.infoType = infoType;
 
                 setupUI(fileRevision, infoType);
 
@@ -333,7 +340,7 @@ public class TestTimeMachineWindow
                 myComponent.add(marker);
             }
 
-            private void setupUI_commitInfo(VcsFileRevision fileRevision,  CommitItemInfoType infoType)
+            private void setupUI_commitInfo(VcsFileRevision fileRevision, CommitItemInfoType infoType)
             {
                 String commitInfoStr = "";
 
@@ -424,17 +431,31 @@ public class TestTimeMachineWindow
 
             private void updateToNormalUI()
             {
-                marker.setSize(MARKERT_NORMAL_SIZE);
-                marker.setBackground(NORMAL_COLOR);
-                updateMarkerLocation();
+                if(infoType==CommitItemInfoType.DATE)
+                {
+                    marker.setSize(MARKERT_NORMAL_SIZE_LONG);
+                    marker.setBackground(NORMAL_COLOR_LONG);
+                }
+                else
+                {
+                    marker.setSize(MARKERT_NORMAL_SIZE);
+                    marker.setBackground(NORMAL_COLOR);
+                }
 
-                commitInfo.setForeground(NORMAL_COLOR);
+                updateMarkerLocation();
+                if(infoType==CommitItemInfoType.DATE)
+                    commitInfo.setForeground(NORMAL_COLOR_LONG);
+                else
+                    commitInfo.setForeground(NORMAL_COLOR);
                 updateCommitInfoLocation();
             }
 
             private void updateToActiveUI()
             {
-                marker.setSize(MARKER_HOVERED_SIZE);
+                if(infoType==CommitItemInfoType.DATE)
+                    marker.setSize(MARKER_HOVERED_SIZE_LONG);
+                else
+                    marker.setSize(MARKER_HOVERED_SIZE);
                 marker.setBackground(HOVERED_COLOR);
                 updateMarkerLocation();
 
@@ -456,7 +477,7 @@ public class TestTimeMachineWindow
 
             private void updateCommitInfoLocation()
             {
-                final int DELTA_DIS_FROM_MARKER = 1;
+                final int DELTA_DIS_FROM_MARKER = 3;
                 if(direction== CommitItemDirection.LTR)
                     commitInfo.setLocation( marker.getLocation().x+marker.getSize().width+DELTA_DIS_FROM_MARKER,
                             marker.getLocation().y+marker.getSize().height/2-commitInfo.getSize().height/2);
