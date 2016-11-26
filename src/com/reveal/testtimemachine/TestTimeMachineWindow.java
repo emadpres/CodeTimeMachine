@@ -480,7 +480,7 @@ public class TestTimeMachineWindow
 
             for (int i = 0; i< commitList.size() ; i++)
             {
-                virtualEditorWindows[i] = new VirtualEditorWindow(i);
+                virtualEditorWindows[i] = new VirtualEditorWindow(i, commitList.get(i));
             }
 
             setVirtualWindowsDefaultValues();
@@ -693,6 +693,8 @@ public class TestTimeMachineWindow
             final float Y_OFFSET_FACTOR = 250;
             ////////
             int index=-1;
+            VcsFileRevision fileRevision = null;
+
             boolean isVisible=true;
             float depth;
             Color DEFAULT_BORDER_COLOR = Color.GRAY;
@@ -701,9 +703,11 @@ public class TestTimeMachineWindow
             Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
             ////////
 
-            public VirtualEditorWindow(int index)
+            public VirtualEditorWindow(int index, VcsFileRevision fileRevision)
             {
                 this.index = index;
+                this.fileRevision = fileRevision;
+
 
                 if(COLORFUL || DEBUG_MODE_UI)
                 {
@@ -787,8 +791,10 @@ public class TestTimeMachineWindow
                 g.fillRect(x, y, w, TOP_BAR_HEIGHT);
                 /// Name
                 g.setColor(Color.BLACK);
-                String text = new String("Number: "+Integer.toString(index)+" ");
-                g.drawChars(text.toCharArray(), 0, text.length(), x+w/2, y+15);
+                String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
+                final int CHAR_WIDTH = 7;
+                int textLengthInPixel = text.length()*CHAR_WIDTH;
+                g.drawChars(text.toCharArray(), 0, text.length(), x+w/2-textLengthInPixel/2, y+15);
             }
 
         } // End of VirtualEditorWindow class
