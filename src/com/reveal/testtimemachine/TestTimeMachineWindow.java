@@ -944,11 +944,11 @@ public class TestTimeMachineWindow
                 g.fillRect(x, y, w, TOP_BAR_HEIGHT);
                 /// Name
                 g.setColor(Color.BLACK);
-                g.setFont(new Font("Courier", Font.BOLD, 10));
+                g.setFont(new Font("Courier", Font.BOLD, (int)(20/(BASE_DEPTH+depth))));
                 //String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
                 String text = new String("#"+Integer.toString(index+1)+"| Commit "+commitWrapper.getHash());
-                final int CHAR_WIDTH = 6;
-                int textLengthInPixel = text.length()*CHAR_WIDTH;
+                final float CHAR_WIDTH = 10/(BASE_DEPTH+depth);
+                int textLengthInPixel = (int)(text.length()*CHAR_WIDTH);
                 g.drawString(text,x+w/2-textLengthInPixel/2, y+15);
             }
 
