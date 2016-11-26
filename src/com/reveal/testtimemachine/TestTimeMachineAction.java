@@ -28,8 +28,8 @@ import java.util.List;
  */
 public class TestTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
-    final int NUM_OF_FILES____TEMP = 1;
+    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
+    final int NUM_OF_FILES____TEMP = 2;
     //////////////////////////////
     Project project = null;
     TestTimeMachineWindow mainWindow = null;
@@ -87,8 +87,8 @@ public class TestTimeMachineAction extends AnAction
         if(AUTOMATICALLY_CHOOSE_SAMPLE_FILES)
         {
             chosenVirtualFiles = new VirtualFile[2];
-            chosenVirtualFiles[0] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/src/A.java"));
-            chosenVirtualFiles[1] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/SampleProject/testSrc/ATest.java"));
+            chosenVirtualFiles[0] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/Vector/src/com/math/vector/Vector.java"));
+            chosenVirtualFiles[1] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/Vector/testSrc/com/math/vector/VectorTest.java"));
         }
         else
         {

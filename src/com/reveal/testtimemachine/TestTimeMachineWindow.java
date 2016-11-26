@@ -10,6 +10,7 @@ import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import com.intellij.ui.components.JBScrollPane;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -41,7 +42,8 @@ public class TestTimeMachineWindow
     ///////// -- Constant -- /////////
 
     ///////// ++ UI ++ /////////
-    Commits3DView myLeftEditor = null;
+    Commits3DView leftEditor = null;
+    Commits3DView rightEditor = null;
     ///////// -- UI -- /////////
 
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<List<VcsFileRevision>> fileRevisionsLists)
@@ -55,11 +57,64 @@ public class TestTimeMachineWindow
 
 
         CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  fileRevisionLists.get(0), this);
+        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  fileRevisionLists.get(1), this);
 
-        myLeftEditor = new Commits3DView(project, fileRevisionsLists.get(0));
+        JTextArea  textArea = new JTextArea("Ready.",2,3);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(false);
+        //Border border = BorderFactory.createLineBorder(Color.GRAY, 1);
+        JBScrollPane logTextArea_scrolled = new JBScrollPane(textArea);
+        //outputTextArea.setBorder(border);
+        //logTextArea.setPreferredSize(new Dimension(500,100));
+        logTextArea_scrolled.setMaximumSize(new Dimension(500,100));
 
-        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup().addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
-        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING).addComponent(leftBar.getComponent()).addComponent(myLeftEditor));
+        JButton runBtn = new JButton("Run");
+        runBtn.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                //RunIt();
+            }
+        });
+
+        leftEditor = new Commits3DView(project, fileRevisionsLists.get(0));
+        rightEditor = new Commits3DView(project, fileRevisionsLists.get(1));
+
+        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
+                                            .addComponent(leftBar.getComponent())
+                                            .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                                                .addGroup( groupLayout.createSequentialGroup()
+                                                    .addComponent(leftEditor)
+                                                    .addComponent(rightEditor)
+                                                        )
+                                                .addGroup( groupLayout.createSequentialGroup()
+                                                        .addComponent(runBtn)
+                                                        .addComponent(logTextArea_scrolled)
+                                                        )
+                                                    )
+                                            .addComponent(rightBar.getComponent())
+                                    );
+
+        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                        .addComponent(leftBar.getComponent())
+                                        .addGroup(groupLayout.createSequentialGroup()
+                                                .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(leftEditor)
+                                                        .addComponent(rightEditor)
+                                                        )
+                                                .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                        .addComponent(runBtn)
+                                                        .addComponent(logTextArea_scrolled)
+                                                        )
+                                                )
+                                        .addComponent(rightBar.getComponent())
+                                    );
+
+
+        leftEditor.showCommit(0, false);
+        rightEditor.showCommit(0, false);
     }
 
     private void setupToolTipSetting()
@@ -87,7 +142,10 @@ public class TestTimeMachineWindow
 
     private boolean navigateToCommit(SubjectOrTest s, int commitIndex)
     {
-        return myLeftEditor.showCommitByIndexNumber(commitIndex, true);
+        if(s==SubjectOrTest.SUBJECT)
+            return leftEditor.showCommit(commitIndex, true);
+        else
+            return rightEditor.showCommit(commitIndex, true);
     }
 
     private class CommitsBar
@@ -122,7 +180,7 @@ public class TestTimeMachineWindow
 
             lastCommitCal.setTime(new Date(Long.MIN_VALUE));
 
-            for(int i=0; i< fileRevisionsList.size(); i++)
+            for(int i=0; i<fileRevisionsList.size() ; i++)
             {
                 currentCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
                 boolean sameDay = lastCommitCal.get(Calendar.YEAR) == currentCommitCal.get(Calendar.YEAR) &&
@@ -132,11 +190,17 @@ public class TestTimeMachineWindow
                     commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.TIME);
                 else
                     commitItems[i]= new CommitItem(direction, i, fileRevisionsList.get(i), this, CommitItemInfoType.DATE);
-                myComponent.add(commitItems[i].getComponent());
-                myComponent.add(Box.createRigidArea(new Dimension(1,10)));
                 ///
                 lastCommitCal.setTime(fileRevisionsList.get(i).getRevisionDate());
             }
+            for(int i=fileRevisionsList.size()-1; i>=0 ; i--)
+            {
+                myComponent.add(commitItems[i].getComponent());
+                myComponent.add(Box.createRigidArea(new Dimension(1, 10)));
+            }
+            activeCommitIndex = 0;
+            commitItems[0].setActivated(true);
+
         }
 
         private void createEmptyJComponent()
@@ -419,7 +483,6 @@ public class TestTimeMachineWindow
         }
     }
 
-
     protected class Commits3DView extends JComponent implements ComponentListener
     {
         ///////// ++ Constant ++ /////////
@@ -438,7 +501,7 @@ public class TestTimeMachineWindow
         //////
         boolean onChangingCommitProcess = false;
         final int TOP_BAR_HEIGHT = 25;
-        int topLayerIndex, targetLayerIndex /*if equals to topLayerIndex it means no animation is running*/;
+        int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
         float topLayerOffset;
         VirtualEditorWindow[] virtualEditorWindows = null;
         Timer playing3DAnimationTimer;
@@ -521,6 +584,7 @@ public class TestTimeMachineWindow
             // Don't forget to call `setVirtualWindowsDefaultValues()` before
             for (int i = 0; i< commitList.size() ; i++)
                 virtualEditorWindows[i].updateDepth(i* LAYER_DISTANCE);
+            virtualEditorWindows[topLayerIndex].highlightTopLayer();
             repaint();
         }
 
@@ -532,6 +596,7 @@ public class TestTimeMachineWindow
             //////
             updateMainEditorWidnowPositionAndScale();
             setVirtualWindowsDefaultValues();
+            virtualEditorWindows[topLayerIndex].highlightTopLayer();
         }
 
         @Override
@@ -626,19 +691,29 @@ public class TestTimeMachineWindow
             repaint();
         }
 
-        public boolean showCommitByIndexNumber(int newCommitIndex, boolean withAnimation) // TODO: without animation
+        public boolean showCommit(int newCommitIndex, boolean withAnimation) // TODO: without animation
         {
-            if( targetLayerIndex==newCommitIndex || onChangingCommitProcess == true)
-                return false;
+            if(withAnimation==false)
+            {
+                loadMainEditorWindowContent();
+                virtualEditorWindows[topLayerIndex].highlightTopLayer();
+                // TODO: Arrange VirtualEditorWindows
+                return true;
+            }
+            else
+            {
+                if( targetLayerIndex==newCommitIndex || onChangingCommitProcess == true)
+                    return false;
 
-            onChangingCommitProcess = true;
-            playAnimation(newCommitIndex);
-            mainEditorWindow.setVisible(false);
-            return true;
+                playAnimation(newCommitIndex);
+                mainEditorWindow.setVisible(false);
+                return true;
+            }
         }
 
         private void playAnimation(int newCommitIndex)
         {
+            onChangingCommitProcess = true;
             this.targetLayerIndex = newCommitIndex;
             playing3DAnimationTimer.start();
         }
@@ -664,17 +739,23 @@ public class TestTimeMachineWindow
 
         public void stopAnimation()
         {
+            loadMainEditorWindowContent();
+
             playing3DAnimationTimer.stop();
+            onChangingCommitProcess = false;
+        }
+
+        private void loadMainEditorWindowContent()
+        {
             String content = getStringFromCommits(topLayerIndex);
-            myLeftEditor.mainEditorWindow.setText(content);
-            mainEditorWindow.setVisible(true);
+            mainEditorWindow.setText(content);
             int x,y,w,h;
             w = virtualEditorWindows[topLayerIndex].drawingRect.width;
             h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
             x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2;
             y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
             mainEditorWindow.setBounds(x,y,w,h);
-            onChangingCommitProcess = false;
+            mainEditorWindow.setVisible(true);
         }
 
         private void updateMainEditorWidnowPositionAndScale()
@@ -796,10 +877,12 @@ public class TestTimeMachineWindow
                 g.fillRect(x, y, w, TOP_BAR_HEIGHT);
                 /// Name
                 g.setColor(Color.BLACK);
-                String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
-                final int CHAR_WIDTH = 7;
+                g.setFont(new Font("Courier", Font.BOLD, 10));
+                //String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
+                String text = new String("#"+Integer.toString(index+1)+"| Commit "+fileRevision.getRevisionNumber());
+                final int CHAR_WIDTH = 6;
                 int textLengthInPixel = text.length()*CHAR_WIDTH;
-                g.drawChars(text.toCharArray(), 0, text.length(), x+w/2-textLengthInPixel/2, y+15);
+                g.drawString(text,x+w/2-textLengthInPixel/2, y+15);
             }
 
         } // End of VirtualEditorWindow class
