@@ -14,8 +14,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vcs.VcsException;
-import com.intellij.openapi.vcs.history.VcsFileRevision;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.components.JBScrollPane;
@@ -25,7 +23,6 @@ import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -677,8 +674,7 @@ public class TestTimeMachineWindow
             Dimension size = getSize();
             centerOfComponent = new Point(size.width/2, size.height/2);
             //////
-            updateMainEditorWidnowPositionAndScale();
-            setVirtualWindowsDefaultValues();
+            updateTopLayerIdealBoundary();
             virtualEditorWindows[topLayerIndex].highlightTopLayer();
         }
 
@@ -819,16 +815,21 @@ public class TestTimeMachineWindow
         {
             String content = getStringFromCommits(topLayerIndex);
             mainEditorWindow.setText(content);
+            updateMainEditorWindowBoundary();
+            mainEditorWindow.setVisible(true);
+        }
+
+        private void updateMainEditorWindowBoundary()
+        {
             int x,y,w,h;
             w = virtualEditorWindows[topLayerIndex].drawingRect.width;
             h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
             x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2;
             y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
             mainEditorWindow.setBounds(x,y,w,h);
-            mainEditorWindow.setVisible(true);
         }
 
-        private void updateMainEditorWidnowPositionAndScale()
+        private void updateTopLayerIdealBoundary()
         {
             final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
             ////
@@ -836,11 +837,8 @@ public class TestTimeMachineWindow
                     2*getSize().height/3 /*2/3 of whole vertical*/);
             topLayerCenterPos = new Point(centerOfComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
             ////
-            Point mainEditorWindow_topLeftPos = new Point(topLayerCenterPos.x - topLayerDimention.width/2, topLayerCenterPos.y-topLayerDimention.height/2+TOP_BAR_HEIGHT);
-            Dimension mainEditorWindow_dimension = new Dimension(topLayerDimention.width, topLayerDimention.height - TOP_BAR_HEIGHT);
-            mainEditorWindow.setBounds(new Rectangle(mainEditorWindow_topLeftPos, mainEditorWindow_dimension));
-            ////
-            placeVirtualWindowsInStandardPosition();
+            setVirtualWindowsDefaultValues();
+            updateMainEditorWindowBoundary();
         }
 
         protected class VirtualEditorWindow
