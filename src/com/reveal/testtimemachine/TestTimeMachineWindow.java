@@ -10,6 +10,7 @@ import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
@@ -90,8 +91,8 @@ public class TestTimeMachineWindow
 
 
 
-        leftEditor = new Commits3DView(project, subjectAndTestClassCommitsList[0]);
-        rightEditor = new Commits3DView(project, subjectAndTestClassCommitsList[1]);
+        leftEditor = new Commits3DView(project, virtualFiles[0], subjectAndTestClassCommitsList[0]);
+        rightEditor = new Commits3DView(project, virtualFiles[1], subjectAndTestClassCommitsList[1]);
 
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
                                             .addComponent(leftBar.getComponent())
@@ -592,14 +593,16 @@ public class TestTimeMachineWindow
         ///////// -- UI: 3D Stuff -- /////////
 
         Project project;
+        VirtualFile virtualFile;
         List<CommitWrapper> commitList = null;
 
 
-        public Commits3DView( Project project, List<CommitWrapper> commitList)
+        public Commits3DView( Project project, VirtualFile virtualFile, List<CommitWrapper> commitList)
         {
             super();
 
             this.project = project;
+            this.virtualFile = virtualFile;
             this.commitList = commitList;
 
             this.setLayout(null);
@@ -609,7 +612,7 @@ public class TestTimeMachineWindow
             this.setOpaque(true);
 
 
-            mainEditorWindow = new CustomEditorTextField("First commit did not load correctly! ", project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
+            mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
             mainEditorWindow.setEnabled(true);
             mainEditorWindow.setRequestFocusEnabled(true);
             mainEditorWindow.setOneLineMode(false);
