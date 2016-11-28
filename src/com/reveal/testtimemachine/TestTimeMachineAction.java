@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class TestTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
+    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
     final int NUM_OF_FILES____TEMP = 2;
     //////////////////////////////
     Project project = null;
@@ -76,7 +76,7 @@ public class TestTimeMachineAction extends AnAction
         }
 
         mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, subjectAndTestClassCommitsList);
-        ToolWindowManager.getInstance(project).registerToolWindow("TTM", mainWindow.getComponent(), ToolWindowAnchor.RIGHT);
+        ToolWindowManager.getInstance(project).registerToolWindow("TTM", mainWindow.getComponent(), ToolWindowAnchor.TOP);
     }
 
     private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
