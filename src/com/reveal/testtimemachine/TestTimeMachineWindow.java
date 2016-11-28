@@ -24,6 +24,8 @@ import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Area;
+import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.List;
 
@@ -930,7 +932,7 @@ public class TestTimeMachineWindow
             {
                 if(this.isVisible!=true) return;
 
-                int x,y,w,h;
+                int x,y,w,h; //TODO: Create drawingRect not centered and make a function for below
                 w = this.drawingRect.width;
                 h = this.drawingRect.height;
                 x = this.drawingRect.x - w/2;
@@ -949,20 +951,23 @@ public class TestTimeMachineWindow
                 /// Name
                 g.setColor(Color.BLACK);
                 String text="";
+                Graphics g2 = g.create();
+                Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(x,y,w,TOP_BAR_HEIGHT);
+                g2.setClip(rectangleToDrawIn);
                 if(index==topLayerIndex)
                 {
-                    g.setFont(new Font("Courier", Font.BOLD, 10));
+                    g2.setFont(new Font("Courier", Font.BOLD, 10));
                     text = getTopBarMessage();
-                    drawStringCenter(g, text, x, y+8, w);
+                    drawStringCenter(g2, text, x, y+8, w);
                     text = new String(virtualFile.getPath());
-                    drawStringCenter(g, text, x, y+18, w);
+                    drawStringCenter(g2, text, x, y+18, w);
                 }
                 else
                 {
                     float fontSize = 20/(BASE_DEPTH+depth);
-                    g.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
+                    g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
                     text = getTopBarMessage();
-                    drawStringCenter(g, text, x, y+15, w);
+                    drawStringCenter(g2, text, x, y+15, w);
                 }
             }
 
@@ -977,10 +982,11 @@ public class TestTimeMachineWindow
                 return text;
             }
 
-            void drawStringCenter(Graphics g, String text, int x, int y, int w)
+            void drawStringCenter(Graphics g2, String text, int x, int y, int w)
             {
-                int textLengthInPixel= g.getFontMetrics().stringWidth(text);
-                g.drawString(text, x+w/2-textLengthInPixel/2, y);
+                int textLengthInPixel= g2.getFontMetrics().stringWidth(text);
+                g2.drawString(text, x+w/2-textLengthInPixel/2, y);
+
             }
 
 
