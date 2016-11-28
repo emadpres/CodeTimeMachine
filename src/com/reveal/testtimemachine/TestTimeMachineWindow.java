@@ -1046,6 +1046,7 @@ public class TestTimeMachineWindow
         {
             String content = getStringFromCommits(topLayerIndex);
             mainEditorWindow.setText(content);
+            mainEditorWindow.setCaretPosition(0);
             updateMainEditorWindowBoundary();
             mainEditorWindow.setVisible(true);
         }
