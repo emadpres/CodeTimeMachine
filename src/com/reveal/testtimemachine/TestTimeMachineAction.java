@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class TestTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
+    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
     final int NUM_OF_FILES____TEMP = 2;
     //////////////////////////////
     Project project = null;

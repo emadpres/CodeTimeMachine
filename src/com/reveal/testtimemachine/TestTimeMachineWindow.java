@@ -230,8 +230,7 @@ public class TestTimeMachineWindow
             // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
             scroll.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, H+10));
             JScrollBar vertical = scroll.getVerticalScrollBar();
-            vertical.setValue( vertical.getMaximum() );
-
+            vertical.setValue( vertical.getMaximum() ); // TODO : Doesn't work correctly. maybe we should call after resize
 
             scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         }
@@ -802,7 +801,7 @@ public class TestTimeMachineWindow
         final boolean COLORFUL = false;
         final int TICK_INTERVAL_MS = 50;
         final float LAYER_DISTANCE = 0.2f;
-
+        final int MAX_VISIBLE_VIRTUAL_WINDOW = 10;
         //////
         boolean onChangingCommitProcess = false;
         final int TOP_BAR_HEIGHT = 25;
@@ -890,7 +889,11 @@ public class TestTimeMachineWindow
             topLayerIndex=0;
             // Don't forget to call `setVirtualWindowsDefaultValues()` before
             for (int i = 0; i< commitList.size() ; i++)
-                virtualEditorWindows[i].updateDepth(i* LAYER_DISTANCE);
+            {
+                virtualEditorWindows[i].updateDepth(i * LAYER_DISTANCE);
+                if(i>topLayerIndex + MAX_VISIBLE_VIRTUAL_WINDOW )
+                    virtualEditorWindows[i].isVisible = false;
+            }
             virtualEditorWindows[topLayerIndex].highlightTopLayer();
             repaint();
         }
@@ -979,7 +982,8 @@ public class TestTimeMachineWindow
             {
                 int layerIndex_ith_after_topLayer = (topLayerIndex+i)%commitList.size();
 
-                if(layerIndex_ith_after_topLayer < topLayerIndex || layerIndex_ith_after_topLayer>topLayerIndex+9 )
+                if(layerIndex_ith_after_topLayer < topLayerIndex
+                        || layerIndex_ith_after_topLayer>topLayerIndex + MAX_VISIBLE_VIRTUAL_WINDOW )
                     virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = false;
                 else
                     virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = true;
