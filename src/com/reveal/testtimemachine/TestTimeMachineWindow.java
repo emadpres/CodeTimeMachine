@@ -1011,7 +1011,16 @@ public class TestTimeMachineWindow
             {
                 EditorEx editor = super.createEditor();
                 editor.setVerticalScrollbarVisible(true);
+                editor.setHorizontalScrollbarVisible(true);
+                showLineNumber(editor);
                 return editor;
+            }
+
+            private void showLineNumber(EditorEx editor)
+            {
+                EditorSettings settings = editor.getSettings();
+                settings.setLineNumbersShown(true);
+                editor.reinitSettings();
             }
 
         }
