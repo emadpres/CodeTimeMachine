@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -197,7 +198,7 @@ public class TestTimeMachineWindow
         ///////// ++ UI ++ /////////
         private TestTimeMachineWindow TTMWindow;
         private JPanel myComponent;
-        private CommitItem[] commitItems;
+        private CommitItem[] commitItems /* Most recent commit at 0*/;
         ///////// ++ UI -- /////////
 
         private SubjectOrTest s = SubjectOrTest.NONE;
@@ -217,12 +218,17 @@ public class TestTimeMachineWindow
 
         private void creatingCommitsItem(CommitItemDirection direction, ArrayList<CommitWrapper> commitList)
         {
-            commitItems = new CommitItem[commitList.size()];
+            // commitList: Most recent commit at 0
+            // commitItems: Most recent commit at 0
 
-            Calendar lastCommitCal = Calendar.getInstance();
             Calendar currentCommitCal = Calendar.getInstance();
-
+            Calendar lastCommitCal = Calendar.getInstance();
             lastCommitCal.setTime(new Date(Long.MIN_VALUE));
+
+            // UI_items includes CommitItem and other fake UI elements
+            ArrayList<JComponent> UI_items = new ArrayList<>(commitList.size()/*reserve at least this much memort*/);
+
+            commitItems = new CommitItem[commitList.size()];
 
             for(int i=0; i<commitList.size() ; i++)
             {
@@ -230,16 +236,34 @@ public class TestTimeMachineWindow
                 boolean sameDay = lastCommitCal.get(Calendar.YEAR) == currentCommitCal.get(Calendar.YEAR) &&
                         lastCommitCal.get(Calendar.DAY_OF_YEAR) == currentCommitCal.get(Calendar.DAY_OF_YEAR);
                 /////
-                if(sameDay)
-                    commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
-                else
-                    commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.DATE);
+
+                if(!sameDay)
+                {
+                    if(i==0)
+                    {
+                        //TODO
+                    }
+                    else
+                    {
+                        NewDayItem newDayMarker = new NewDayItem(direction, commitList.get(i-1).getDate());
+                        UI_items.add(newDayMarker.getComponent());
+                    }
+
+                }
+
+                commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
+
+                UI_items.add(commitItems[i].getComponent());
                 ///
                 lastCommitCal.setTime(commitList.get(i).getDate());
             }
-            for(int i=commitList.size()-1; i>=0 ; i--)
+
+            NewDayItem newDayMarker = new NewDayItem(direction, commitList.get(commitList.size()-1).getDate());
+            UI_items.add(newDayMarker.getComponent());
+
+            for(int i=UI_items.size()-1; i>=0 ; i--)
             {
-                myComponent.add(commitItems[i].getComponent());
+                myComponent.add(UI_items.get(i));
                 myComponent.add(Box.createRigidArea(new Dimension(1, 10)));
             }
             activeCommitIndex = 0;
@@ -275,13 +299,223 @@ public class TestTimeMachineWindow
             return myComponent;
         }
 
+        private class NewDayItem
+        {
+            ///////// ++ Constant ++ /////////
+            private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
+            private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );//
+            private final Color NORMAL_COLOR = Color.ORANGE;
+            ///////// ++ Constant -- /////////
+
+            ///////// ++ UI ++ /////////
+            private JPanel myComponent;
+            private JLabel marker, commitInfo;
+            ///////// ++ UI -- /////////
+
+            private CommitItemDirection direction;
+            private Date date;
+
+            public NewDayItem(CommitItemDirection direction, Date date)
+            {
+                this.direction = direction;
+                this.date = date;
+
+                createEmptyJComponent();
+
+                if(direction == CommitItemDirection.LTR)
+                    myComponent.setAlignmentX(Component.LEFT_ALIGNMENT); // make it left_align within parent layout (Hbox)
+                else
+                    myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+
+                if(DEBUG_MODE_UI)
+                    myComponent.setBackground(Color.YELLOW);
+
+
+                setupUI_marker();
+                setupUI_commitInfo();
+
+                updateUIToNewSize();
+                setupComponentResizingBehaviour();
+            }
+
+            private void setupUI_marker()
+            {
+                marker = new JLabel("");
+                marker.setOpaque(true);
+                myComponent.add(marker);
+            }
+
+            private void setupUI_commitInfo()
+            {
+                String commitInfoStr = "";
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+
+
+                long tillCommit = date.getTime();
+                long tillToday = new Date().getTime();
+                long daysTillCommit = tillCommit  / (24 * 60 * 60 * 1000);
+                long daysTillToday = tillToday / (24 * 60 * 60 * 1000); // TODO: BUG: when we are between 12:00am to 1:00am
+
+                if(daysTillToday - daysTillCommit == 0)
+                {
+                    commitInfoStr = "Today";
+                }
+                else if(daysTillToday - daysTillCommit == 1)
+                {
+                    commitInfoStr = "Yesterday";
+                }
+                else
+                {
+                    // Month
+                    int mInt = cal.get(Calendar.MONTH);
+                    String mStr = getMonthName(mInt);
+                    commitInfoStr = mStr;
+                    // Day
+                    commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
+                    // Year
+                    commitInfoStr += " "+ cal.get(Calendar.YEAR);
+                }
+
+
+                commitInfo = new JLabel(commitInfoStr);
+                commitInfo.setSize(30,10); //updated in ComponentSizeChanged
+                if(DEBUG_MODE_UI)
+                    commitInfo.setBackground(Color.CYAN);
+                commitInfo.setOpaque(true);
+                Font font = commitInfo.getFont();
+                Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+                commitInfo.setFont(boldFont);
+                if(direction == CommitItemDirection.LTR)
+                    commitInfo.setHorizontalAlignment(SwingConstants.LEFT);
+                else
+                    commitInfo.setHorizontalAlignment(SwingConstants.RIGHT);
+                commitInfo.setSize(myComponent.getSize().width-30,10);
+                myComponent.add(commitInfo);
+            }
+
+            private void createEmptyJComponent()
+            {
+                myComponent = new JPanel(null);
+                myComponent.setSize(COMPONENT_SIZE);
+                myComponent.setPreferredSize(COMPONENT_SIZE);
+                myComponent.setMinimumSize(COMPONENT_SIZE);
+                myComponent.setMaximumSize(COMPONENT_SIZE);
+            }
+
+            private String getMonthName(int month){
+                //String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+                String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                return monthNames[month];
+            }
+
+            private void updateMarkerLocation() //TODO: Move this duplicate to Base class
+            {
+                if(direction== CommitItemDirection.LTR)
+                    marker.setLocation( 0/*Align Left*/,
+                            myComponent.getSize().height/2 - marker.getSize().height/2);
+                else
+                {
+                    marker.setLocation( myComponent.getSize().width - marker.getSize().width/*Align Right*/,
+                            myComponent.getSize().height / 2 - marker.getSize().height / 2);
+                }
+            }
+
+            private void updateCommitInfoLocation() //TODO: Move this duplicate to Base class
+            {
+                final int DELTA_DIS_FROM_MARKER = 3;
+                if(direction== CommitItemDirection.LTR)
+                    commitInfo.setLocation( marker.getLocation().x+marker.getSize().width+DELTA_DIS_FROM_MARKER,
+                            marker.getLocation().y+marker.getSize().height/2-commitInfo.getSize().height/2);
+                else
+                {
+                    commitInfo.setLocation( marker.getLocation().x - DELTA_DIS_FROM_MARKER - commitInfo.getSize().width,
+                            marker.getLocation().y + marker.getSize().height / 2 - commitInfo.getSize().height / 2);
+                }
+            }
+
+            private void updateUIToNewSize()
+            {
+                marker.setSize(MARKERT_NORMAL_SIZE);
+                marker.setBackground(NORMAL_COLOR);
+
+                updateMarkerLocation();
+
+                commitInfo.setForeground(NORMAL_COLOR);
+                updateCommitInfoLocation();
+            }
+
+            private void setupComponentResizingBehaviour() //TODO: Move this duplicate to Base class
+            {
+                myComponent.addComponentListener(new ComponentListener()
+                {
+                    @Override
+                    public void componentResized(ComponentEvent e)
+                    {
+                    /*
+                    Since myComponent may change (since it belongs to a layout AND we didn't limit the maximum size),
+                    we need to reaarange objects when size chnages.
+                    if myComponent had layout (for its children) we wouldn't manage its children after each size change.
+                     */
+                        int sd=0;
+                        sd++;
+                        updateUIToNewSize();
+                    }
+
+                    @Override
+                    public void componentMoved(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+
+                    @Override
+                    public void componentShown(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+
+                    @Override
+                    public void componentHidden(ComponentEvent e)
+                    {
+                        int sd=0;
+                        sd++;
+                    }
+                });
+            }
+
+            public JPanel getComponent()
+            {
+                return myComponent;
+            }
+        }
+
+        /*private class DateTimeUtil
+        {
+            static private DateTimeUtil instance = null;
+            static public getInstance()
+            {
+                if(instance==null)
+                    instance = new DateTimeUtil();
+                return instance;
+            }
+
+            private DateTimeUtil()
+            {
+
+            }
+        }*/
+
         private class CommitItem
         {
             ///////// ++ Constant ++ /////////
             private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
             private final int LONG_FACTOR = 5;
-            private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );
-            private final Dimension MARKER_HOVERED_SIZE = new Dimension( 15,8 );
+            private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 17,5 );
+            private final Dimension MARKER_HOVERED_SIZE = new Dimension( 20,8 );
             private final Dimension MARKERT_NORMAL_SIZE_LONG = new Dimension( 10+LONG_FACTOR,5 );
             private final Dimension MARKER_HOVERED_SIZE_LONG = new Dimension( 15+LONG_FACTOR,8 );
             //
@@ -388,42 +622,13 @@ public class TestTimeMachineWindow
             {
                 String commitInfoStr = "";
 
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(commitWrapper.getDate());
-
-                if(infoType == CommitItemInfoType.DATE)
+                if(commitWrapper.isFake())
+                    commitInfoStr = "Uncommited";
+                else
                 {
-                    long tillCommit = commitWrapper.getDate().getTime();
-                    long tillToday = new Date().getTime();
-                    long daysTillCommit = tillCommit  / (24 * 60 * 60 * 1000);
-                    long daysTillToday = tillToday / (24 * 60 * 60 * 1000);
-
-                    if(daysTillToday - daysTillCommit == 0)
-                    {
-                        commitInfoStr = "Now";
-                    }
-                    else if(daysTillToday - daysTillCommit == 1)
-                    {
-                        commitInfoStr = "Yesterday";
-                    }
-                    else
-                    {
-                        // Month
-                        int mInt = cal.get(Calendar.MONTH);
-                        String mStr = getMonthName(mInt);
-                        commitInfoStr = mStr;
-                        // Day
-                        commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
-                        // Year
-                        commitInfoStr += ", "+ cal.get(Calendar.YEAR);
-                    }
+                    SimpleDateFormat format = new SimpleDateFormat("HH:mm"); //"yyyy-MM-dd HH:mm:ss.SSS"
+                    commitInfoStr = format.format(commitWrapper.getDate());
                 }
-                else if(infoType == CommitItemInfoType.TIME)
-                {
-                    // Time
-                    commitInfoStr = cal.get(Calendar.HOUR_OF_DAY)+":"+cal.get(Calendar.MINUTE);
-                }
-
 
 
                 commitInfo = new JLabel(commitInfoStr);
@@ -481,12 +686,6 @@ public class TestTimeMachineWindow
                 myComponent.setPreferredSize(COMPONENT_SIZE);
                 myComponent.setMinimumSize(COMPONENT_SIZE);
                 myComponent.setMaximumSize(COMPONENT_SIZE);
-            }
-
-            private String getMonthName(int month){
-                //String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-                String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-                return monthNames[month];
             }
 
             private void updateToNormalUI()

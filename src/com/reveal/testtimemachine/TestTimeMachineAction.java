@@ -21,6 +21,7 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class TestTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
+    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = true;
     final int NUM_OF_FILES____TEMP = 2;
     //////////////////////////////
     Project project = null;
@@ -55,23 +56,33 @@ public class TestTimeMachineAction extends AnAction
         {
             int realCommitsSize = _fileRevisionsLists.get(i).size();
             subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
-            ///// First Fake
-            byte[] bytes = new byte[0];
-            try
-            {
-                bytes = chosenVirtualFiles[i].contentsToByteArray();
-            } catch (IOException e1)
-            {
-                e1.printStackTrace();
-            }
-            String s = new String(bytes);
-            aCommitWrapper = new CommitWrapper(s, "",new Date(),"Uncommited Changes");
-            subjectAndTestClassCommitsList[i].add(aCommitWrapper);
+
+
             ///// Other Real
             for(int j=0; j< realCommitsSize; j++)
             {
                 aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j));
                 subjectAndTestClassCommitsList[i].add(aCommitWrapper);
+            }
+
+
+
+            ///// First Fake (UncommitedChanges)
+            String currentContent = "";
+            try
+            {
+                byte[] currentBytes = chosenVirtualFiles[i].contentsToByteArray();
+                currentContent = new String(currentBytes);
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
+
+            String mostRecentCommitContent = subjectAndTestClassCommitsList[i].get(0).getFileContent();
+            if(! mostRecentCommitContent.equals(currentContent) )
+            {
+                aCommitWrapper = new CommitWrapper(currentContent, "",new Date(),"Uncommited Changes");
+                subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }
         }
 
