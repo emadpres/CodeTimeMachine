@@ -198,9 +198,11 @@ public class TestTimeMachineWindow
         ///////// ++ UI ++ /////////
         private TestTimeMachineWindow TTMWindow;
         private JPanel myComponent;
+        private JBScrollPane scroll;
         private CommitItem[] commitItems /* Most recent commit at 0*/;
         ///////// ++ UI -- /////////
 
+        int H=0;
         private SubjectOrTest s = SubjectOrTest.NONE;
         private int activeCommitIndex = -1;
 
@@ -212,8 +214,26 @@ public class TestTimeMachineWindow
 
             createEmptyJComponent();
             creatingCommitsItem(direction, commitList);
+
+            setupScroll();
+
             myComponent.repaint();
 
+        }
+
+        private void setupScroll()
+        {
+            scroll = new JBScrollPane();
+            scroll.setViewportView(myComponent);
+            scroll.setBorder(null);
+
+            // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
+            scroll.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, H+10));
+            JScrollBar vertical = scroll.getVerticalScrollBar();
+            vertical.setValue( vertical.getMaximum() );
+
+
+            scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         }
 
         private void creatingCommitsItem(CommitItemDirection direction, ArrayList<CommitWrapper> commitList)
@@ -264,7 +284,11 @@ public class TestTimeMachineWindow
             for(int i=UI_items.size()-1; i>=0 ; i--)
             {
                 myComponent.add(UI_items.get(i));
-                myComponent.add(Box.createRigidArea(new Dimension(1, 10)));
+
+                final int GAP_H = 10;
+                myComponent.add(Box.createRigidArea(new Dimension(1, GAP_H)));
+                H += UI_items.get(i).getSize().height + GAP_H;
+
             }
             activeCommitIndex = 0;
             commitItems[0].setActivated(true);
@@ -275,8 +299,9 @@ public class TestTimeMachineWindow
         {
             // Size of this component according to children's components = CommitItem
             myComponent = new JPanel();
-            BoxLayout boxLayout = new BoxLayout(myComponent, BoxLayout.Y_AXIS);
+            BoxLayout boxLayout = new BoxLayout(myComponent, BoxLayout.PAGE_AXIS);
             myComponent.setLayout(boxLayout);
+
             if(DEBUG_MODE_UI)
                 myComponent.setBackground(Color.RED);
         }
@@ -294,9 +319,9 @@ public class TestTimeMachineWindow
 
         }
 
-        public JPanel getComponent()
+        public JComponent getComponent()
         {
-            return myComponent;
+            return scroll;
         }
 
         private class NewDayItem
