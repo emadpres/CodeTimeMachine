@@ -328,7 +328,7 @@ public class TestTimeMachineWindow
             ///////// ++ Constant ++ /////////
             private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
             private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );//
-            private final Color NORMAL_COLOR = Color.ORANGE;
+            private final Color NORMAL_COLOR = Color.DARK_GRAY;
             ///////// ++ Constant -- /////////
 
             ///////// ++ UI ++ /////////
