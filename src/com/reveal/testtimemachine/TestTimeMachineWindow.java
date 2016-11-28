@@ -9,6 +9,7 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
@@ -940,18 +941,48 @@ public class TestTimeMachineWindow
                 /// Border
                 g.setColor( this.myBorderColor);
                 g.drawRect(x, y, w, h);
+
                 /// TopBar
                 g.setColor( this.myBorderColor);
                 g.fillRect(x, y, w, TOP_BAR_HEIGHT);
+
                 /// Name
                 g.setColor(Color.BLACK);
-                g.setFont(new Font("Courier", Font.BOLD, (int)(20/(BASE_DEPTH+depth))));
-                //String text = new String("(#"+Integer.toString(index+1)+")        Commit "+fileRevision.getRevisionNumber()+"              Author: "+fileRevision.getAuthor());
-                String text = new String("#"+Integer.toString(index+1)+"| Commit "+commitWrapper.getHash());
-                final float CHAR_WIDTH = 10/(BASE_DEPTH+depth);
-                int textLengthInPixel = (int)(text.length()*CHAR_WIDTH);
-                g.drawString(text,x+w/2-textLengthInPixel/2, y+15);
+                String text="";
+                if(index==topLayerIndex)
+                {
+                    g.setFont(new Font("Courier", Font.BOLD, 10));
+                    text = getTopBarMessage();
+                    drawStringCenter(g, text, x, y+8, w);
+                    text = new String(virtualFile.getPath());
+                    drawStringCenter(g, text, x, y+18, w);
+                }
+                else
+                {
+                    float fontSize = 20/(BASE_DEPTH+depth);
+                    g.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
+                    text = getTopBarMessage();
+                    drawStringCenter(g, text, x, y+15, w);
+                }
             }
+
+            @NotNull
+            private String getTopBarMessage()
+            {
+                String text;
+                if(commitWrapper.isFake())
+                    text = new String(commitWrapper.getHash());
+                else
+                    text = new String("Commit "+commitWrapper.getHash());
+                return text;
+            }
+
+            void drawStringCenter(Graphics g, String text, int x, int y, int w)
+            {
+                int textLengthInPixel= g.getFontMetrics().stringWidth(text);
+                g.drawString(text, x+w/2-textLengthInPixel/2, y);
+            }
+
 
         } // End of VirtualEditorWindow class
 
