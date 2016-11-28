@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class TestTimeMachineWindowTest
 {
     @Test
-    public void testInstanciating()
+    public void testInstantiating()
     {
         TestTimeMachineWindow testTimeMachineWindow = new TestTimeMachineWindow(null, null, null);
         assertNotEquals(testTimeMachineWindow.getComponent(), null);

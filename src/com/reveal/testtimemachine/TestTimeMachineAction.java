@@ -65,7 +65,7 @@ public class TestTimeMachineAction extends AnAction
                 e1.printStackTrace();
             }
             String s = new String(bytes);
-            aCommitWrapper = new CommitWrapper(s, "",new Date(),"Last change");
+            aCommitWrapper = new CommitWrapper(s, "",new Date(),"Uncommited Changes");
             subjectAndTestClassCommitsList[i].add(aCommitWrapper);
             ///// Other Real
             for(int j=0; j< realCommitsSize; j++)
