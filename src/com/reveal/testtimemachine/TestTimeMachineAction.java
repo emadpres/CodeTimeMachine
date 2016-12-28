@@ -15,13 +15,14 @@ import com.intellij.openapi.vcs.history.VcsHistoryProvider;
 import com.intellij.openapi.vcs.history.VcsHistorySession;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.ui.content.Content;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -31,20 +32,18 @@ import java.util.List;
 public class TestTimeMachineAction extends AnAction
 {
     final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
-    final int NUM_OF_FILES____TEMP = 2;
+    final int MAX_NUM_OF_FILES = 2;
     //////////////////////////////
     Project project = null;
-    TestTimeMachineWindow mainWindow = null;
+    ToolWindow toolWindow = null;
 
     @Override
     public void actionPerformed(AnActionEvent e)
     {
-        if(mainWindow!=null) return;
-
         project = e.getProject();
 
         VirtualFile[] chosenVirtualFiles = getSubjectAndTestVirtualFiles();
-        if(chosenVirtualFiles == null || chosenVirtualFiles.length !=NUM_OF_FILES____TEMP )
+        if(chosenVirtualFiles == null || chosenVirtualFiles.length > MAX_NUM_OF_FILES)
             return;
 
         VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider();
@@ -52,7 +51,7 @@ public class TestTimeMachineAction extends AnAction
 
         ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[2];
         CommitWrapper aCommitWrapper = null;
-        for(int i=0; i< NUM_OF_FILES____TEMP; i++)
+        for(int i=0; i< chosenVirtualFiles.length; i++)
         {
             int realCommitsSize = _fileRevisionsLists.get(i).size();
             subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
@@ -86,15 +85,35 @@ public class TestTimeMachineAction extends AnAction
             }
         }
 
-        mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, subjectAndTestClassCommitsList);
-        ToolWindowManager.getInstance(project).registerToolWindow("TTM", mainWindow.getComponent(), ToolWindowAnchor.TOP);
+
+        if(toolWindow == null)
+            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("TTM", true, ToolWindowAnchor.TOP);
+
+
+
+        String contentName = "";
+        contentName += chosenVirtualFiles[0].getNameWithoutExtension();
+        for(int i=1; i< chosenVirtualFiles.length; i++)
+        {
+            contentName += " vs. ";
+            contentName += chosenVirtualFiles[1].getNameWithoutExtension();
+        }
+
+        TestTimeMachineWindow mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, subjectAndTestClassCommitsList);
+        Content ttm_content = toolWindow.getContentManager().getFactory().createContent(mainWindow.getComponent(), contentName, true);
+        toolWindow.getContentManager().addContent(ttm_content);
+        toolWindow.setAutoHide(false);
+        toolWindow.setAvailable(true,null);
+
+
+
     }
 
     private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
     {
-        ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(2);
+        ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(chosenVirtualFiles.length);
 
-        for(int i=0; i<NUM_OF_FILES____TEMP; i++)
+        for(int i = 0; i< chosenVirtualFiles.length; i++)
         {
             FilePath filePathOn = VcsContextFactory.SERVICE.getInstance().createFilePathOn(chosenVirtualFiles[i]);
             VcsHistorySession sessionFor = null;

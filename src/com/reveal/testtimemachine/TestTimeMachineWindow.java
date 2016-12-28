@@ -54,7 +54,10 @@ public class TestTimeMachineWindow
     ///////// ++ UI ++ /////////
     Commits3DView leftEditor = null;
     Commits3DView rightEditor = null;
+    CommitsBar leftBar=null, rightBar=null;
+    JButton runBtn = null;
     JTextArea textArea = null;
+    JBScrollPane logTextArea_scrolled = null;
     ///////// -- UI -- /////////
 
     TestTimeMachineWindow(Project project, VirtualFile[] virtualFiles, ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList)
@@ -65,22 +68,51 @@ public class TestTimeMachineWindow
         ////////////////////////////////////////////////////
         setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
+        ////////////
+        setupUI_createBars(virtualFiles, subjectAndTestClassCommitsList);
+        setupUI_createTextArea();
+        setupUI_createRunButton();
+        setupUI_createEditorsView(project, virtualFiles, subjectAndTestClassCommitsList);
+        ////////////
+        if(virtualFiles.length==1)
+            setup_UILayout_Single(groupLayout);
+        else// if(virtualFiles.length==2)
+            setup_UILayout_Double(groupLayout);
 
+        leftEditor.showCommit(0, false);
+        if(virtualFiles.length >1)
+            rightEditor.showCommit(0, false);
+    }
 
-        CommitsBar leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  subjectAndTestClassCommitsList[0], this);
-        CommitsBar rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  subjectAndTestClassCommitsList[1], this);
+    private void setupUI_createEditorsView(Project project, VirtualFile[] virtualFiles, ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList)
+    {
+        leftEditor = new Commits3DView(project, virtualFiles[0], subjectAndTestClassCommitsList[0]);
+        if(virtualFiles.length >1)
+        {
+            rightEditor = new Commits3DView(project, virtualFiles[1], subjectAndTestClassCommitsList[1]);
+        }
+        else
+        {
+            rightEditor = new Commits3DView(project, virtualFiles[0], subjectAndTestClassCommitsList[0]);
+            rightEditor.setVisible(false);
+        }
+    }
 
-        textArea = new JTextArea("Ready.",2,3);
-        textArea.setEditable(false);
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(false);
-        //Border border = BorderFactory.createLineBorder(Color.GRAY, 1);
-        JBScrollPane logTextArea_scrolled = new JBScrollPane(textArea);
-        //outputTextArea.setBorder(border);
-        //logTextArea.setPreferredSize(new Dimension(500,100));
-        logTextArea_scrolled.setMaximumSize(new Dimension(500,100));
+    private void setupUI_createBars(VirtualFile[] virtualFiles, ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList)
+    {
+        leftBar = new CommitsBar(CommitItemDirection.LTR, SubjectOrTest.SUBJECT,  subjectAndTestClassCommitsList[0], this);
+        if(virtualFiles.length >1)
+            rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST,  subjectAndTestClassCommitsList[1], this);
+        else
+        {
+            rightBar = new CommitsBar(CommitItemDirection.RTL, SubjectOrTest.TEST, subjectAndTestClassCommitsList[0], this); //fake
+            rightBar.getComponent().setVisible(false);
+        }
+    }
 
-        JButton runBtn = new JButton("Run");
+    private void setupUI_createRunButton()
+    {
+        runBtn = new JButton("Run");
         runBtn.addActionListener(new ActionListener()
         {
             @Override
@@ -89,45 +121,77 @@ public class TestTimeMachineWindow
                 RunIt();
             }
         });
+    }
 
+    private void setupUI_createTextArea()
+    {
+        textArea = new JTextArea("Ready.",2,3);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(false);
+        //Border border = BorderFactory.createLineBorder(Color.GRAY, 1);
+        logTextArea_scrolled = new JBScrollPane(textArea);
+        //outputTextArea.setBorder(border);
+        //logTextArea.setPreferredSize(new Dimension(500,100));
+        logTextArea_scrolled.setMaximumSize(new Dimension(500,100));
+    }
 
-
-        leftEditor = new Commits3DView(project, virtualFiles[0], subjectAndTestClassCommitsList[0]);
-        rightEditor = new Commits3DView(project, virtualFiles[1], subjectAndTestClassCommitsList[1]);
-
+    private void setup_UILayout_Double(GroupLayout groupLayout)
+    {
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
-                                            .addComponent(leftBar.getComponent())
-                                            .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                                                .addGroup( groupLayout.createSequentialGroup()
-                                                    .addComponent(leftEditor)
-                                                    .addComponent(rightEditor)
-                                                        )
-                                                .addGroup( groupLayout.createSequentialGroup()
-                                                        .addComponent(runBtn)
-                                                        .addComponent(logTextArea_scrolled)
-                                                        )
-                                                    )
-                                            .addComponent(rightBar.getComponent())
-                                    );
+                .addComponent(leftBar.getComponent())
+                .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addGroup( groupLayout.createSequentialGroup()
+                                .addComponent(leftEditor)
+                                .addComponent(rightEditor)
+                        )
+                        .addGroup( groupLayout.createSequentialGroup()
+                                .addComponent(runBtn)
+                                .addComponent(logTextArea_scrolled)
+                        )
+                )
+                .addComponent(rightBar.getComponent())
+        );
 
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                        .addComponent(leftBar.getComponent())
-                                        .addGroup(groupLayout.createSequentialGroup()
-                                                .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                                        .addComponent(leftEditor)
-                                                        .addComponent(rightEditor)
-                                                        )
-                                                .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                                        .addComponent(runBtn)
-                                                        .addComponent(logTextArea_scrolled)
-                                                        )
-                                                )
-                                        .addComponent(rightBar.getComponent())
-                                    );
+                .addComponent(leftBar.getComponent())
+                .addGroup(groupLayout.createSequentialGroup()
+                        .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                .addComponent(leftEditor)
+                                .addComponent(rightEditor)
+                        )
+                        .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(runBtn)
+                                .addComponent(logTextArea_scrolled)
+                        )
+                )
+                .addComponent(rightBar.getComponent())
+        );
+    }
 
+    private void setup_UILayout_Single(GroupLayout groupLayout)
+    {
+        groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
+                .addComponent(leftBar.getComponent())
+                .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addComponent(leftEditor)
+                        .addGroup( groupLayout.createSequentialGroup()
+                                .addComponent(runBtn)
+                                .addComponent(logTextArea_scrolled)
+                        )
+                )
+        );
 
-        leftEditor.showCommit(0, false);
-        rightEditor.showCommit(0, false);
+        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                .addComponent(leftBar.getComponent())
+                .addGroup(groupLayout.createSequentialGroup()
+                        .addComponent(leftEditor)
+                        .addGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(runBtn)
+                                .addComponent(logTextArea_scrolled)
+                        )
+                )
+        );
     }
 
     private void setupToolTipSetting()
@@ -150,10 +214,16 @@ public class TestTimeMachineWindow
 
     private void RunIt()
     {
+        textArea.setText("");
         RunManager runManager = RunManager.getInstance(project);
         RunManagerImpl runManagerImp = (RunManagerImpl) RunManager.getInstance(project);
 
         RunnerAndConfigurationSettings selectedConfiguration1 = runManager.getSelectedConfiguration();
+        if(selectedConfiguration1==null)
+        {
+            textArea.append("FAILED: No Configuration.");
+            return;
+        }
         RunConfiguration runConfiguration = selectedConfiguration1.getConfiguration();
         Executor executor = DefaultRunExecutor.getRunExecutorInstance();
 
