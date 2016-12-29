@@ -16,7 +16,7 @@ import java.util.Date;
 public class CommitsBar
 {
     ///////// ++ UI ++ /////////
-    private TestTimeMachineWindow TTMWindow;
+    private TTMSingleFileView TTMWindow;
     private JPanel myComponent;
     private JBScrollPane scroll;
     private CommitItem[] commitItems /* Most recent commit at 0*/;
@@ -30,7 +30,7 @@ public class CommitsBar
     private int activeCommitIndex = -1;
 
     public CommitsBar(CommitItemDirection direction, ClassType s, ArrayList<CommitWrapper> commitList,
-                      TestTimeMachineWindow TTMWindow)
+                      TTMSingleFileView TTMWindow)
     {
         this.TTMWindow = TTMWindow;
         this.s= s;

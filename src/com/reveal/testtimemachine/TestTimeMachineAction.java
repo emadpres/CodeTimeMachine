@@ -99,7 +99,7 @@ public class TestTimeMachineAction extends AnAction
             contentName += chosenVirtualFiles[1].getNameWithoutExtension();
         }
 
-        TestTimeMachineWindow mainWindow = new TestTimeMachineWindow(project, chosenVirtualFiles, subjectAndTestClassCommitsList);
+        TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenVirtualFiles[0], subjectAndTestClassCommitsList[0]);
         Content ttm_content = toolWindow.getContentManager().getFactory().createContent(mainWindow.getComponent(), contentName, true);
         toolWindow.getContentManager().addContent(ttm_content);
         toolWindow.setAutoHide(false);
