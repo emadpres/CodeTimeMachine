@@ -20,6 +20,7 @@ public class TTMSingleFileView
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
     CommitsBar commitsBar = null;
+    CommitsTimeline commitsTimeline = null;
     //////////////////////////////
 
     TTMSingleFileView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commits)
@@ -28,49 +29,49 @@ public class TTMSingleFileView
         this.virtualFile = virtualFile;
         this.commits = commits;
         ////////////////////////////////////////////////////
-        setupToolTipSetting();
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
-        setupUI_createBar(virtualFile, commits);
-        setupUI_createCodeHistory3DView(project, virtualFile, commits);
+        commitsTimeline = setupUI_createCommitsTimeline();
+        commitsBar = setupUI_createCommitsBar(virtualFile, commits);
+        codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
-
-        setup_UILayout_Single(groupLayout);
+        setupLayout(groupLayout);
 
         codeHistory3DView.showCommit(0, false);
     }
 
-    private void setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
+    private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
     {
-        codeHistory3DView = new Commits3DView(project, virtualFiles, commits);
+         return new Commits3DView(project, virtualFiles, commits);
     }
 
-    private void setupUI_createBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
+    private CommitsBar setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
     {
-        commitsBar = new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, commits, this);
+        return new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, commits, this);
     }
 
-    private void setup_UILayout_Single(GroupLayout groupLayout)
+    private CommitsTimeline setupUI_createCommitsTimeline()
+    {
+        return new CommitsTimeline(commits,this);
+    }
+
+    private void setupLayout(GroupLayout groupLayout)
     {
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
                 .addComponent(commitsBar.getComponent())
                 .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                         .addComponent(codeHistory3DView)
+                        .addComponent(commitsTimeline)
                 )
         );
 
-        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+        groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                 .addComponent(commitsBar.getComponent())
                 .addGroup(groupLayout.createSequentialGroup()
+                        .addComponent(commitsTimeline)
                         .addComponent(codeHistory3DView)
                 )
         );
-    }
-
-    private void setupToolTipSetting()
-    {
-        ToolTipManager.sharedInstance().setEnabled(true);
-        ToolTipManager.sharedInstance().setInitialDelay(100); // it needs ToolTipManager.sharedInstance().setEnabled(true); before
     }
 
     private GroupLayout createEmptyJComponentAndReturnGroupLayout()

@@ -35,6 +35,8 @@ public class CommitsBar
         this.TTMWindow = TTMWindow;
         this.s= s;
 
+        setupToolTipSetting();
+
         createEmptyJComponent();
         creatingCommitsItem(direction, commitList);
 
@@ -42,6 +44,12 @@ public class CommitsBar
 
         myComponent.repaint();
 
+    }
+
+    private void setupToolTipSetting()
+    {
+        ToolTipManager.sharedInstance().setEnabled(true);
+        ToolTipManager.sharedInstance().setInitialDelay(0); // it needs ToolTipManager.sharedInstance().setEnabled(true); before
     }
 
     private void setupScroll()

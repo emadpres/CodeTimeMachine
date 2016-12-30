@@ -64,7 +64,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.commitList = commitList;
 
         this.setLayout(null);
-        this.addComponentListener(this);
+        this.addComponentListener(this); // Check class definition as : ".. implements ComponentListener"
         if (CommonValues.IS_UI_IN_DEBUGGING_MODE)
             this.setBackground(Color.ORANGE);
         this.setOpaque(true);
@@ -157,9 +157,13 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         super.paintComponent(g);
 
-        g.setColor(new Color(255,0,0));
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
+        {
+            g.setColor(new Color(0,255,255));
+            g.fillRect(0, 0,getSize().width,getSize().height);
+            g.setColor(new Color(255,0,0));
             g.fillOval(getSize().width/2-10, getSize().height/2-10,20,20); //Show Center
+        }
 
         if(virtualEditorWindows!=null)
         {
