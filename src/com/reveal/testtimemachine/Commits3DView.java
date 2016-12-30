@@ -426,16 +426,16 @@ public class Commits3DView extends JComponent implements ComponentListener
             {
                 g2.setFont(new Font("Courier", Font.BOLD, 10));
                 text = getTopBarMessage();
-                drawStringCenter(g2, text, x, y+8, w);
+                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+8);
                 text = new String(virtualFile.getPath());
-                drawStringCenter(g2, text, x, y+18, w);
+                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+18);
             }
             else
             {
                 float fontSize = 20/(BASE_DEPTH+depth);
                 g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
                 text = getTopBarMessage();
-                drawStringCenter(g2, text, x, y+15, w);
+                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+15);
             }
         }
 
@@ -448,13 +448,6 @@ public class Commits3DView extends JComponent implements ComponentListener
             else
                 text = new String("Commit "+commitWrapper.getHash());
             return text;
-        }
-
-        void drawStringCenter(Graphics g2, String text, int x, int y, int w)
-        {
-            int textLengthInPixel= g2.getFontMetrics().stringWidth(text);
-            g2.drawString(text, x+w/2-textLengthInPixel/2, y);
-
         }
 
 
