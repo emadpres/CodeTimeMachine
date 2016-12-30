@@ -20,7 +20,7 @@ public class TTMSingleFileView
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
     CommitsBar commitsBar = null;
-    CommitsTimeline commitsTimeline = null;
+    CommitsTimelineZoomable commitsTimelineZoomable = null;
     //////////////////////////////
 
     TTMSingleFileView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commits)
@@ -31,7 +31,7 @@ public class TTMSingleFileView
         ////////////////////////////////////////////////////
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
-        commitsTimeline = setupUI_createCommitsTimeline();
+        commitsTimelineZoomable = new CommitsTimelineZoomable(commits, this);
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
@@ -61,14 +61,14 @@ public class TTMSingleFileView
                 .addComponent(commitsBar.getComponent())
                 .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                         .addComponent(codeHistory3DView)
-                        .addComponent(commitsTimeline)
+                        .addComponent(commitsTimelineZoomable)
                 )
         );
 
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                 .addComponent(commitsBar.getComponent())
                 .addGroup(groupLayout.createSequentialGroup()
-                        .addComponent(commitsTimeline)
+                        .addComponent(commitsTimelineZoomable)
                         .addComponent(codeHistory3DView)
                 )
         );
