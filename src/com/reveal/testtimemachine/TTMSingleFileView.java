@@ -31,7 +31,7 @@ public class TTMSingleFileView
         ////////////////////////////////////////////////////
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
-        commitsTimelineZoomable = new CommitsTimelineZoomable(commits, this);
+        commitsTimelineZoomable = setupUI_createCommitsTimeline(commits);
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
@@ -45,14 +45,16 @@ public class TTMSingleFileView
          return new Commits3DView(project, virtualFiles, commits);
     }
 
-    private CommitsBar setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
+    private CommitsBar setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
     {
-        return new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, commits, this);
+        CommitsBar commitsBar =  new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, this);
+        commitsBar.updateCommitsList(commitsList);
+        return commitsBar;
     }
 
-    private CommitsTimeline setupUI_createCommitsTimeline()
+    private CommitsTimelineZoomable setupUI_createCommitsTimeline(ArrayList<CommitWrapper> commitsList)
     {
-        return new CommitsTimeline(commits,this);
+        return new CommitsTimelineZoomable(commitsList, this);
     }
 
     private void setupLayout(GroupLayout groupLayout)
@@ -86,10 +88,30 @@ public class TTMSingleFileView
         return groupLayout;
     }
 
-
     public JPanel getComponent()
     {
         return thisComponent;
+    }
+
+    public void updateCommitsBar(Date activeRange_startDate, Date activeRange_endDate)
+    {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(activeRange_startDate);
+        int y = cal.get(Calendar.YEAR);
+        int m = cal.get(Calendar.MONTH);
+        //////////
+        ArrayList<CommitWrapper> commitsForRequestedRange = new ArrayList<>();
+        //Calendar tempCal = Calendar.getInstance();
+        for(int i=0; i<commits.size(); i++)
+        {
+            //tempCal.setTime(commits.get(i).getDate());
+            Date currentCommitDate = commits.get(i).getDate();
+            //if( tempCal.get(Calendar.YEAR)==y && tempCal.get(Calendar.MONTH)==m)
+            if(!currentCommitDate.before(activeRange_startDate) && !currentCommitDate.after(activeRange_endDate))
+                commitsForRequestedRange.add(commits.get(i));
+        }
+        //////////
+        commitsBar.updateCommitsList(commitsForRequestedRange);
     }
 
     public boolean navigateToCommit(ClassType s, int commitIndex)

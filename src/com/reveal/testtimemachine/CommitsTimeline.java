@@ -1,12 +1,12 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.ui.components.JBScrollPane;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.text.DateFormatSymbols;
+import java.awt.event.MouseMotionListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,9 +18,12 @@ public class CommitsTimeline extends JComponent
     //General Notice: All calculation are INT since Point class is INT.
     //General Notice: "First commits" means "Oldest commit" and is the last element in commits list.
 
-    private static final Dimension COMPONENT_SIZE = new Dimension(1100, 100);
+    TTMSingleFileView TTMWindow = null;
+    JBScrollPane scrollComponent = null;
 
-    int activeMonthIndex = -1; //0-based
+    final int INVALIDE_VALUE = -10;
+    int activeRange_startIndex = INVALIDE_VALUE, activeRange_endIndex=INVALIDE_VALUE; //0-based - we use "*_temp" variables unless they are INVALID_VALUE
+    int activeRange_startIndex_temp = INVALIDE_VALUE, activeRange_endIndex_temp = INVALIDE_VALUE; //0-based
     Point line_effectiveBegin = null;
     int n_monthes = 0;
     int line_effectiveLength = 0;
@@ -28,6 +31,8 @@ public class CommitsTimeline extends JComponent
     int line_sectorsLength = 0;
     int PRIMARY_LINE_TICKNESS = 3;
     int LOD = 1;
+
+    final int PRIMARY_LINE_OUTTER_SIDES_GAP = 20;
 
     int start_year=0, start_month=0, end_year=0, end_month=0; // Notice: All months are 0-based as Cal.get(Calendar.MONTH) does.
 
@@ -37,63 +42,61 @@ public class CommitsTimeline extends JComponent
 
 
 
-    public CommitsTimeline(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow)
+    public CommitsTimeline(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow, JBScrollPane scrollComponent)
     {
         super();
         this.commitList = commitList;
+        this.TTMWindow = TTMWindow;
+        this.scrollComponent = scrollComponent;
 
         this.setLayout(null);
-        setSize(COMPONENT_SIZE);
-        setPreferredSize(COMPONENT_SIZE);
-        setMinimumSize(COMPONENT_SIZE);
-        setMaximumSize(COMPONENT_SIZE);
+        // setSize(COMPONENT_SIZE); By "updateDrawingVariablesForNewSectorsLength()"
         ////////////////////////////////////
 
         preCalculation_basic();
         preCalculation_commitsStat();
-        preCalculation_drawing();
+        preCalculation_originalSectorsLength();
 
         addMouseListener();
 
 
-        activeMonthIndex = n_monthes-1;
+        activeRange_startIndex = activeRange_endIndex = n_monthes-1;
         repaint();
 
 
 
     }
 
-    private void preCalculation_drawing()
+    private void preCalculation_originalSectorsLength()
     {
-        final int PRIMARY_LINE_GAP_FROM_SIDES = 20;
-        //////////
-        int maxPossibleLineLength = getSize().width - 2 * PRIMARY_LINE_GAP_FROM_SIDES;
+        int maxPossibleLineLength = scrollComponent.getSize().width - 2 * PRIMARY_LINE_OUTTER_SIDES_GAP;
         original_sectorsLength = maxPossibleLineLength / n_monthes;  // => "int" value
         setSectorsLength(original_sectorsLength);
     }
 
-    public void setSectorsLength(int newSize)
+    public void setZoomFactor(int newZoomFactor)
     {
-        line_sectorsLength = newSize;
-        //// Updated dependent drawing values
-       updateDrawingVariables();
-
+        setSectorsLength(original_sectorsLength*newZoomFactor);
     }
 
-    private void updateDrawingVariables()
+    private void setSectorsLength(int newSectorsLength)
+    {
+        line_sectorsLength = newSectorsLength;
+        updateDrawingVariablesForNewSectorsLength();
+    }
+
+    private void updateDrawingVariablesForNewSectorsLength()
     {
         int BIG_ENOUGH_LENGTH = 50;
         if(line_sectorsLength > BIG_ENOUGH_LENGTH)
             LOD=2;
         else
             LOD=1;
-
         //////////////////
-
 
         line_effectiveLength = n_monthes * line_sectorsLength; // Because "Ponit(x,y)" and therefor the "line_sectorsLength" shoudl be INT.
 
-        Dimension componentDimension = new Dimension(line_effectiveLength+50, COMPONENT_SIZE.height);
+        Dimension componentDimension = new Dimension(line_effectiveLength+50, scrollComponent.getSize().height);
         setSize(componentDimension);
         setPreferredSize(componentDimension);
         setMaximumSize(componentDimension);
@@ -106,36 +109,16 @@ public class CommitsTimeline extends JComponent
     {
         if(commitList.size()<=0) return;
 
-
-
         numberOfCommitsPerMonth = new int[n_monthes];
         for(int i=0; i<n_monthes; i++)
             numberOfCommitsPerMonth[i]=0;
 
 
-        int lastSectorIndex = -1;
-        int n_commitsForCurrentSector=0;
-
-        for(int i=commitList.size()-1; i>=0; i--)
+        for(int i=0; i<commitList.size(); i++)
         {
             int currentSectorIndex = getSectorIndexForDate(commitList.get(i).getDate());
-            if(lastSectorIndex!=currentSectorIndex)
-            {
-                ///// Save lastSectorData
-                if(lastSectorIndex!=-1)
-                    numberOfCommitsPerMonth[lastSectorIndex] = n_commitsForCurrentSector;
-                /////
-                n_commitsForCurrentSector = 1;
-                lastSectorIndex = currentSectorIndex;
-            }
-            else
-            {
-                n_commitsForCurrentSector++;
-            }
+            numberOfCommitsPerMonth[currentSectorIndex]++;
         }
-
-        if(lastSectorIndex!=-1)
-            numberOfCommitsPerMonth[lastSectorIndex] = n_commitsForCurrentSector;
 
         ///////////////////////////
 
@@ -183,45 +166,102 @@ public class CommitsTimeline extends JComponent
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                Point p = e.getPoint();
-                final int Y_ACCEPTABLE_CLICK_MARGINE = 35;
-                if (p.x < line_effectiveBegin.x || p.x > line_effectiveBegin.x + line_effectiveLength
-                        || p.y > line_effectiveBegin.y+Y_ACCEPTABLE_CLICK_MARGINE || p.y < line_effectiveBegin.y-Y_ACCEPTABLE_CLICK_MARGINE )
-                {
-                    return;
-                }
-
-                int m = (p.x - line_effectiveBegin.x) / line_sectorsLength;
-                activeMonthIndex = m;
-
-                CommitsTimeline.this.repaint();
-
             }
 
             @Override
             public void mousePressed(MouseEvent e)
             {
+                Point p = e.getPoint();
+                int m = findMonthIndexFromPoint(p);
+                activeRange_startIndex_temp = activeRange_endIndex_temp = m;
 
+                CommitsTimeline.this.repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e)
             {
+                int m =findMonthIndexFromPoint(e.getPoint());
+                activeRange_endIndex_temp = m;
 
+                ///// Update highlight Area
+                if(activeRange_startIndex_temp>activeRange_endIndex_temp)
+                {
+                    int dummy = activeRange_endIndex_temp;
+                    activeRange_endIndex_temp = activeRange_startIndex_temp;
+                    activeRange_startIndex_temp = dummy;
+                }
+                activeRange_startIndex = activeRange_startIndex_temp;
+                activeRange_endIndex = activeRange_endIndex_temp;
+                activeRange_startIndex_temp = activeRange_endIndex_temp = INVALIDE_VALUE; // Validate above variables to render.
+                CommitsTimeline.this.repaint();
+
+                ///// Update CommitsBar
+                Date startDate = commitList.get(commitList.size()-1).getDate();
+                Calendar cal = Calendar.getInstance();
+                ////
+                cal.setTime(startDate);
+                cal.add(Calendar.MONTH, activeRange_startIndex);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                Date activeRange_startDate = cal.getTime();
+                /////
+                cal.add(Calendar.MONTH, activeRange_endIndex-activeRange_startIndex);
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                Date activeRange_endDate = cal.getTime();
+
+                TTMWindow.updateCommitsBar(activeRange_startDate, activeRange_endDate);
             }
 
             @Override
             public void mouseEntered(MouseEvent e)
             {
 
+
+
             }
 
             @Override
             public void mouseExited(MouseEvent e)
             {
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionListener()
+        {
+            @Override
+            public void mouseDragged(MouseEvent e)
+            {
+                if(activeRange_startIndex_temp==INVALIDE_VALUE) return;
+
+                int m =findMonthIndexFromPoint(e.getPoint());
+                activeRange_endIndex_temp = m;
+
+                CommitsTimeline.this.repaint();
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e)
+            {
 
             }
         });
+    }
+
+    private int findMonthIndexFromPoint(Point p)
+    {
+        final int Y_ACCEPTABLE_CLICK_MARGINE = 35;
+        int endPoint_x = line_effectiveBegin.x + n_monthes*line_sectorsLength - 5/*floating point error*/;
+
+        //if ( p.y > line_effectiveBegin.y+Y_ACCEPTABLE_CLICK_MARGINE || p.y < line_effectiveBegin.y-Y_ACCEPTABLE_CLICK_MARGINE )
+        if (p.x < line_effectiveBegin.x)
+        {
+            p.x = line_effectiveBegin.x;
+        }
+        else if( p.x > endPoint_x)
+            p.x = endPoint_x;
+
+        int m = (p.x - line_effectiveBegin.x) / line_sectorsLength;
+        return m;
     }
 
     @Override
@@ -239,7 +279,8 @@ public class CommitsTimeline extends JComponent
             g.fillOval(getSize().width / 2 - 10, getSize().height / 2 - 10, 20, 20); //Show Center
         }
 
-        g2d.drawString("Date:"+getYearForSector(activeMonthIndex)+"/"+getMonthForSector(activeMonthIndex),50,20);
+        g2d.drawString("Date:" +getYearForSector(activeRange_startIndex)+"/"+getMonthForSector(activeRange_startIndex) +"--"
+                                    +getYearForSector(activeRange_endIndex)+"/"+getMonthForSector(activeRange_endIndex),50,10);
 
         draw_primaryLine(g2d);
         draw_primaryLineSectors(g2d);
@@ -303,23 +344,22 @@ public class CommitsTimeline extends JComponent
     {
         g2d.setColor(Color.WHITE);
 
-        /// Drawing Pillars
+
         final int MAX_LENGTH = 30;
         for(int sectorIndex = 0; sectorIndex<n_monthes; sectorIndex++)
         {
             if(numberOfCommitsPerMonth[sectorIndex]==0) continue;
             Point centerOfSector = getCenterOfSector(sectorIndex);
-            double l = (MAX_LENGTH*percentgeOfCommitsPerMonth[sectorIndex])/100.0;
-            g2d.fillRect(centerOfSector.x-line_sectorsLength/3, centerOfSector.y-(int)l, 2*line_sectorsLength/3, (int)l );
+
+            /// Drawing Pillars
+            int l = (int)((MAX_LENGTH*percentgeOfCommitsPerMonth[sectorIndex])/100.0);
+            g2d.fillRect(centerOfSector.x-line_sectorsLength/3, centerOfSector.y-l, 2*line_sectorsLength/3, l );
+
+            /// Drawing Number of commits (string)
+            g2d.setFont(new Font("Arial",Font.BOLD, 10));
+            DrawingHelper.drawStringCenter(g2d, Integer.toString(numberOfCommitsPerMonth[sectorIndex]),centerOfSector.x,centerOfSector.y-l-5);
         }
 
-        /// Drawing Number of commits (string)
-        for(int sectorIndex = 0; sectorIndex<n_monthes; sectorIndex++)
-        {
-            if(numberOfCommitsPerMonth[sectorIndex]==0) continue;
-            Point centerOfSector = getCenterOfSector(sectorIndex);
-            g2d.drawString(Integer.toString(numberOfCommitsPerMonth[sectorIndex]),centerOfSector.x-5,centerOfSector.y-MAX_LENGTH-5);
-        }
     }
 
     private Point getCenterOfSector(int sectorIndex)
@@ -353,10 +393,32 @@ public class CommitsTimeline extends JComponent
     private void draw_highlightActiveMonth(Graphics2D g2d)
     {
         final int HIGHLIGHT_HEIGHT = 100;
-        Color TRANSPARENT_GREEN = new Color(0,255,0,100);
+        Color TRANSPARENT_GREEN = new Color(0,255,0,70);
         g2d.setColor(TRANSPARENT_GREEN);
         final int GAP=1;
-        g2d.fillRoundRect(line_effectiveBegin.x+activeMonthIndex*line_sectorsLength+GAP, line_effectiveBegin.y-HIGHLIGHT_HEIGHT/2, line_sectorsLength-2*GAP, HIGHLIGHT_HEIGHT, 3, 3);
+
+
+        int s=0, e=0;
+        if(activeRange_startIndex_temp!=INVALIDE_VALUE)
+        {
+            // Notice "activeRange_startIndex_temp" could be bigger than "activeRange_endIndex_temp"
+            s = activeRange_startIndex_temp;
+            e = activeRange_endIndex_temp;
+            if(s>e)
+            {
+                int dummmy = s;
+                s = e;
+                e = dummmy;
+            }
+        }
+        else
+        {
+            s = activeRange_startIndex;
+            e = activeRange_endIndex;
+        }
+
+        int activeRange_length = e - s +1;
+        g2d.fillRoundRect(line_effectiveBegin.x+ s*line_sectorsLength+GAP, line_effectiveBegin.y-HIGHLIGHT_HEIGHT/2-4/*experiential*/, activeRange_length*line_sectorsLength-2*GAP, HIGHLIGHT_HEIGHT, 3, 3);
     }
 
     private void draw_primaryLineSectors(Graphics2D g2d)

@@ -12,27 +12,36 @@ import java.util.ArrayList;
 
 public class CommitsTimelineZoomable extends JBScrollPane
 {
-    private static final Dimension COMPONENT_SIZE = new Dimension(1100, 110); // Area which dedicated to this component in UI
+    private static final Dimension COMPONENT_SIZE = new Dimension(1250, 110); // Area which dedicated to this component in UI
     CommitsTimeline t = null;
     int zoomScale = 1;
 
 
     public CommitsTimelineZoomable(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow)
     {
-        t = new CommitsTimeline(commitList, TTMWindow);
+        setSize(COMPONENT_SIZE);
+        setPreferredSize(COMPONENT_SIZE);
+        setMaximumSize(COMPONENT_SIZE); //The internal component should obviously be bigger than this Dimension for scrolling
+        setMinimumSize(COMPONENT_SIZE);
 
+
+        t = new CommitsTimeline(commitList, TTMWindow, this); //After setting scrollComponent size
         setViewportView(t);
         setBorder(null);
 
-        setMaximumSize(COMPONENT_SIZE); //The internal component should obviously be bigger than this Dimension for scrolling
+        setupScrollBarProperties();
+
+        addKeyListener();
+    }
+
+    private void setupScrollBarProperties()
+    {
         setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         getHorizontalScrollBar().setPreferredSize(new Dimension(0, 8));
         getHorizontalScrollBar().setForeground(Color.RED);
         getHorizontalScrollBar().setOpaque(true);
 
         setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_NEVER);
-
-        addKeyListener();
     }
 
     public JComponent getComponent()
@@ -73,7 +82,7 @@ public class CommitsTimelineZoomable extends JBScrollPane
                 ///////////
                 newMax *= zoomScale;
                 double progress = (model.getValue()+model.getExtent()/2)/(double)(model.getMaximum());
-                t.setSectorsLength(t.original_sectorsLength*zoomScale);
+                t.setZoomFactor(zoomScale);
 
                 getHorizontalScrollBar().setValue( (int)(progress*newMax-model.getExtent()/2));
             }

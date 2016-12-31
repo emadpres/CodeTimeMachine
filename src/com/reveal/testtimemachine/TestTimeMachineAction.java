@@ -22,9 +22,7 @@ import com.intellij.ui.content.Content;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by emadpres on 11/23/16.
@@ -83,6 +81,17 @@ public class TestTimeMachineAction extends AnAction
                 aCommitWrapper = new CommitWrapper(currentContent, "",new Date(),"Uncommited Changes");
                 subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }
+
+
+            /// Sort by Date all commits
+            Collections.sort(subjectAndTestClassCommitsList[i], new Comparator<CommitWrapper>()
+            {
+                @Override
+                public int compare(CommitWrapper o1, CommitWrapper o2)
+                {
+                    return o2.getDate().compareTo(o1.getDate());
+                }
+            });
         }
 
 

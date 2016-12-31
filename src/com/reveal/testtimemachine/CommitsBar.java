@@ -28,22 +28,29 @@ public class CommitsBar
     int H=0;
     private ClassType s = ClassType.NONE;
     private int activeCommitIndex = -1;
+    CommitItemDirection direction = CommitItemDirection.NONE;
 
-    public CommitsBar(CommitItemDirection direction, ClassType s, ArrayList<CommitWrapper> commitList,
-                      TTMSingleFileView TTMWindow)
+    public CommitsBar(CommitItemDirection direction, ClassType s, TTMSingleFileView TTMWindow)
     {
         this.TTMWindow = TTMWindow;
         this.s= s;
+        this.direction = direction;
+
 
         setupToolTipSetting();
 
         createEmptyJComponent();
-        creatingCommitsItem(direction, commitList);
-
         setupScroll();
+    }
 
+    public void updateCommitsList(ArrayList<CommitWrapper> newCommitList)
+    {
+        myComponent.removeAll();
+        creatingCommitsItem(newCommitList);
         myComponent.repaint();
-
+        myComponent.getParent().invalidate();
+        myComponent.getParent().revalidate();
+        myComponent.getParent().repaint();
     }
 
     private void setupToolTipSetting()
@@ -59,15 +66,17 @@ public class CommitsBar
         scroll.setBorder(null);
 
         // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
-        scroll.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, H+10));
+        //scroll.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, H+10));
+        scroll.setMaximumSize(new Dimension(200, 1000));
         JScrollBar vertical = scroll.getVerticalScrollBar();
         vertical.setValue( vertical.getMaximum() ); // TODO : Doesn't work correctly. maybe we should call after resize
 
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
     }
 
-    private void creatingCommitsItem(CommitItemDirection direction, ArrayList<CommitWrapper> commitList)
+    private void creatingCommitsItem(ArrayList<CommitWrapper> commitList)
     {
+        if(commitList.size()==0) return;
         // commitList: Most recent commit at 0
         // commitItems: Most recent commit at 0
 
@@ -110,6 +119,7 @@ public class CommitsBar
 
         NewDayItem newDayMarker = new NewDayItem(direction, commitList.get(commitList.size()-1).getDate());
         UI_items.add(newDayMarker.getComponent());
+
 
         for(int i=UI_items.size()-1; i>=0 ; i--)
         {
