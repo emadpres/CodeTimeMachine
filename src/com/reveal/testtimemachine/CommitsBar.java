@@ -10,26 +10,20 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-public class CommitsBar
+public class CommitsBar extends CommitsBarBase
 {
 
-    private TTMSingleFileView TTMWindow = null;
-    private JBScrollPane thisComponent = null;
-    private JPanel thisComponentWithoutScroll = null;
-
-    final Dimension COMPONENT_SIZE = new Dimension(200,1000);
+    protected JBScrollPane commitsBarView = null;
+    protected JPanel thisComponentWithoutScroll = null;
 
     public enum CommitItemDirection {NONE, LTR, RTL};
     public enum CommitItemInfoType {NONE, DATE, TIME}
 
+
     private CommitUIItem[] commitUIItems /* Most recent commit at 0*/;
-    private ArrayList<CommitWrapper> commitList /* Most recent commit at 0*/;
-
-
-    int contentHeight =0;
-    private ClassType classType = ClassType.NONE;
-    private int activeCommit_cIndex = -1;
     CommitItemDirection direction = CommitItemDirection.NONE;
+    int contentHeight =0;
+
 
     public CommitsBar(CommitItemDirection direction, ClassType s, TTMSingleFileView TTMWindow)
     {
@@ -38,7 +32,7 @@ public class CommitsBar
         this.direction = direction;
 
         thisComponentWithoutScroll = createEmptyJComponent();
-        thisComponent = addScrollToThisComponent(thisComponentWithoutScroll);
+        commitsBarView = addScrollToThisComponent(thisComponentWithoutScroll);
 
         //setupToolTipSetting();
     }
@@ -66,25 +60,26 @@ public class CommitsBar
             commitUIItems[commitUIItemIndexIfExist].setActivated(true);
     }
 
+    @Override
     public void updateCommitsList(ArrayList<CommitWrapper> newCommitList)
     {
         this.commitList = newCommitList;
 
         thisComponentWithoutScroll.removeAll();
 
-        creatingCommitsItem(newCommitList);
+        creatingCommitsUIItem(newCommitList);
 
         activateCommitUIItemIfExists(activeCommit_cIndex);
 
-        Dimension newDimension  = new Dimension(COMPONENT_SIZE.width, contentHeight);
+        Dimension newDimension  = new Dimension(COMMITS_BAR_VIEW_DIMENSION.width-40/*scroll bar of parent scrollContainer*/, contentHeight);
         thisComponentWithoutScroll.setPreferredSize(newDimension);
         thisComponentWithoutScroll.setSize(newDimension);
         thisComponentWithoutScroll.setMaximumSize(newDimension);
         thisComponentWithoutScroll.setMinimumSize(newDimension);
 
 
-        thisComponent.repaint();
-        scrollToBottom(thisComponent);
+        commitsBarView.repaint();
+        scrollToBottom(commitsBarView);
     }
 
     private void scrollToBottom(JScrollPane scrollPane) {
@@ -113,15 +108,15 @@ public class CommitsBar
         s.setBorder(null);
 
         // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
-        //thisComponent.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, contentHeight+10));
-        s.setMaximumSize(COMPONENT_SIZE);
+        //commitsBarView.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, contentHeight+10));
+        s.setMaximumSize(COMMITS_BAR_VIEW_DIMENSION);
 
         s.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         return s;
     }
 
-    private void creatingCommitsItem(ArrayList<CommitWrapper> commitList)
+    private void creatingCommitsUIItem(ArrayList<CommitWrapper> commitList)
     {
         if(commitList.size()==0) return;
         // commitList: Most recent commit at 0
@@ -193,13 +188,8 @@ public class CommitsBar
         return c;
     }
 
-
-    private void activateCommit(int clickedCommitUIItemIndex)
+    public void setActiveCommit_cIndex(int cIndex)
     {
-        int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
-        boolean possible = TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
-        if(!possible) return;
-
         if(activeCommit_cIndex!=-1)
         {
             int x = findCommitUIItemIndexFromcIndex(activeCommit_cIndex);
@@ -210,20 +200,29 @@ public class CommitsBar
             }
         }
 
-        activeCommit_cIndex = newActivecommit_cIndex;
-        commitUIItems[clickedCommitUIItemIndex].setActivated(true);
-
+        activeCommit_cIndex = cIndex;
+        commitUIItems[cIndex].setActivated(true);
     }
 
+    private void activateCommit(int clickedCommitUIItemIndex)
+    {
+        int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
+        boolean possible = TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
+        if(!possible) return;
+
+        setActiveCommit_cIndex(newActivecommit_cIndex);
+    }
+
+    @Override
     public JComponent getComponent()
     {
-        return thisComponent;
+        return commitsBarView;
     }
 
     private class NewDayItem
     {
         ///////// ++ Constant ++ /////////
-        private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
+        private final Dimension COMPONENT_SIZE = new Dimension( 140,30 );
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );//
         private final Color NORMAL_COLOR = Color.DARK_GRAY;
         ///////// ++ Constant -- /////////
@@ -302,7 +301,7 @@ public class CommitsBar
 
 
             commitInfo = new JLabel(commitInfoStr);
-            commitInfo.setSize(30,10); //updated in ComponentSizeChanged
+
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 commitInfo.setBackground(Color.CYAN);
             commitInfo.setOpaque(true);
@@ -313,7 +312,7 @@ public class CommitsBar
                 commitInfo.setHorizontalAlignment(SwingConstants.LEFT);
             else
                 commitInfo.setHorizontalAlignment(SwingConstants.RIGHT);
-            commitInfo.setSize(myComponent.getSize().width-30,10);
+            commitInfo.setSize(myComponent.getSize().width-30,20);
             myComponent.add(commitInfo);
         }
 
@@ -417,7 +416,7 @@ public class CommitsBar
     static private class CommitUIItem
     {
         ///////// ++ Constant ++ /////////
-        private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
+        private final Dimension COMPONENT_SIZE = new Dimension( 140,20 );
         private final int LONG_FACTOR = 5;
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 17,5 );
         private final Dimension MARKER_HOVERED_SIZE = new Dimension( 20,8 );
@@ -537,7 +536,6 @@ public class CommitsBar
 
 
             commitInfo = new JLabel(commitInfoStr);
-            commitInfo.setSize(30,10); //updated in ComponentSizeChanged
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 commitInfo.setBackground(Color.CYAN);
             commitInfo.setOpaque(true);
@@ -548,7 +546,7 @@ public class CommitsBar
                 commitInfo.setHorizontalAlignment(SwingConstants.LEFT);
             else
                 commitInfo.setHorizontalAlignment(SwingConstants.RIGHT);
-            commitInfo.setSize(myComponent.getSize().width-30,10);
+            commitInfo.setSize(myComponent.getSize().width-30,20);
             myComponent.add(commitInfo);
         }
 

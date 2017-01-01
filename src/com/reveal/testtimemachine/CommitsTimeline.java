@@ -50,7 +50,7 @@ public class CommitsTimeline extends JComponent
         this.scrollComponent = scrollComponent;
 
         this.setLayout(null);
-        // setSize(COMPONENT_SIZE); By "updateDrawingVariablesForNewSectorsLength()"
+        // setSize(COMMITS_BAR_VIEW_DIMENSION); By "updateDrawingVariablesForNewSectorsLength()"
         ////////////////////////////////////
 
         preCalculation_basic();

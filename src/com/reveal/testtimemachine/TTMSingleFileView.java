@@ -19,7 +19,7 @@ public class TTMSingleFileView
     private ArrayList<CommitWrapper> commits = null;
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
-    CommitsBar commitsBar = null;
+    CommitsBarBase commitsBar = null;
     CommitsTimelineZoomable commitsTimelineZoomable = null;
     //////////////////////////////
 
@@ -49,6 +49,7 @@ public class TTMSingleFileView
     {
         CommitsBar commitsBar =  new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, this);
         commitsBar.updateCommitsList(commitsList);
+        commitsBar.setActiveCommit_cIndex(0);
         return commitsBar;
     }
 
