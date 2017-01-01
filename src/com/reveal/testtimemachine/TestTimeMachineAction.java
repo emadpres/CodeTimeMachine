@@ -2,8 +2,10 @@ package com.reveal.testtimemachine;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.AbstractVcs;
 import com.intellij.openapi.vcs.FilePath;
@@ -40,8 +42,12 @@ public class TestTimeMachineAction extends AnAction
     {
         project = e.getProject();
 
-        VirtualFile[] chosenVirtualFiles = getSubjectAndTestVirtualFiles();
-        if(chosenVirtualFiles == null || chosenVirtualFiles.length > MAX_NUM_OF_FILES)
+
+        VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
+        if(chosenVirtualFiles[0] == null)
+            chosenVirtualFiles = selectVirtualFiles_manually();
+
+        if(chosenVirtualFiles == null || chosenVirtualFiles.length==0 || chosenVirtualFiles.length > MAX_NUM_OF_FILES)
             return;
 
         VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider();
@@ -122,6 +128,7 @@ public class TestTimeMachineAction extends AnAction
 
     }
 
+
     private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
     {
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(chosenVirtualFiles.length);
@@ -150,7 +157,7 @@ public class TestTimeMachineAction extends AnAction
         return myGit.getVcsHistoryProvider();
     }
 
-    public VirtualFile[] getSubjectAndTestVirtualFiles()
+    public VirtualFile[] selectVirtualFiles_manually()
     {
         VirtualFile[] chosenVirtualFiles = null;
 
@@ -166,6 +173,19 @@ public class TestTimeMachineAction extends AnAction
                     new FileChooserDescriptor(true, false, false, false, false, true),
                     project, null);
         }
+
+        return chosenVirtualFiles;
+    }
+
+
+    private VirtualFile[] selectVirtualFiles_auto(AnActionEvent e)
+    {
+        VirtualFile[] chosenVirtualFiles = new VirtualFile[1];
+
+        if(e.getData(LangDataKeys.PSI_FILE) != null)
+            chosenVirtualFiles[0] = e.getData(LangDataKeys.PSI_FILE).getVirtualFile();
+        else
+            chosenVirtualFiles[0] = null;
 
         return chosenVirtualFiles;
     }
