@@ -477,7 +477,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         }
 
         public CustomEditorTextField(@NotNull String text, Project project, FileType fileType) {
-            this(EditorFactory.getInstance().createDocument(text), project, fileType, false, true);
+            this(EditorFactory.getInstance().createDocument(text), project, fileType, true, true);
         }
 
         @Override
@@ -486,11 +486,11 @@ public class Commits3DView extends JComponent implements ComponentListener
             EditorEx editor = super.createEditor();
             editor.setVerticalScrollbarVisible(true);
             editor.setHorizontalScrollbarVisible(true);
-            showLineNumber(editor);
+            addLineNumberToEditor(editor);
             return editor;
         }
 
-        private void showLineNumber(EditorEx editor)
+        private void addLineNumberToEditor(EditorEx editor)
         {
             EditorSettings settings = editor.getSettings();
             settings.setLineNumbersShown(true);
