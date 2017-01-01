@@ -4,10 +4,7 @@ import com.intellij.ui.components.JBScrollPane;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -15,42 +12,92 @@ import java.util.Date;
 
 public class CommitsBar
 {
-    ///////// ++ UI ++ /////////
-    private TTMSingleFileView TTMWindow;
-    private JPanel myComponent;
-    private JBScrollPane scroll;
-    private CommitItem[] commitItems /* Most recent commit at 0*/;
-    ///////// ++ UI -- /////////
+
+    private TTMSingleFileView TTMWindow = null;
+    private JBScrollPane thisComponent = null;
+    private JPanel thisComponentWithoutScroll = null;
+
+    final Dimension COMPONENT_SIZE = new Dimension(200,1000);
 
     public enum CommitItemDirection {NONE, LTR, RTL};
     public enum CommitItemInfoType {NONE, DATE, TIME}
 
-    int H=0;
-    private ClassType s = ClassType.NONE;
-    private int activeCommitIndex = -1;
+    private CommitUIItem[] commitUIItems /* Most recent commit at 0*/;
+    private ArrayList<CommitWrapper> commitList /* Most recent commit at 0*/;
+
+
+    int contentHeight =0;
+    private ClassType classType = ClassType.NONE;
+    private int activeCommit_cIndex = -1;
     CommitItemDirection direction = CommitItemDirection.NONE;
 
     public CommitsBar(CommitItemDirection direction, ClassType s, TTMSingleFileView TTMWindow)
     {
         this.TTMWindow = TTMWindow;
-        this.s= s;
+        this.classType= s;
         this.direction = direction;
 
+        thisComponentWithoutScroll = createEmptyJComponent();
+        thisComponent = addScrollToThisComponent(thisComponentWithoutScroll);
 
-        setupToolTipSetting();
+        //setupToolTipSetting();
+    }
 
-        createEmptyJComponent();
-        setupScroll();
+
+    private int findCommitUIItemIndexFromcIndex(int cIndex)
+    {
+        int commitUIItemIndexIfExist = -1;
+        for(int i=0; i<commitList.size(); i++)
+            if(commitList.get(i).cIndex == cIndex)
+            {
+                commitUIItemIndexIfExist = i;
+                break;
+            }
+
+        return commitUIItemIndexIfExist;
+    }
+
+    public void activateCommitUIItemIfExists(int cIndex)
+    {
+        activeCommit_cIndex = cIndex;
+        int commitUIItemIndexIfExist = findCommitUIItemIndexFromcIndex(cIndex);
+
+        if(commitUIItemIndexIfExist != -1)
+            commitUIItems[commitUIItemIndexIfExist].setActivated(true);
     }
 
     public void updateCommitsList(ArrayList<CommitWrapper> newCommitList)
     {
-        myComponent.removeAll();
+        this.commitList = newCommitList;
+
+        thisComponentWithoutScroll.removeAll();
+
         creatingCommitsItem(newCommitList);
-        myComponent.repaint();
-        myComponent.getParent().invalidate();
-        myComponent.getParent().revalidate();
-        myComponent.getParent().repaint();
+
+        activateCommitUIItemIfExists(activeCommit_cIndex);
+
+        Dimension newDimension  = new Dimension(COMPONENT_SIZE.width, contentHeight);
+        thisComponentWithoutScroll.setPreferredSize(newDimension);
+        thisComponentWithoutScroll.setSize(newDimension);
+        thisComponentWithoutScroll.setMaximumSize(newDimension);
+        thisComponentWithoutScroll.setMinimumSize(newDimension);
+
+
+        thisComponent.repaint();
+        scrollToBottom(thisComponent);
+    }
+
+    private void scrollToBottom(JScrollPane scrollPane) {
+        JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
+        AdjustmentListener downScroller = new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                Adjustable adjustable = e.getAdjustable();
+                adjustable.setValue(adjustable.getMaximum());
+                verticalBar.removeAdjustmentListener(this);
+            }
+        };
+        verticalBar.addAdjustmentListener(downScroller);
     }
 
     private void setupToolTipSetting()
@@ -59,19 +106,19 @@ public class CommitsBar
         ToolTipManager.sharedInstance().setInitialDelay(0); // it needs ToolTipManager.sharedInstance().setEnabled(true); before
     }
 
-    private void setupScroll()
+    private JBScrollPane addScrollToThisComponent(JPanel internalComponent)
     {
-        scroll = new JBScrollPane();
-        scroll.setViewportView(myComponent);
-        scroll.setBorder(null);
+        JBScrollPane s = new JBScrollPane();
+        s.setViewportView(internalComponent);
+        s.setBorder(null);
 
         // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
-        //scroll.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, H+10));
-        scroll.setMaximumSize(new Dimension(200, 1000));
-        JScrollBar vertical = scroll.getVerticalScrollBar();
-        vertical.setValue( vertical.getMaximum() ); // TODO : Doesn't work correctly. maybe we should call after resize
+        //thisComponent.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, contentHeight+10));
+        s.setMaximumSize(COMPONENT_SIZE);
 
-        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        s.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        return s;
     }
 
     private void creatingCommitsItem(ArrayList<CommitWrapper> commitList)
@@ -85,9 +132,9 @@ public class CommitsBar
         lastCommitCal.setTime(new Date(Long.MIN_VALUE));
 
         // UI_items includes CommitItem and other fake UI elements
-        ArrayList<JComponent> UI_items = new ArrayList<>(commitList.size()/*reserve at least this much memort*/);
+        ArrayList<JComponent> UI_items = new ArrayList<>(commitList.size()/*reserve at least this much memory*/);
 
-        commitItems = new CommitItem[commitList.size()];
+        commitUIItems = new CommitUIItem[commitList.size()];
 
         for(int i=0; i<commitList.size() ; i++)
         {
@@ -110,9 +157,9 @@ public class CommitsBar
 
             }
 
-            commitItems[i]= new CommitItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
+            commitUIItems[i]= new CommitUIItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
 
-            UI_items.add(commitItems[i].getComponent());
+            UI_items.add(commitUIItems[i].getComponent());
             ///
             lastCommitCal.setTime(commitList.get(i).getDate());
         }
@@ -121,47 +168,56 @@ public class CommitsBar
         UI_items.add(newDayMarker.getComponent());
 
 
+        contentHeight = 0;
         for(int i=UI_items.size()-1; i>=0 ; i--)
         {
-            myComponent.add(UI_items.get(i));
+            thisComponentWithoutScroll.add(UI_items.get(i));
 
             final int GAP_H = 10;
-            myComponent.add(Box.createRigidArea(new Dimension(1, GAP_H)));
-            H += UI_items.get(i).getSize().height + GAP_H;
+            thisComponentWithoutScroll.add(Box.createRigidArea(new Dimension(1, GAP_H)));
+            contentHeight += UI_items.get(i).getSize().height + GAP_H;
 
         }
-        activeCommitIndex = 0;
-        commitItems[0].setActivated(true);
-
     }
 
-    private void createEmptyJComponent()
+    private JPanel createEmptyJComponent()
     {
-        // Size of this component according to children's components = CommitItem
-        myComponent = new JPanel();
-        BoxLayout boxLayout = new BoxLayout(myComponent, BoxLayout.PAGE_AXIS);
-        myComponent.setLayout(boxLayout);
+        // Size of this component according to children's components => CommitItem
+        JPanel c = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(c, BoxLayout.PAGE_AXIS);
+        c.setLayout(boxLayout);
 
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
-            myComponent.setBackground(Color.RED);
+            c.setBackground(Color.RED);
+
+        return c;
     }
 
 
-    private void activateCommit(int newCommitIndex)
+    private void activateCommit(int clickedCommitUIItemIndex)
     {
-        boolean possible = TTMWindow.navigateToCommit(s, newCommitIndex);
+        int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
+        boolean possible = TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
         if(!possible) return;
 
-        if(activeCommitIndex!=-1)
-            commitItems[activeCommitIndex].setActivated(false);
-        activeCommitIndex = newCommitIndex;
-        commitItems[activeCommitIndex].setActivated(true);
+        if(activeCommit_cIndex!=-1)
+        {
+            int x = findCommitUIItemIndexFromcIndex(activeCommit_cIndex);
+            if(x!= -1)
+            {
+                /*If we are here, it means last active commit was also in the current CommitsBar list*/
+                commitUIItems[x].setActivated(false);
+            }
+        }
+
+        activeCommit_cIndex = newActivecommit_cIndex;
+        commitUIItems[clickedCommitUIItemIndex].setActivated(true);
 
     }
 
     public JComponent getComponent()
     {
-        return scroll;
+        return thisComponent;
     }
 
     private class NewDayItem
@@ -320,9 +376,9 @@ public class CommitsBar
                 public void componentResized(ComponentEvent e)
                 {
                     /*
-                    Since myComponent may change (since it belongs to a layout AND we didn't limit the maximum size),
+                    Since thisComponentWithoutScroll may change (since it belongs to a layout AND we didn't limit the maximum size),
                     we need to reaarange objects when size chnages.
-                    if myComponent had layout (for its children) we wouldn't manage its children after each size change.
+                    if thisComponentWithoutScroll had layout (for its children) we wouldn't manage its children after each size change.
                      */
                     int sd=0;
                     sd++;
@@ -358,7 +414,7 @@ public class CommitsBar
         }
     }
 
-    static private class CommitItem
+    static private class CommitUIItem
     {
         ///////// ++ Constant ++ /////////
         private final Dimension COMPONENT_SIZE = new Dimension( 170,20 );
@@ -379,7 +435,7 @@ public class CommitsBar
         ///////// ++ UI -- /////////
 
 
-        private int commitIndex=-1;
+        private int commitUIItemIndex=-1;
         private CommitItemDirection direction;
         CommitItemInfoType infoType;
 
@@ -388,11 +444,11 @@ public class CommitsBar
 
 
 
-        public CommitItem(CommitItemDirection direction, int commitIndex, CommitWrapper commitWrapper, CommitsBar commitBar, CommitItemInfoType infoType)
+        public CommitUIItem(CommitItemDirection direction, int commitUIItemIndex, CommitWrapper commitWrapper, CommitsBar commitBar, CommitItemInfoType infoType)
         {
             this.commitsBar = commitBar;
             this.direction = direction;
-            this.commitIndex = commitIndex;
+            this.commitUIItemIndex = commitUIItemIndex;
             this.infoType = infoType;
 
             setupUI(commitWrapper, infoType);
@@ -428,9 +484,9 @@ public class CommitsBar
                 public void componentResized(ComponentEvent e)
                 {
                     /*
-                    Since myComponent may change (since it belongs to a layout AND we didn't limit the maximum size),
+                    Since thisComponentWithoutScroll may change (since it belongs to a layout AND we didn't limit the maximum size),
                     we need to reaarange objects when size chnages.
-                    if myComponent had layout (for its children) we wouldn't manage its children after each size change.
+                    if thisComponentWithoutScroll had layout (for its children) we wouldn't manage its children after each size change.
                      */
                     int sd=0;
                     sd++;
@@ -509,7 +565,7 @@ public class CommitsBar
                 @Override
                 public void mouseReleased(MouseEvent e)
                 {
-                    commitsBar.activateCommit(commitIndex);
+                    commitsBar.activateCommit(commitUIItemIndex);
                 }
 
                 @Override

@@ -31,8 +31,8 @@ public class TTMSingleFileView
         ////////////////////////////////////////////////////
         GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
-        commitsTimelineZoomable = setupUI_createCommitsTimeline(commits);
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
+        commitsTimelineZoomable = setupUI_createCommitsTimeline(commits);
         codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
         setupLayout(groupLayout);

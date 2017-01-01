@@ -40,7 +40,7 @@ public class CommitsTimeline extends JComponent
     int[] numberOfCommitsPerMonth = null;
     int[] percentgeOfCommitsPerMonth = null;
 
-
+    final int INITIAL_ACTIVE_RANGE_MONTH = 3;
 
     public CommitsTimeline(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow, JBScrollPane scrollComponent)
     {
@@ -59,12 +59,12 @@ public class CommitsTimeline extends JComponent
 
         addMouseListener();
 
+        activeRange_endIndex = n_monthes-1;
+        activeRange_startIndex = Integer.max(0,activeRange_endIndex- INITIAL_ACTIVE_RANGE_MONTH);
+        setActiveRange(activeRange_startIndex, activeRange_endIndex);
 
-        activeRange_startIndex = activeRange_endIndex = n_monthes-1;
+
         repaint();
-
-
-
     }
 
     private void preCalculation_originalSectorsLength()
@@ -191,25 +191,8 @@ public class CommitsTimeline extends JComponent
                     activeRange_endIndex_temp = activeRange_startIndex_temp;
                     activeRange_startIndex_temp = dummy;
                 }
-                activeRange_startIndex = activeRange_startIndex_temp;
-                activeRange_endIndex = activeRange_endIndex_temp;
-                activeRange_startIndex_temp = activeRange_endIndex_temp = INVALIDE_VALUE; // Validate above variables to render.
-                CommitsTimeline.this.repaint();
 
-                ///// Update CommitsBar
-                Date startDate = commitList.get(commitList.size()-1).getDate();
-                Calendar cal = Calendar.getInstance();
-                ////
-                cal.setTime(startDate);
-                cal.add(Calendar.MONTH, activeRange_startIndex);
-                cal.set(Calendar.DAY_OF_MONTH, 1);
-                Date activeRange_startDate = cal.getTime();
-                /////
-                cal.add(Calendar.MONTH, activeRange_endIndex-activeRange_startIndex);
-                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-                Date activeRange_endDate = cal.getTime();
-
-                TTMWindow.updateCommitsBar(activeRange_startDate, activeRange_endDate);
+                setActiveRange(activeRange_startIndex_temp, activeRange_endIndex_temp);
             }
 
             @Override
@@ -245,6 +228,35 @@ public class CommitsTimeline extends JComponent
 
             }
         });
+    }
+
+    private void setActiveRange(int startMonthIndex, int endMonthIndex)
+    {
+        activeRange_startIndex = startMonthIndex;
+        activeRange_endIndex = endMonthIndex;
+        activeRange_startIndex_temp = activeRange_endIndex_temp = INVALIDE_VALUE; // Validate above variables to render.
+        CommitsTimeline.this.repaint();
+
+        ///// Update CommitsBar
+        Date startDate = commitList.get(commitList.size()-1).getDate();
+        Calendar cal = Calendar.getInstance();
+        ////
+        cal.setTime(startDate);
+        cal.add(Calendar.MONTH, activeRange_startIndex);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        Date activeRange_startDate_inclusive = cal.getTime();
+        /////
+        cal.add(Calendar.MONTH, activeRange_endIndex-activeRange_startIndex);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        Date activeRange_endDate_inclusive = cal.getTime();
+
+        TTMWindow.updateCommitsBar(activeRange_startDate_inclusive, activeRange_endDate_inclusive);
     }
 
     private int findMonthIndexFromPoint(Point p)
@@ -295,7 +307,7 @@ public class CommitsTimeline extends JComponent
         g2d.setColor(Color.RED);
         g2d.fillOval(5,5,10,10);
         g2d.setColor(Color.GREEN);
-        g2d.fillOval(5,getSize().height-5,10,10);
+        g2d.fillOval(5,getSize().height-15,10,10);
         g2d.setColor(Color.YELLOW);
         g2d.fillOval(getSize().width-15,5,10,10);
         g2d.setColor(Color.BLUE);

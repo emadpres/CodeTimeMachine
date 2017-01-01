@@ -9,19 +9,22 @@ import java.util.Date;
 
 public class CommitWrapper // A Wrapper for `fileRevision` class
 {
+    int cIndex = -1;
     private boolean isFake = false;
     private VcsFileRevision fileRevision = null;
     private FakeCommit fakeCommit = null;
 
-    public CommitWrapper(VcsFileRevision fileRevision)
+    public CommitWrapper(VcsFileRevision fileRevision, int cIndex)
     {
         isFake = false;
+        this.cIndex = cIndex;
         this.fileRevision = fileRevision;
     }
 
-    public CommitWrapper(String content, String commitMessage, Date date, String hash)
+    public CommitWrapper(String content, String commitMessage, Date date, String hash, int cIndex)
     {
         isFake = true;
+        this.cIndex = cIndex;
         fakeCommit = new FakeCommit(content, commitMessage, date, hash);
     }
 
@@ -35,18 +38,7 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
         String content;
         if(!isFake)
         {
-            byte[] selectedCommitContent = new byte[0];
-            try
-            {
-                selectedCommitContent = fileRevision.loadContent();
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            } catch (VcsException e)
-            {
-                e.printStackTrace();
-            }
-            content = new String(selectedCommitContent);
+            content = VcsFileRevisionHelper.getContent(fileRevision);
         }
         else
         {

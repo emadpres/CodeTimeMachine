@@ -55,14 +55,7 @@ public class TestTimeMachineAction extends AnAction
             subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
 
 
-            ///// Other Real
-            for(int j=0; j< realCommitsSize; j++)
-            {
-                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j));
-                subjectAndTestClassCommitsList[i].add(aCommitWrapper);
-            }
-
-
+            int cIndex = 0;
 
             ///// First Fake (UncommitedChanges)
             String currentContent = "";
@@ -75,12 +68,23 @@ public class TestTimeMachineAction extends AnAction
                 e1.printStackTrace();
             }
 
-            String mostRecentCommitContent = subjectAndTestClassCommitsList[i].get(0).getFileContent();
+            String mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(i).get(0));
             if(! mostRecentCommitContent.equals(currentContent) )
             {
-                aCommitWrapper = new CommitWrapper(currentContent, "",new Date(),"Uncommited Changes");
+                aCommitWrapper = new CommitWrapper(currentContent, "",new Date(),"Uncommited Changes", cIndex++);
                 subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }
+
+            ///// Other Real
+            for(int j=0; j< realCommitsSize; j++)
+            {
+                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j),cIndex++);
+                subjectAndTestClassCommitsList[i].add(aCommitWrapper);
+            }
+
+
+
+
 
 
             /// Sort by Date all commits

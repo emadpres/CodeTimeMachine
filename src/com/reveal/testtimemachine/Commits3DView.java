@@ -1,5 +1,6 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
@@ -36,7 +37,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final boolean COLORFUL = false;
     final int TICK_INTERVAL_MS = 50;
     final float LAYER_DISTANCE = 0.2f;
-    final int MAX_VISIBLE_VIRTUAL_WINDOW = 10;
+    final int MAX_VISIBLE_VIRTUAL_WINDOW = 15;
     //////
     boolean onChangingCommitProcess = false;
     final int TOP_BAR_HEIGHT = 25;
@@ -72,8 +73,9 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
         mainEditorWindow.setEnabled(true);
-        mainEditorWindow.setRequestFocusEnabled(true);
+        mainEditorWindow.setRequestFocusEnabled(false);
         mainEditorWindow.setOneLineMode(false);
+
         add(mainEditorWindow); // we setBound in ComponentResized() event
 
 
@@ -284,10 +286,21 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void loadMainEditorWindowContent()
     {
         String content = getStringFromCommits(topLayerIndex);
-        mainEditorWindow.setText(content);
-        mainEditorWindow.setCaretPosition(0);
+
+        ApplicationManager.getApplication().invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                mainEditorWindow.setText(content);
+
+            }
+        });
+
         updateMainEditorWindowBoundary();
+        mainEditorWindow.setCaretPosition(0); // TODO: Doesn't Work
         mainEditorWindow.setVisible(true);
+
     }
 
     private void updateMainEditorWindowBoundary()
