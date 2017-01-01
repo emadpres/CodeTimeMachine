@@ -12,6 +12,8 @@ import java.util.*;
 
 public class TTMSingleFileView
 {
+    enum CommitsBarType {NONE, TREE, OLD};
+    final CommitsBarType commitsBarType = CommitsBarType.OLD;
     //////////////////////////////
     private JPanel thisComponent;
     private Project project;
@@ -45,9 +47,19 @@ public class TTMSingleFileView
          return new Commits3DView(project, virtualFiles, commits);
     }
 
-    private CommitsBar setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
+    private CommitsBarBase setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
     {
-        CommitsBar commitsBar =  new CommitsBar( CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, this);
+        CommitsBarBase commitsBar = null;
+        switch (commitsBarType)
+        {
+            case OLD:
+                commitsBar = new CommitsBar(CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, this);
+                break;
+            case TREE:
+            default:
+                commitsBar = new CommitsBarTreeView(this);
+                break;
+        }
         commitsBar.updateCommitsList(commitsList);
         commitsBar.setActiveCommit_cIndex(0);
         return commitsBar;
@@ -96,18 +108,10 @@ public class TTMSingleFileView
 
     public void updateCommitsBar(Date activeRange_startDate, Date activeRange_endDate)
     {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(activeRange_startDate);
-        int y = cal.get(Calendar.YEAR);
-        int m = cal.get(Calendar.MONTH);
-        //////////
         ArrayList<CommitWrapper> commitsForRequestedRange = new ArrayList<>();
-        //Calendar tempCal = Calendar.getInstance();
         for(int i=0; i<commits.size(); i++)
         {
-            //tempCal.setTime(commits.get(i).getDate());
             Date currentCommitDate = commits.get(i).getDate();
-            //if( tempCal.get(Calendar.YEAR)==y && tempCal.get(Calendar.MONTH)==m)
             if(!currentCommitDate.before(activeRange_startDate) && !currentCommitDate.after(activeRange_endDate))
                 commitsForRequestedRange.add(commits.get(i));
         }

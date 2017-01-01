@@ -188,6 +188,7 @@ public class CommitsBar extends CommitsBarBase
         return c;
     }
 
+    @Override
     public void setActiveCommit_cIndex(int cIndex)
     {
         if(activeCommit_cIndex!=-1)

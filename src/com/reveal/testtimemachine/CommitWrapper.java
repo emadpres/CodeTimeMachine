@@ -33,6 +33,10 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
         return isFake;
     }
 
+    public String toString() {
+        return getCommitMessage();
+    }
+
     public String getFileContent()
     {
         String content;

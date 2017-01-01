@@ -11,7 +11,7 @@ public abstract class CommitsBarBase
 {
     protected TTMSingleFileView TTMWindow = null;
 
-    final protected Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(200,1000);
+    protected Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(200,1000);
 
     protected ArrayList<CommitWrapper> commitList /* Most recent commit at 0*/;
 

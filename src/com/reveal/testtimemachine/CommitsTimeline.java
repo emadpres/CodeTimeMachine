@@ -495,9 +495,7 @@ public class CommitsTimeline extends JComponent
 
             if(LOD>1)
             {
-                Date d = new Date(2000,getMonthForSector(splitter),1);
-                SimpleDateFormat month_date = new SimpleDateFormat("MMM");
-                String month_name = month_date.format(d);
+                String month_name = CalendarHelper.convertMonthIndexToShortName(getMonthForSector(splitter));
                 g2d.drawString(month_name, lineIterator.x,lineIterator.y+SECTOR_SPLITTER_LENGTH_YEAR+5/*5: text position considered as bottom-left*/);
             }
         }
