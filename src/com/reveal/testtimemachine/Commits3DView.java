@@ -71,9 +71,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.setOpaque(true);
 
 
-        mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
+        //mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
+        mainEditorWindow = new CustomEditorTextField("",project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
         mainEditorWindow.setEnabled(true);
-        mainEditorWindow.setRequestFocusEnabled(false);
         mainEditorWindow.setOneLineMode(false);
 
         add(mainEditorWindow); // we setBound in ComponentResized() event
