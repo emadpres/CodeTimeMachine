@@ -13,7 +13,7 @@ import java.util.*;
 public class TTMSingleFileView
 {
     enum CommitsBarType {NONE, TREE, OLD};
-    final CommitsBarType commitsBarType = CommitsBarType.OLD;
+    final CommitsBarType commitsBarType = CommitsBarType.TREE;
     //////////////////////////////
     private JPanel thisComponent;
     private Project project;

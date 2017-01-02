@@ -8,9 +8,13 @@ import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.util.ArrayList;
+
+import javax.swing.ImageIcon;
 
 public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionListener
 {
@@ -19,7 +23,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
     private Tree treeComponent = null;
 
 
-    protected Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(250,1000);
+    protected Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(220,750);
 
     CommitsBarTreeView(TTMSingleFileView TTMWindow)
     {
@@ -32,6 +36,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         commitsBarTreeView.setSize(COMMITS_BAR_VIEW_DIMENSION);
         commitsBarTreeView.setMinimumSize(COMMITS_BAR_VIEW_DIMENSION);
         commitsBarTreeView.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        commitsBarTreeView.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
     }
 
@@ -44,9 +49,26 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         DefaultMutableTreeNode treeViewRoot = SwingTreeHelper.convertCommitsDataTree_to_SwingTreeNode(commitsDataTree);
         treeComponent = new Tree(treeViewRoot);
         treeComponent.setRootVisible(false);
-        //treeComponent.putClientProperty("JTree.lineStyle", "None");
+        treeComponent.setShowsRootHandles(false); // Toplevel 'Root' or (if Root invisible) it's children don't need + to expand)
+        treeComponent.putClientProperty("JTree.lineStyle", "Angled"); //"Angled" (default) 	"Horizontal" 	"None"
         treeComponent.getSelectionModel().setSelectionMode (TreeSelectionModel.SINGLE_TREE_SELECTION);
         treeComponent.addTreeSelectionListener(this);
+        ///
+        DefaultMutableTreeNode currentNode = treeViewRoot.getNextNode();
+        while (currentNode != null){
+            if (currentNode.getLevel()==1)
+                treeComponent.expandPath(new TreePath(currentNode.getPath()));
+            currentNode = currentNode.getNextNode();
+        }
+
+        ///
+        //ImageIcon leafIcon = createImageIcon("images/git-commit.png");
+        ImageIcon leafIcon = new ImageIcon(getClass().getResource("/images/git-commit.png"));
+        if (leafIcon != null) {
+            DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+            renderer.setLeafIcon(leafIcon);
+            treeComponent.setCellRenderer(renderer);
+        }
         /////
         commitsBarTreeView.setViewportView(treeComponent);
 
@@ -59,6 +81,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         commitsBarTreeView.repaint();
     }
 
+    @Override
     public void valueChanged(TreeSelectionEvent e)
     {
         //Returns the last path element of the selection.
@@ -71,6 +94,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         if (node.isLeaf())
         {
             CommitWrapper commitwrapper = (CommitWrapper)nodeInfo;
+            if(commitwrapper == null) return; //We have some leafs (not lowest level which are Year/Month names.
 
             boolean possible = TTMWindow.navigateToCommit(classType.SUBJECT_CLASS, commitwrapper.cIndex);
             if(!possible) return;

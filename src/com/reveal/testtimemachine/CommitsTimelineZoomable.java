@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class CommitsTimelineZoomable extends JBScrollPane
 {
-    private static final Dimension COMPONENT_SIZE = new Dimension(1250, 110); // Area which dedicated to this component in UI
+    private static final Dimension COMPONENT_SIZE = new Dimension(1000, 110); // Area which dedicated to this component in UI
     CommitsTimeline t = null;
     int zoomScale = 1;
 

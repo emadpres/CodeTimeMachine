@@ -4,15 +4,15 @@ import java.util.ArrayList;
 
 class CommitsDataTree
 {
-    ArrayList<CommitTreeYearNode> commitTreeYearsNode = new ArrayList<>();
+    ArrayList<CommitTreeYearNode> yearNodes = new ArrayList<>();
 
     //public void addCommits(ArrayList<CommitWrapper> commitsListOfOneYear, int year)
     public void addCommit(CommitWrapper commit, int year, int month, int day)
     {
         int foundIndex=-1;
-        for(int i=0; i<commitTreeYearsNode.size(); i++)
+        for(int i = 0; i< yearNodes.size(); i++)
         {
-            if(commitTreeYearsNode.get(i).year ==year)
+            if(yearNodes.get(i).year ==year)
             {
                 foundIndex = i;
                 break;
@@ -20,11 +20,11 @@ class CommitsDataTree
         }
         if(foundIndex==-1)
         {
-            commitTreeYearsNode.add(new CommitTreeYearNode(this, year));
-            foundIndex = commitTreeYearsNode.size()-1;
+            yearNodes.add(new CommitTreeYearNode(this, year));
+            foundIndex = yearNodes.size()-1;
         }
         ////////////////////
-        commitTreeYearsNode.get(foundIndex).addCommit(commit, month, day);
+        yearNodes.get(foundIndex).addCommit(commit, month, day);
     }
 
 
@@ -32,7 +32,8 @@ class CommitsDataTree
     {
         int year=-1;
         CommitsDataTree parentTreeRoot = null;
-        ArrayList<CommitTreeMonthNode> commitTreeMonthsNode = new ArrayList<>();
+        int totalNumberOfCommitsOfThisYear=0;
+        ArrayList<CommitTreeMonthNode> monthNodes = new ArrayList<>();
 
         public CommitTreeYearNode(CommitsDataTree parentTreeRoot, int year)
         {
@@ -42,10 +43,12 @@ class CommitsDataTree
 
         public void addCommit(CommitWrapper commit, int month, int day)
         {
+            totalNumberOfCommitsOfThisYear++;
+
             int foundIndex=-1;
-            for(int i=0; i<commitTreeMonthsNode.size(); i++)
+            for(int i = 0; i< monthNodes.size(); i++)
             {
-                if(commitTreeMonthsNode.get(i).month == month)
+                if(monthNodes.get(i).month == month)
                 {
                     foundIndex = i;
                     break;
@@ -53,11 +56,11 @@ class CommitsDataTree
             }
             if(foundIndex==-1)
             {
-                commitTreeMonthsNode.add(new CommitTreeMonthNode(this, month));
-                foundIndex = commitTreeMonthsNode.size()-1;
+                monthNodes.add(new CommitTreeMonthNode(this, month));
+                foundIndex = monthNodes.size()-1;
             }
             ////////////////////
-            commitTreeMonthsNode.get(foundIndex).addCommit(commit, day);
+            monthNodes.get(foundIndex).addCommit(commit, day);
         }
     }
 
@@ -65,7 +68,8 @@ class CommitsDataTree
     {
         int month=-1;
         CommitTreeYearNode parentYearNode=null;
-        ArrayList<CommitTreeDayNode> commitTreeDaysNode = new ArrayList<>();
+        int totalNumberOfCommitsOfThisMonth=0;
+        ArrayList<CommitTreeDayNode> dayNodes = new ArrayList<>();
 
         public CommitTreeMonthNode(CommitTreeYearNode parentYearNode, int month)
         {
@@ -75,10 +79,12 @@ class CommitsDataTree
 
         public void addCommit(CommitWrapper commit, int day)
         {
+            totalNumberOfCommitsOfThisMonth++;
+
             int foundIndex=-1;
-            for(int i=0; i<commitTreeDaysNode.size(); i++)
+            for(int i = 0; i< dayNodes.size(); i++)
             {
-                if(commitTreeDaysNode.get(i).day == day)
+                if(dayNodes.get(i).day == day)
                 {
                     foundIndex = i;
                     break;
@@ -86,11 +92,11 @@ class CommitsDataTree
             }
             if(foundIndex==-1)
             {
-                commitTreeDaysNode.add(new CommitTreeDayNode(this, day));
-                foundIndex = commitTreeDaysNode.size()-1;
+                dayNodes.add(new CommitTreeDayNode(this, day));
+                foundIndex = dayNodes.size()-1;
             }
             ////////////////////
-            commitTreeDaysNode.get(foundIndex).addCommit(commit);
+            dayNodes.get(foundIndex).addCommit(commit);
         }
     }
 
@@ -98,7 +104,7 @@ class CommitsDataTree
     {
         int day = -1;
         CommitTreeMonthNode parentMonthNode = null;
-        ArrayList<CommitWrapper> commitsOfDay = new ArrayList<>();
+        ArrayList<CommitWrapper> commitsOfTheDay = new ArrayList<>();
 
         public CommitTreeDayNode(CommitTreeMonthNode parentMonthNode, int day)
         {
@@ -108,7 +114,7 @@ class CommitsDataTree
 
         public void addCommit(CommitWrapper commit)
         {
-            commitsOfDay.add(commit);
+            commitsOfTheDay.add(commit);
         }
     }
 }

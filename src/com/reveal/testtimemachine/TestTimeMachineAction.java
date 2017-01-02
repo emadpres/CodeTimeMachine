@@ -77,7 +77,8 @@ public class TestTimeMachineAction extends AnAction
             String mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(i).get(0));
             if(! mostRecentCommitContent.equals(currentContent) )
             {
-                aCommitWrapper = new CommitWrapper(currentContent, "",new Date(),"Uncommited Changes", cIndex++);
+                final String UNCOMMITED_CHANGE_TEXT  = "Uncommited Changes";
+                aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT,new Date(),UNCOMMITED_CHANGE_TEXT, cIndex++);
                 subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }
 
