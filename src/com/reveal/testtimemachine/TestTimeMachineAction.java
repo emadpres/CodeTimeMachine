@@ -107,7 +107,8 @@ public class TestTimeMachineAction extends AnAction
 
 
         if(toolWindow == null)
-            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("TTM", true, ToolWindowAnchor.TOP);
+            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("((Time Machine Plugin))", false, ToolWindowAnchor.TOP);
+
 
 
 

@@ -21,6 +21,8 @@ public class CommitsTimeline extends JComponent
     TTMSingleFileView TTMWindow = null;
     JBScrollPane scrollComponent = null;
 
+    int FIRST_MONTH_OF_YEAR_INDEX = 0;
+
     final int INVALIDE_VALUE = -10;
     int activeRange_startIndex = INVALIDE_VALUE, activeRange_endIndex=INVALIDE_VALUE; //0-based - we use "*_temp" variables unless they are INVALID_VALUE
     int activeRange_startIndex_temp = INVALIDE_VALUE, activeRange_endIndex_temp = INVALIDE_VALUE; //0-based
@@ -459,9 +461,8 @@ public class CommitsTimeline extends JComponent
         Point lineIterator = (Point) line_effectiveBegin.clone();
 
         int yearIterator = start_year;
-        for (int splitter = 1; splitter < n_monthes; splitter++)
+        for (int splitter = 0; splitter < n_monthes; splitter++)
         {
-            int FIRST_MONTH_OF_YEAR_INDEX = 0;
             if(getMonthForSector(splitter)== FIRST_MONTH_OF_YEAR_INDEX)
             {
                 g2d.setColor(Color.LIGHT_GRAY);
@@ -475,7 +476,6 @@ public class CommitsTimeline extends JComponent
                 sectorSplitter_vecticalLineLength = SECTOR_SPLITTER_LENGTH_MONTH;
             }
 
-            lineIterator.x += line_sectorsLength;
             g2d.drawLine(lineIterator.x, lineIterator.y + sectorSplitter_vecticalLineLength / 2,
                     lineIterator.x, lineIterator.y - sectorSplitter_vecticalLineLength / 2);
 
@@ -496,8 +496,12 @@ public class CommitsTimeline extends JComponent
             if(LOD>1)
             {
                 String month_name = CalendarHelper.convertMonthIndexToShortName(getMonthForSector(splitter));
+                if(start_year==end_year /*We have one year altogether*/ && splitter==0/*First Month*/ )
+                    month_name = month_name + " " +Integer.toString(start_year);
                 g2d.drawString(month_name, lineIterator.x,lineIterator.y+SECTOR_SPLITTER_LENGTH_YEAR+5/*5: text position considered as bottom-left*/);
             }
+
+            lineIterator.x += line_sectorsLength;
         }
 
         //g2d.setStroke(null);

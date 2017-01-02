@@ -54,7 +54,7 @@ public class CommitsTimelineZoomable extends JBScrollPane
         int newMax = model.getMaximum();
         newMax /= zoomScale;
 
-        if(zoomScale+value<=10 && zoomScale+value>=1)
+        if(zoomScale+value<=getMaximumZoomFactor() && zoomScale+value>=1)
             zoomScale += value;
 
 
@@ -63,6 +63,12 @@ public class CommitsTimelineZoomable extends JBScrollPane
         t.setZoomFactor(zoomScale);
 
         getHorizontalScrollBar().setValue( (int)(progress*newMax-model.getExtent()/2));
+    }
+
+    public int getMaximumZoomFactor()
+    {
+        int max = getSize().width / t.original_sectorsLength;
+        return max;
     }
 
     @Override
