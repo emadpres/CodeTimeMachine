@@ -344,7 +344,7 @@ public class CommitsTimeline extends JComponent
             int dayInMonth = cal.get(Calendar.DAY_OF_MONTH);
 
             Point p = (Point) line_effectiveBegin.clone();
-            p.x = p.x + (int) ((sectorIndex+(dayInMonth/30.0))*line_sectorsLength);
+            p.x = p.x + (int) ((sectorIndex+(dayInMonth/31.0))*line_sectorsLength);
 
             g2d.setColor(Color.BLUE);
             g2d.fillOval(p.x - CIRCLE_SIZE.width/2, p.y - CIRCLE_SIZE.height/2, CIRCLE_SIZE.width, CIRCLE_SIZE.height);
