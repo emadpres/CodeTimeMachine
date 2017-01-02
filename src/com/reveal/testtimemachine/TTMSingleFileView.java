@@ -102,13 +102,21 @@ public class TTMSingleFileView
 
     private void showDiff()
     {
-        final String latestCommitContent_str = commits.get(0).getFileContent(), activeCommitContent_str = commits.get(commitsBar.activeCommit_cIndex).getFileContent();
-        //SimpleContent latestCommitContent = new SimpleContent(latestCommitContent_str);
-        //SimpleContent  activeCommitContent = new SimpleContent(activeCommitContent_str);
+        int latestsCommittedRevision = -1;
+        for( int i=0; i<commits.size(); i++)
+            if(!commits.get(i).isFake())
+            {
+                latestsCommittedRevision = i;
+                break;
+            }
+        if(latestsCommittedRevision==-1) return;
+        ///////////
+
+        final String latestCommitContent_str = commits.get(latestsCommittedRevision).getFileContent(), activeCommitContent_str = commits.get(commitsBar.activeCommit_cIndex).getFileContent();
         DocumentContent latestCommitContent = DiffContentFactory.getInstance().create(latestCommitContent_str);
         DocumentContent activeCommitContent = DiffContentFactory.getInstance().create(activeCommitContent_str);
 
-        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", latestCommitContent, activeCommitContent, "Base ("+commits.get(0).getHash()+")", "Selected Commit ("+commits.get(0).getHash()+")");
+        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", latestCommitContent, activeCommitContent, "Base ("+commits.get(latestsCommittedRevision).getHash()+")", "Selected Commit ("+commits.get(0).getHash()+")");
 
         DiffManager.getInstance().showDiff(project, diffReqFromString);
 
