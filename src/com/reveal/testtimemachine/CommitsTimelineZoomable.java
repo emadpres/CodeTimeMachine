@@ -30,8 +30,6 @@ public class CommitsTimelineZoomable extends JBScrollPane
         setBorder(null);
 
         setupScrollBarProperties();
-
-        addKeyListener();
     }
 
     private void setupScrollBarProperties()
@@ -49,54 +47,22 @@ public class CommitsTimelineZoomable extends JBScrollPane
         return this;
     }
 
-    private void addKeyListener()
+    // Value: +1 or -1
+    public void changeZoomFactor(int value)
     {
-        this.setFocusable(true);
-        this.requestFocus();
-        /////////
-        addKeyListener(new KeyListener()
-        {
-            @Override
-            public void keyTyped(KeyEvent e)
-            {
-                BoundedRangeModel model = getHorizontalScrollBar().getModel();
-                int newMax = model.getMaximum();
-                newMax /= zoomScale;
+        BoundedRangeModel model = getHorizontalScrollBar().getModel();
+        int newMax = model.getMaximum();
+        newMax /= zoomScale;
 
-                char c = e.getKeyChar();
-                switch (c)
-                {
-                    case '+':
-                    case '=':
-                        if(zoomScale<10)
-                            zoomScale ++;
-                        break;
-                    case '_':
-                    case '-':
-                        if(zoomScale>1)
-                        {
-                            zoomScale--;
-                        }
-                        break;
-                }
-                ///////////
-                newMax *= zoomScale;
-                double progress = (model.getValue()+model.getExtent()/2)/(double)(model.getMaximum());
-                t.setZoomFactor(zoomScale);
+        if(zoomScale+value<=10 && zoomScale+value>=1)
+            zoomScale += value;
 
-                getHorizontalScrollBar().setValue( (int)(progress*newMax-model.getExtent()/2));
-            }
 
-            @Override
-            public void keyPressed(KeyEvent e)
-            {
-            }
+        newMax *= zoomScale;
+        double progress = (model.getValue()+model.getExtent()/2)/(double)(model.getMaximum());
+        t.setZoomFactor(zoomScale);
 
-            @Override
-            public void keyReleased(KeyEvent e)
-            {
-            }
-        });
+        getHorizontalScrollBar().setValue( (int)(progress*newMax-model.getExtent()/2));
     }
 
     @Override

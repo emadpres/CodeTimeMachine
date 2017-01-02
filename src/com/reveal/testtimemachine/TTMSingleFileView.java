@@ -1,10 +1,20 @@
 package com.reveal.testtimemachine;
 
+import com.intellij.diff.DiffContentFactory;
+import com.intellij.diff.DiffManager;
+import com.intellij.diff.DiffRequestFactory;
+import com.intellij.diff.contents.DocumentContent;
+import com.intellij.diff.requests.ContentDiffRequest;
+import com.intellij.diff.requests.SimpleDiffRequest;
+import com.intellij.openapi.diff.SimpleContent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.*;
 
 ///////// ++ UI ++ /////////
@@ -13,7 +23,7 @@ import java.util.*;
 public class TTMSingleFileView
 {
     enum CommitsBarType {NONE, TREE, OLD};
-    final CommitsBarType commitsBarType = CommitsBarType.TREE;
+    final CommitsBarType commitsBarType = CommitsBarType.OLD;
     //////////////////////////////
     private JPanel thisComponent;
     private Project project;
@@ -39,7 +49,69 @@ public class TTMSingleFileView
         ////////////
         setupLayout(groupLayout);
 
+
         codeHistory3DView.showCommit(0, false);
+
+        addKeyListener();
+    }
+
+    private void addKeyListener()
+    {
+        thisComponent.requestFocusInWindow();
+
+        final String ZOOOM_IN_ACTION_NAME = "zoomInTimeline";
+        final String ZOOOM_OUT_ACTION_NAME = "zoomOutTimeline";
+        final String SHOW_DIFF_ACTION_NAME = "showDiffWindow";
+
+
+        /*thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("-"), ZOOOM_OUT_ACTION_NAME);
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('-'), ZOOOM_OUT_ACTION_NAME);
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("_"), ZOOOM_OUT_ACTION_NAME);*/
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0), ZOOOM_OUT_ACTION_NAME);
+        thisComponent.getActionMap().put(ZOOOM_OUT_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.changeZoomFactor(-1);
+            }
+        });
+
+        //thisComponent.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ADD, KeyEvent.CTRL_DOWN_MASK), "zoomInTimeline");
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ADD,0), ZOOOM_IN_ACTION_NAME);
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,0), ZOOOM_IN_ACTION_NAME);
+        thisComponent.getActionMap().put(ZOOOM_IN_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.changeZoomFactor(+1);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0), SHOW_DIFF_ACTION_NAME);
+        thisComponent.getActionMap().put(SHOW_DIFF_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                showDiff();
+            }
+        });
+    }
+
+    private void showDiff()
+    {
+        final String latestCommitContent_str = commits.get(0).getFileContent(), activeCommitContent_str = commits.get(commitsBar.activeCommit_cIndex).getFileContent();
+        //SimpleContent latestCommitContent = new SimpleContent(latestCommitContent_str);
+        //SimpleContent  activeCommitContent = new SimpleContent(activeCommitContent_str);
+        DocumentContent latestCommitContent = DiffContentFactory.getInstance().create(latestCommitContent_str);
+        DocumentContent activeCommitContent = DiffContentFactory.getInstance().create(activeCommitContent_str);
+
+        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", latestCommitContent, activeCommitContent, "Base ("+commits.get(0).getHash()+")", "Selected Commit ("+commits.get(0).getHash()+")");
+
+        DiffManager.getInstance().showDiff(project, diffReqFromString);
+
     }
 
     private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
