@@ -15,10 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
@@ -94,6 +91,37 @@ public class Commits3DView extends JComponent implements ComponentListener
             {
                 tick(TICK_INTERVAL_MS/1000.f);
                 repaint();
+            }
+        });
+
+        addMouseWheelListener();
+    }
+
+    private void addMouseWheelListener()
+    {
+        this.addMouseWheelListener(new MouseWheelListener()
+        {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e)
+            {
+                int notches = e.getWheelRotation();
+                if (notches < 0)
+                {
+                    //Mouse wheel moved UP for -1*notches
+                    int activeCommit_cIndex = targetLayerIndex;
+                    if(activeCommit_cIndex+1 >= commitList.size()) return;
+                    activeCommit_cIndex++;
+                    showCommit(activeCommit_cIndex, true);
+                    TTMWindow.commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                }
+                else
+                {
+                    int activeCommit_cIndex = targetLayerIndex;
+                    if(activeCommit_cIndex-1 <0) return;
+                    activeCommit_cIndex--;
+                    showCommit(activeCommit_cIndex, true);
+                    TTMWindow.commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                }
             }
         });
     }
