@@ -232,7 +232,7 @@ public class CommitsTimeline extends JComponent
         });
     }
 
-    private void setActiveRange(int startMonthIndex, int endMonthIndex)
+    public void setActiveRange(int startMonthIndex, int endMonthIndex)
     {
         activeRange_startIndex = startMonthIndex;
         activeRange_endIndex = endMonthIndex;

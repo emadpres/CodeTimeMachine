@@ -202,7 +202,12 @@ public class CommitsBar extends CommitsBarBase
         }
 
         activeCommit_cIndex = cIndex;
-        commitUIItems[cIndex].setActivated(true);
+        int x = findCommitUIItemIndexFromcIndex(activeCommit_cIndex);
+        if(x!= -1)
+        {
+                /*If we are here, it means new active commit was also in the current CommitsBar list*/
+            commitUIItems[x].setActivated(true);
+        }
     }
 
     private void activateCommit(int clickedCommitUIItemIndex)

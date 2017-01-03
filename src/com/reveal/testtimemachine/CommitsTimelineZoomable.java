@@ -50,12 +50,14 @@ public class CommitsTimelineZoomable extends JBScrollPane
     // Value: +1 or -1
     public void changeZoomFactor(int value)
     {
+        if(zoomScale+value>getMaximumZoomFactor() || zoomScale+value<1) return;
+
         BoundedRangeModel model = getHorizontalScrollBar().getModel();
         int newMax = model.getMaximum();
         newMax /= zoomScale;
 
-        if(zoomScale+value<=getMaximumZoomFactor() && zoomScale+value>=1)
-            zoomScale += value;
+
+        zoomScale += value;
 
 
         newMax *= zoomScale;
@@ -63,6 +65,15 @@ public class CommitsTimelineZoomable extends JBScrollPane
         t.setZoomFactor(zoomScale);
 
         getHorizontalScrollBar().setValue( (int)(progress*newMax-model.getExtent()/2));
+    }
+
+    public void moveActiveRange(int monthMov)
+    {
+        // argument=+2 means: move ActiveRange 2month right
+        if(t.activeRange_endIndex+monthMov < t.n_monthes && t.activeRange_startIndex+monthMov >= 0)
+        {
+            t.setActiveRange(t.activeRange_startIndex+monthMov, t.activeRange_endIndex+monthMov);
+        }
     }
 
     public int getMaximumZoomFactor()

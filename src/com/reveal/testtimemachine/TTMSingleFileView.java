@@ -52,42 +52,21 @@ public class TTMSingleFileView
 
         codeHistory3DView.showCommit(0, false);
 
-        addKeyListener();
+        addKeyBindings();
     }
 
-    private void addKeyListener()
+    private void addKeyBindings()
     {
         thisComponent.requestFocusInWindow();
 
         final String ZOOOM_IN_ACTION_NAME = "zoomInTimeline";
         final String ZOOOM_OUT_ACTION_NAME = "zoomOutTimeline";
         final String SHOW_DIFF_ACTION_NAME = "showDiffWindow";
+        final String PREV_MONTH_ACTION_NAME = "showPrevMonthInTimeline";
+        final String NEXT_MONTH_ACTION_NAME = "showNextMonthInTimeline";
+        final String PREV_COMMIT_ACTION_NAME = "showPrevCommitIn3DView";
+        final String NEXT_COMMIT_ACTION_NAME = "showNextCommitIn3DView";
 
-
-        /*thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("-"), ZOOOM_OUT_ACTION_NAME);
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('-'), ZOOOM_OUT_ACTION_NAME);
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("_"), ZOOOM_OUT_ACTION_NAME);*/
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0), ZOOOM_OUT_ACTION_NAME);
-        thisComponent.getActionMap().put(ZOOOM_OUT_ACTION_NAME, new AbstractAction()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                commitsTimelineZoomable.changeZoomFactor(-1);
-            }
-        });
-
-        //thisComponent.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ADD, KeyEvent.CTRL_DOWN_MASK), "zoomInTimeline");
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ADD,0), ZOOOM_IN_ACTION_NAME);
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,0), ZOOOM_IN_ACTION_NAME);
-        thisComponent.getActionMap().put(ZOOOM_IN_ACTION_NAME, new AbstractAction()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                commitsTimelineZoomable.changeZoomFactor(+1);
-            }
-        });
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0), SHOW_DIFF_ACTION_NAME);
         thisComponent.getActionMap().put(SHOW_DIFF_ACTION_NAME, new AbstractAction()
@@ -98,6 +77,80 @@ public class TTMSingleFileView
                 showDiff();
             }
         });
+
+
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,0), ZOOOM_IN_ACTION_NAME);
+        thisComponent.getActionMap().put(ZOOOM_IN_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.changeZoomFactor(+1);
+            }
+        });
+
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0), ZOOOM_OUT_ACTION_NAME);
+        thisComponent.getActionMap().put(ZOOOM_OUT_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.changeZoomFactor(-1);
+            }
+        });
+
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_A,0), PREV_MONTH_ACTION_NAME);
+        thisComponent.getActionMap().put(PREV_MONTH_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.moveActiveRange(-1);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_D,0), NEXT_MONTH_ACTION_NAME);
+        thisComponent.getActionMap().put(NEXT_MONTH_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsTimelineZoomable.moveActiveRange(+1);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_W,0), PREV_COMMIT_ACTION_NAME);
+        thisComponent.getActionMap().put(PREV_COMMIT_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                int activeCommit_cIndex = commitsBar.activeCommit_cIndex;
+                if(activeCommit_cIndex+1 >= commits.size()) return;
+                activeCommit_cIndex++;
+                navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
+                commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_S,0), NEXT_COMMIT_ACTION_NAME);
+        thisComponent.getActionMap().put(NEXT_COMMIT_ACTION_NAME, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                int activeCommit_cIndex = commitsBar.activeCommit_cIndex;
+                if(activeCommit_cIndex-1 < 0) return;
+                activeCommit_cIndex--;
+                navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
+                commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+            }
+        });
+
+
     }
 
     private void showDiff()
@@ -199,10 +252,10 @@ public class TTMSingleFileView
         commitsBar.updateCommitsList(commitsForRequestedRange);
     }
 
-    public boolean navigateToCommit(ClassType s, int commitIndex)
+    public boolean navigateToCommit(ClassType s, int commitcIndex)
     {
         if(s==ClassType.SUBJECT_CLASS)
-            return codeHistory3DView.showCommit(commitIndex, true);
+            return codeHistory3DView.showCommit(commitcIndex, true);
         else
             return false;
     }
