@@ -82,6 +82,11 @@ public class CommitsTimelineZoomable extends JBScrollPane
         return max;
     }
 
+    public void updateCommits3DViewActiveRange(int topLayer_cIndex)
+    {
+        t.updateCommits3DViewActiveRange(topLayer_cIndex);
+    }
+
     @Override
     protected void paintComponent(Graphics g)
     {

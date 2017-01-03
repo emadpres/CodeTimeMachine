@@ -36,6 +36,8 @@ public class CommitsTimeline extends JComponent
 
     final int PRIMARY_LINE_OUTTER_SIDES_GAP = 20;
 
+    int commits3DViewTopLayer_cIndex=0;
+
     int start_year=0, start_month=0, end_year=0, end_month=0; // Notice: All months are 0-based as Cal.get(Calendar.MONTH) does.
 
     ArrayList<CommitWrapper> commitList = null;
@@ -300,9 +302,20 @@ public class CommitsTimeline extends JComponent
         draw_primaryLineSectors(g2d);
         draw_highlightActiveMonth(g2d);
         draw_commits(g2d);
+        draw_commits3DActiveRange(g2d);
+
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
             draw_helpingInformation(g2d);
     }
+
+    private void draw_commits3DActiveRange(Graphics g)
+    {
+        int s = getSectorIndexForcIndex(commits3DViewTopLayer_cIndex);
+        Point p = getCenterOfSector(s);
+        g.setColor(Color.RED);
+        g.fillRoundRect(p.x-line_sectorsLength/2, p.y, line_sectorsLength, PRIMARY_LINE_TICKNESS, 3, 3);
+    }
+
 
     private void draw_helpingInformation(Graphics2D g2d)
     {
@@ -515,6 +528,12 @@ public class CommitsTimeline extends JComponent
         g2d.fillRoundRect(line_effectiveBegin.x, line_effectiveBegin.y, line_effectiveLength, PRIMARY_LINE_TICKNESS, 3, 3);
     }
 
+    public void updateCommits3DViewActiveRange(int topLayer_cIndex)
+    {
+        commits3DViewTopLayer_cIndex = topLayer_cIndex;
+        repaint();
+    }
+
     // Return value is 0-based
     private int getSectorIndexForDate(Date date)
     {
@@ -534,5 +553,22 @@ public class CommitsTimeline extends JComponent
     {
         int m = (start_month+sectorIndex)/12;
         return start_year+m;
+    }
+
+    private int getSectorIndexForcIndex(int cIndex)
+    {
+        int sss = 0;
+        int firstcIndexInSectorSSS = commitList.size()-numberOfCommitsPerMonth[sss];
+        while(true)
+        {
+            if(cIndex >= firstcIndexInSectorSSS)
+                break;
+            //// Let's go next sector
+            sss++;
+            firstcIndexInSectorSSS -= numberOfCommitsPerMonth[sss];
+        }
+
+        return sss;
+
     }
 }

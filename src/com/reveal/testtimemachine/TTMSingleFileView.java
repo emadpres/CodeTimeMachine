@@ -199,7 +199,7 @@ public class TTMSingleFileView
 
     private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
     {
-         return new Commits3DView(project, virtualFiles, commits);
+         return new Commits3DView(project, virtualFiles, commits, this);
     }
 
     private CommitsBarBase setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
@@ -272,6 +272,11 @@ public class TTMSingleFileView
         }
         //////////
         commitsBar.updateCommitsList(commitsForRequestedRange);
+    }
+
+    public void updateCommits3DViewActiveRangeOnTimeLine(int topLayer_cIndex)
+    {
+        commitsTimelineZoomable.updateCommits3DViewActiveRange(topLayer_cIndex);
     }
 
     public void navigateToCommit(ClassType s, int commitcIndex)

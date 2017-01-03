@@ -61,6 +61,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     ////////
 
 
+    TTMSingleFileView TTMWindow = null;
     Project project;
     ArrayList<CommitWrapper> commitList = null;
     VirtualEditorWindow[] virtualEditorWindows = null;
@@ -68,10 +69,11 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
 
-    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList)
+    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow)
     {
         super();
 
+        this.TTMWindow = TTMWindow;
         this.project = project;
         this.virtualFile = virtualFile;
         this.commitList = commitList;
@@ -261,6 +263,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
         topLayerIndex = indexCorrespondingToLowestNonNegativeDepth;
+        TTMWindow.updateCommits3DViewActiveRangeOnTimeLine(virtualEditorWindows[topLayerIndex].cIndex);
 
         targetDepth = virtualEditorWindows[targetLayerIndex].depth;
         if(targetDepth>=0 && targetDepth<0.03)
@@ -295,7 +298,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         numberOfPassingLayersPerSec_forAnimation = sign*4;
 
 
-        // TODO: maybe we overpass the target index commit
+        // TODO: maybe we overpass the target cIndex commit
         topLayerOffset += numberOfPassingLayersPerSec_forAnimation * dt_sec * LAYER_DISTANCE;
 
         // When: numberOfPassingLayersPerSec_forAnimation is NEGATIVE
@@ -454,7 +457,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         final float Y_OFFSET_FACTOR = 250;
         ////////
-        int index=-1;
+        int cIndex =-1;
         CommitWrapper commitWrapper = null;
 
         boolean isVisible=true;
@@ -471,7 +474,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
         {
-            this.index = index;
+            this.cIndex = index;
             this.commitWrapper = commitWrapper;
 
 
@@ -616,11 +619,11 @@ public class Commits3DView extends JComponent implements ComponentListener
             Graphics g2 = g.create();
             Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(x,y,w,TOP_BAR_HEIGHT);
             g2.setClip(rectangleToDrawIn);
-            if(index==topLayerIndex)
+            if(cIndex ==topLayerIndex)
             {
                 g2.setFont(new Font("Courier", Font.BOLD, 10));
                 text = getTopBarMessage();
-                //text = "I: "+index+"Depth = "+ Float.toString(depth)+ "FontSize: --  "+ "Alpha: "+alpha;
+                //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: --  "+ "Alpha: "+alpha;
                 DrawingHelper.drawStringCenter(g2, text, x+w/2, y+8);
                 String path = virtualFile.getPath();
                 path = fit(path, 70, g2);
@@ -632,7 +635,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 float fontSize = 20.f/(BASE_DEPTH+depth);
                 g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
                 text = getTopBarMessage();
-                //text = "I: "+index+"Depth = "+ Float.toString(depth)+ "FontSize: "+fontSize + "Alpha: "+alpha;
+                //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: "+fontSize + "Alpha: "+alpha;
                 DrawingHelper.drawStringCenter(g2, text, x+w/2, y+15);
             }
         }
