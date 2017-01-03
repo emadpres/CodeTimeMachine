@@ -78,14 +78,14 @@ public class TestTimeMachineAction extends AnAction
             if(! mostRecentCommitContent.equals(currentContent) )
             {
                 final String UNCOMMITED_CHANGE_TEXT  = "Uncommited Changes";
-                aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT,new Date(),UNCOMMITED_CHANGE_TEXT, cIndex++);
+                aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT,new Date(),UNCOMMITED_CHANGE_TEXT, -1);
                 subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }
 
             ///// Other Real
             for(int j=0; j< realCommitsSize; j++)
             {
-                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j),cIndex++);
+                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j),-1);
                 subjectAndTestClassCommitsList[i].add(aCommitWrapper);
             }
 
@@ -103,6 +103,15 @@ public class TestTimeMachineAction extends AnAction
                     return o2.getDate().compareTo(o1.getDate());
                 }
             });
+
+
+            // Assign cIndex
+            for(int j=0; j< subjectAndTestClassCommitsList[i].size(); j++)
+            {
+                subjectAndTestClassCommitsList[i].get(j).cIndex = j;
+            }
+
+
         }
 
 

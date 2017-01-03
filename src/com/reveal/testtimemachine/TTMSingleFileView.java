@@ -66,6 +66,8 @@ public class TTMSingleFileView
         final String NEXT_MONTH_ACTION_NAME = "showNextMonthInTimeline";
         final String PREV_COMMIT_ACTION_NAME = "showPrevCommitIn3DView";
         final String NEXT_COMMIT_ACTION_NAME = "showNextCommitIn3DView";
+        final String INCREASE_MAX_VISIBLE_DEPTH = "increaseMaxVisibleDepth";
+        final String DECREASE_MAX_VISIBLE_DEPTH = "decreaseMaxVisibleDepth";
 
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0), SHOW_DIFF_ACTION_NAME);
@@ -147,6 +149,26 @@ public class TTMSingleFileView
                 activeCommit_cIndex--;
                 navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
                 commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_I,0), INCREASE_MAX_VISIBLE_DEPTH);
+        thisComponent.getActionMap().put(INCREASE_MAX_VISIBLE_DEPTH, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                codeHistory3DView.increaseMaxVisibleDepth();
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_K,0), DECREASE_MAX_VISIBLE_DEPTH);
+        thisComponent.getActionMap().put(DECREASE_MAX_VISIBLE_DEPTH, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                codeHistory3DView.decreaseMaxVisibleDepth();
             }
         });
 
@@ -252,12 +274,10 @@ public class TTMSingleFileView
         commitsBar.updateCommitsList(commitsForRequestedRange);
     }
 
-    public boolean navigateToCommit(ClassType s, int commitcIndex)
+    public void navigateToCommit(ClassType s, int commitcIndex)
     {
         if(s==ClassType.SUBJECT_CLASS)
-            return codeHistory3DView.showCommit(commitcIndex, true);
-        else
-            return false;
+            codeHistory3DView.showCommit(commitcIndex, true);
     }
 
 } // End of class

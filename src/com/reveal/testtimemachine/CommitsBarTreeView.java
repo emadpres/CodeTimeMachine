@@ -96,8 +96,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
             CommitWrapper commitwrapper = (CommitWrapper)nodeInfo;
             if(commitwrapper == null) return; //We have some leafs (not lowest level which are Year/Month names.
 
-            boolean possible = TTMWindow.navigateToCommit(classType.SUBJECT_CLASS, commitwrapper.cIndex);
-            if(!possible) return;
+            TTMWindow.navigateToCommit(classType.SUBJECT_CLASS, commitwrapper.cIndex);
 
             setActiveCommit_cIndex(commitwrapper.cIndex);
         }

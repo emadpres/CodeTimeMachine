@@ -213,8 +213,7 @@ public class CommitsBar extends CommitsBarBase
     private void activateCommit(int clickedCommitUIItemIndex)
     {
         int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
-        boolean possible = TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
-        if(!possible) return;
+        TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
 
         setActiveCommit_cIndex(newActivecommit_cIndex);
     }

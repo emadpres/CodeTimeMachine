@@ -186,7 +186,7 @@ public class CommitsTimeline extends JComponent
                 int m =findMonthIndexFromPoint(e.getPoint());
                 activeRange_endIndex_temp = m;
 
-                ///// Update highlight Area
+                ///// Update setHighlightBorder Area
                 if(activeRange_startIndex_temp>activeRange_endIndex_temp)
                 {
                     int dummy = activeRange_endIndex_temp;
