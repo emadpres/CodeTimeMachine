@@ -24,6 +24,7 @@ import java.util.*;
 
 public class TTMSingleFileView
 {
+    //////////////////////////////
     enum CommitsBarType {NONE, TREE, OLD};
     final CommitsBarType commitsBarType = CommitsBarType.OLD;
     //////////////////////////////
@@ -75,6 +76,7 @@ public class TTMSingleFileView
         final String DECREASE_MAX_VISIBLE_DEPTH = "decreaseMaxVisibleDepth";
         final String MARK_AS_FIRST = "markAsFirst";
         final String MARK_AS_SECOND = "markAsSecond";
+        final String TOGGLE_CHART_TYPE = "toggleChartType";
 
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_B,0), MARK_AS_FIRST);
@@ -227,6 +229,26 @@ public class TTMSingleFileView
             }
         });
 
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C,0), TOGGLE_CHART_TYPE);
+        thisComponent.getActionMap().put(TOGGLE_CHART_TYPE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                switch (codeHistory3DView.currentChartType)
+                {
+                    case NONE:
+                        codeHistory3DView.setChartType(Commits3DView.ChartType.METRIC1);
+                        break;
+                    case METRIC1:
+                        codeHistory3DView.setChartType(Commits3DView.ChartType.METRIC2);
+                        break;
+                    case METRIC2:
+                        codeHistory3DView.setChartType(Commits3DView.ChartType.NONE);
+                        break;
+                }
+            }
+        });
 
     }
 

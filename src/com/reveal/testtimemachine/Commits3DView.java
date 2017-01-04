@@ -61,6 +61,9 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int TIME_LINE_WIDTH = 3;
     ////////
 
+    enum ChartType{NONE, METRIC1, METRIC2};
+    ChartType currentChartType = ChartType.NONE;
+
 
     TTMSingleFileView TTMWindow = null;
     Project project;
@@ -243,6 +246,20 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             draw_tipOfTimeLine(g2d);
 
+            if(currentChartType!=ChartType.NONE)
+            {
+
+                switch (currentChartType)
+                {
+                    case METRIC1:
+                        g.drawString("LOC", startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
+                        break;
+                    case METRIC2:
+                        g.drawString("Cyclomatic", startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
+                }
+
+            }
+
             for(int i = commitList.size()-1; i>=0; i--)
             {
                 if(virtualEditorWindows[i].isVisible==false) continue;
@@ -258,33 +275,16 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
 
+                ////////////////////////  (Left) TimeLine
                 Point timeLineMyPoint = virtualEditorWindows[i].timeLinePoint;
-                Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
-                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].chartValuePoint;
-
-
                 // TimeLine Lines
                 if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
                 {
                     // I'm not the first one in for-loop (OR) I'm not the oldest point of time
-
                     Point timeLineNextPoint = virtualEditorWindows[i+1].timeLinePoint; // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
-                    Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
-
-                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].chartValuePoint;
-
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
-
                     g.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timeLineNextPoint.x, timeLineNextPoint.y);
-                    g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
-                    g.setColor(new Color(0,0,0,virtualEditorWindows[i].alpha));
-                    g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
-
-
-
                 }
-
-
                 // TimeLine Point
                 if(i==targetLayerIndex)
                     g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
@@ -303,13 +303,36 @@ public class Commits3DView extends JComponent implements ComponentListener
                 g2d.setFont(new Font("Arial",Font.BOLD, 10));
                 g.drawString( CalendarHelper.convertDateToString(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
 
+
+                ////////////////////////  (Right) Chart
+                if(currentChartType==ChartType.NONE) continue;
+
+                Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
+                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentChartType);
+
+
+                // TimeLine Lines
+                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
+                {
+                    // I'm not the first one in for-loop (OR) I'm not the oldest point of time
+                    Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
+                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentChartType);
+
+                    g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
+                    g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
+                    g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
+                }
+
                 // ChartTimeLine Point
                 g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
-                Color metricC = virtualEditorWindows[i].someRandomMetricColor;
+                Color metricC = virtualEditorWindows[i].getMetricColor(currentChartType);
                 g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
+
+                //Vertical Value Line
                 g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
+                // Point on Value Height
                 g.fillOval(chartTimeLineMyValuePoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyValuePoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height);
             }
@@ -597,13 +620,19 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
+    public void setChartType(ChartType newChartType)
+    {
+        currentChartType = newChartType;
+        repaint();
+    }
+
     protected class VirtualEditorWindow
     {
         final float Y_OFFSET_FACTOR = 250;
         ////////
         int cIndex =-1;
-        int someRandomMetric = 0;
-        Color someRandomMetricColor = Color.BLACK;
+        private int someRandomMetric1 = 0, someRandomMetric2 = 0;
+        private Color someRandomMetric1Color = Color.BLACK, someRandomMetric2Color = Color.BLACK;
         CommitWrapper commitWrapper = null;
 
         boolean isVisible=true;
@@ -613,10 +642,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         Color DEFAULT_TOP_BAR_COLOR = Color.GRAY;
 
         Color myColor=Color.WHITE, myBorderColor=DEFAULT_BORDER_COLOR, myTopBarColor=DEFAULT_TOP_BAR_COLOR;
-
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
-        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0), chartValuePoint= new Point(0,0);
+        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0);
+        //private Point chartValuePoint= new Point(0,0);
         ////////
 
         public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
@@ -624,13 +653,22 @@ public class Commits3DView extends JComponent implements ComponentListener
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
 
-            someRandomMetric = ThreadLocalRandom.current().nextInt(5, 100);
-            if(someRandomMetric<30)
-                someRandomMetricColor = Color.GREEN;
-            else if(someRandomMetric<70)
-                someRandomMetricColor = Color.YELLOW;
+            someRandomMetric1 = ThreadLocalRandom.current().nextInt(5, 100);
+            someRandomMetric2 = ThreadLocalRandom.current().nextInt(5, 100);
+
+            if(someRandomMetric1<30)
+                someRandomMetric1Color = Color.GREEN;
+            else if(someRandomMetric1<70)
+                someRandomMetric1Color = Color.YELLOW;
             else
-                someRandomMetricColor = Color.RED;
+                someRandomMetric1Color = Color.RED;
+
+            if(someRandomMetric2<30)
+                someRandomMetric2Color = Color.GREEN;
+            else if(someRandomMetric2<70)
+                someRandomMetric2Color = Color.YELLOW;
+            else
+                someRandomMetric2Color = Color.RED;
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -640,6 +678,16 @@ public class Commits3DView extends JComponent implements ComponentListener
                 float b = rand.nextFloat();
                 this.myColor = new Color(r,g,b);
             }
+        }
+
+        public Point getChartValuePoint(ChartType c)
+        {
+            Point p = (Point) chartTimeLinePoint.clone();
+            int MAX_UI_HEIGHT = 200;
+            float v = getMetricValue(c)*MAX_UI_HEIGHT/100.f;
+            v = MyRenderer.getInstance().render3DTo2D((int)v,depth+MyRenderer.getInstance().BASE_DEPTH);
+            p.y -= (int)v;
+            return p;
         }
 
         // this function should be called on each size change
@@ -719,14 +767,6 @@ public class Commits3DView extends JComponent implements ComponentListener
             chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             chartTimeLinePoint.x = rect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
             chartTimeLinePoint.y = rect.y - drawingRect.height/2;
-
-            chartValuePoint = (Point) chartTimeLinePoint.clone();
-
-            int MAX_UI_HEIGHT = 200;
-            float v = someRandomMetric*MAX_UI_HEIGHT/100.f;
-            v = MyRenderer.getInstance().render3DTo2D((int)v,renderingDepth);
-            chartValuePoint.y -= (int)v;
-
         }
 
         public void setHighlightBorder(boolean newStatus)
@@ -820,6 +860,30 @@ public class Commits3DView extends JComponent implements ComponentListener
             /// Rect
             g2d.setColor( this.myColor);
             g2d.fillRect(x, y, w, h);
+        }
+
+        public int getMetricValue(ChartType c)
+        {
+            switch (c)
+            {
+                case METRIC1:
+                    return someRandomMetric1;
+                case METRIC2:
+                    return  someRandomMetric2;
+            }
+            return 0;
+        }
+
+        public Color getMetricColor(ChartType c)
+        {
+            switch (c)
+            {
+                case METRIC1:
+                    return someRandomMetric1Color;
+                case METRIC2:
+                    return  someRandomMetric2Color;
+            }
+            return Color.BLACK;
         }
 
         private String getTopBarMessage()
