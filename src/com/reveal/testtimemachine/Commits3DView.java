@@ -25,7 +25,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     ///////// -- Constant -- /////////
 
     ///////// ++ UI ++ /////////
-    CustomEditorTextField mainEditorWindow;
+
     Point centerOfThisComponent;
     ///////// -- UI -- /////////
 
@@ -60,6 +60,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     TTMSingleFileView TTMWindow = null;
     Project project;
+    CustomEditorTextField mainEditorWindow = null;
     ArrayList<CommitWrapper> commitList = null;
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
@@ -130,8 +131,10 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         //mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
         mainEditorWindow = new CustomEditorTextField("",project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
+        //mainEditorWindow.setBounds(100,100,100,50); //TEST
         mainEditorWindow.setEnabled(true);
         mainEditorWindow.setOneLineMode(false);
+        //mainEditorWindow.setOpaque(true);
         this.add(mainEditorWindow); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
@@ -235,6 +238,14 @@ public class Commits3DView extends JComponent implements ComponentListener
             for(int i = commitList.size()-1; i>=0; i--)
             {
                 if(virtualEditorWindows[i].isVisible==false) continue;
+//                if(i==targetLayerIndex)
+//                {
+//                    if(mainEditorWindow!=null)
+//                    {
+//                        mainEditorWindow.paint(g);
+//                        mainEditorWindow.paintComponents(g);
+//                    }
+//                }
                 virtualEditorWindows[i].draw(g);
 
             }
@@ -255,6 +266,8 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         if(targetDepthAbs<=LAYERS_DEPTH_ERROR_THRESHOLD)
             speed_depthPerSec = targetDepth/dt_sec;
+        else if(targetDepthAbs<=LAYER_DISTANCE)
+            speed_depthPerSec = LAYER_DISTANCE*sign;
         else if(targetDepthAbs<4*LAYER_DISTANCE)
             speed_depthPerSec = 2*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<5)
@@ -264,7 +277,9 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         debuggingText = "> "+targetDepth+" > Speed: "+speed_depthPerSec;
 
-        /*if(targetDepthAbs<LAYER_DISTANCE)
+
+        /*/ Slow for debugging
+        if(targetDepthAbs<LAYER_DISTANCE)
             speed_depthPerSec = 0.05f*sign;
         else
             speed_depthPerSec = 1*sign;*/
@@ -460,6 +475,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
         x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2+VIRTUAL_WINDOW_BORDER_TICKNESS;
         y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
+        //mainEditorWindow.setSize(w,h);
+        //mainEditorWindow.setLocation(x,y);
         mainEditorWindow.setBounds(x,y,w,h);
     }
 
@@ -569,7 +586,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 // By adding LAYERS_DEPTH_ERROR_THRESHOLD we make the layer invisible(alpha=0) before getting depth=-LAYER_DISTANCE
                 // It's needed because sometimes layers movement stops while the new top layer is 0+e (not 0) and so the layer
                 // which was supposed to go out (go to depth -LAYER_DISTANCE) get stuck at depth = -LAYERDISTANCE+e.
-                newAlpha = (int)(255*(1-depth/(MIN_VISIBLE_DEPTH+LAYERS_DEPTH_ERROR_THRESHOLD+EPSILON)));
+                newAlpha = (int) (255*(1-depth/(MIN_VISIBLE_DEPTH+LAYERS_DEPTH_ERROR_THRESHOLD+EPSILON)));
             setAlpha(newAlpha);
 
 
