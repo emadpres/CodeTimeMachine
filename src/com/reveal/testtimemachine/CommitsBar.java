@@ -53,7 +53,7 @@ public class CommitsBar extends CommitsBarBase
 
     public void activateCommitUIItemIfExists(int cIndex)
     {
-        activeCommit_cIndex = cIndex;
+        TTMWindow.activeCommit_cIndex = cIndex;
         int commitUIItemIndexIfExist = findCommitUIItemIndexFromcIndex(cIndex);
 
         if(commitUIItemIndexIfExist != -1)
@@ -69,7 +69,7 @@ public class CommitsBar extends CommitsBarBase
 
         creatingCommitsUIItem(newCommitList);
 
-        activateCommitUIItemIfExists(activeCommit_cIndex);
+        activateCommitUIItemIfExists(TTMWindow.activeCommit_cIndex);
 
         Dimension newDimension  = new Dimension(COMMITS_BAR_VIEW_DIMENSION.width-40/*scroll bar of parent scrollContainer*/, contentHeight);
         thisComponentWithoutScroll.setPreferredSize(newDimension);
@@ -191,9 +191,9 @@ public class CommitsBar extends CommitsBarBase
     @Override
     public void setActiveCommit_cIndex(int cIndex)
     {
-        if(activeCommit_cIndex!=-1)
+        if( TTMWindow.activeCommit_cIndex!=-1)
         {
-            int x = findCommitUIItemIndexFromcIndex(activeCommit_cIndex);
+            int x = findCommitUIItemIndexFromcIndex(TTMWindow.activeCommit_cIndex);
             if(x!= -1)
             {
                 /*If we are here, it means last active commit was also in the current CommitsBar list*/
@@ -201,8 +201,8 @@ public class CommitsBar extends CommitsBarBase
             }
         }
 
-        activeCommit_cIndex = cIndex;
-        int x = findCommitUIItemIndexFromcIndex(activeCommit_cIndex);
+        TTMWindow.activeCommit_cIndex = cIndex;
+        int x = findCommitUIItemIndexFromcIndex(TTMWindow.activeCommit_cIndex);
         if(x!= -1)
         {
                 /*If we are here, it means new active commit was also in the current CommitsBar list*/
@@ -213,6 +213,7 @@ public class CommitsBar extends CommitsBarBase
     private void activateCommit(int clickedCommitUIItemIndex)
     {
         int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
+        TTMWindow.activeCommit_cIndex = newActivecommit_cIndex;
         TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
 
         setActiveCommit_cIndex(newActivecommit_cIndex);

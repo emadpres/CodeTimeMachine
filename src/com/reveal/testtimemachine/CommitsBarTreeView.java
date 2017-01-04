@@ -48,6 +48,8 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         /////
         DefaultMutableTreeNode treeViewRoot = SwingTreeHelper.convertCommitsDataTree_to_SwingTreeNode(commitsDataTree);
         treeComponent = new Tree(treeViewRoot);
+        Color APP_BG_COLOR = new Color(236,236,236);
+        treeComponent.setBackground(APP_BG_COLOR);
         treeComponent.setRootVisible(false);
         treeComponent.setShowsRootHandles(false); // Toplevel 'Root' or (if Root invisible) it's children don't need + to expand)
         treeComponent.putClientProperty("JTree.lineStyle", "Angled"); //"Angled" (default) 	"Horizontal" 	"None"
@@ -96,6 +98,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
             CommitWrapper commitwrapper = (CommitWrapper)nodeInfo;
             if(commitwrapper == null) return; //We have some leafs (not lowest level which are Year/Month names.
 
+            TTMWindow.activeCommit_cIndex = commitwrapper.cIndex;
             TTMWindow.navigateToCommit(classType.SUBJECT_CLASS, commitwrapper.cIndex);
 
             setActiveCommit_cIndex(commitwrapper.cIndex);

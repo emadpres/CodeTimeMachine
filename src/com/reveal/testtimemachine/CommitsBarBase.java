@@ -17,8 +17,6 @@ public abstract class CommitsBarBase
 
     protected ClassType classType = ClassType.NONE;
 
-    protected int activeCommit_cIndex = -1;
-
 
 
     public abstract void updateCommitsList(ArrayList<CommitWrapper> newCommitList);

@@ -317,6 +317,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
                     Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentChartType);
 
+                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
                     g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
                     g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
                     g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
@@ -537,8 +538,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         onChangingCommitProcess = false;
     }
 
-    private void render()
+    public void render()
     {
+        updateTimeLineDrawing();
+
         for(int i=0; i<commitList.size(); i++)
         {
             float d = virtualEditorWindows[i].depth;
@@ -602,15 +605,22 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         startPointOfTimeLine = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
                                                                         topIdealLayerDimention.width, topIdealLayerDimention.height,
-                                                                        0.2f+MyRenderer.getInstance().BASE_DEPTH);
+                                                                        0.05f+MyRenderer.getInstance().BASE_DEPTH);
+
+
+        Point aLittleAfterstartPointOfTimeLine = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
+                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                                        +0.4f+MyRenderer.getInstance().BASE_DEPTH);
+
+        int deltaX = startPointOfTimeLine.x - aLittleAfterstartPointOfTimeLine.x;
+        int deltaY = startPointOfTimeLine.y - aLittleAfterstartPointOfTimeLine.y;
+        trianglePoint = (Point) startPointOfTimeLine.clone();
+        trianglePoint.x += deltaX; //
+        trianglePoint.y += deltaY;
 
         startPointOfChartTimeLine = MyRenderer.getInstance().calculateChartTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
-                                                            topIdealLayerDimention.width, topIdealLayerDimention.height,
-                                                            0+MyRenderer.getInstance().BASE_DEPTH);
-
-        trianglePoint = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
-                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
-                                                                        -0.2f+MyRenderer.getInstance().BASE_DEPTH);
+                topIdealLayerDimention.width, topIdealLayerDimention.height,
+                0+MyRenderer.getInstance().BASE_DEPTH);
     }
 
     public void setTopBarHighlight(int cIndex, boolean newStatus, Color c)

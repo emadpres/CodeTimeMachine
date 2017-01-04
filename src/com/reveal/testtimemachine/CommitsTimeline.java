@@ -240,7 +240,11 @@ public class CommitsTimeline extends JComponent
         activeRange_endIndex = endMonthIndex;
         activeRange_startIndex_temp = activeRange_endIndex_temp = INVALIDE_VALUE; // Validate above variables to render.
         CommitsTimeline.this.repaint();
+        updateCommitsBarWithActiveRange();
+    }
 
+    public void updateCommitsBarWithActiveRange()
+    {
         ///// Update CommitsBar
         Date startDate = commitList.get(commitList.size()-1).getDate();
         Calendar cal = Calendar.getInstance();

@@ -26,7 +26,7 @@ public class TTMSingleFileView
 {
     //////////////////////////////
     enum CommitsBarType {NONE, TREE, OLD};
-    final CommitsBarType commitsBarType = CommitsBarType.OLD;
+    CommitsBarType commitsBarType = CommitsBarType.OLD;
     //////////////////////////////
     private JPanel thisComponent;
     private Project project;
@@ -37,7 +37,8 @@ public class TTMSingleFileView
     CommitsBarBase commitsBar = null;
     CommitsTimelineZoomable commitsTimelineZoomable = null;
     //////////////////////////////
-
+    GroupLayout groupLayout = null;
+    int activeCommit_cIndex = -1;
     int INVALID = -1;
     int firstMarked_cIndex = INVALID, secondMarked_cIndex = INVALID;
 
@@ -47,13 +48,13 @@ public class TTMSingleFileView
         this.virtualFile = virtualFile;
         this.commits = commits;
         ////////////////////////////////////////////////////
-        GroupLayout groupLayout = createEmptyJComponentAndReturnGroupLayout();
+        groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         commitsTimelineZoomable = setupUI_createCommitsTimeline(commits);
         codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
-        setupLayout(groupLayout);
+        setupLayout();
 
 
         codeHistory3DView.showCommit(0, false);
@@ -74,9 +75,13 @@ public class TTMSingleFileView
         final String NEXT_COMMIT_ACTION_NAME = "showNextCommitIn3DView";
         final String INCREASE_MAX_VISIBLE_DEPTH = "increaseMaxVisibleDepth";
         final String DECREASE_MAX_VISIBLE_DEPTH = "decreaseMaxVisibleDepth";
+        final String INCREASE_RENDERER_Y_OFFSET = "increaseRendererYOffset";
+        final String DECREASE_RENDERER_Y_OFFSET = "decreaseRendererYOffset";
         final String MARK_AS_FIRST = "markAsFirst";
         final String MARK_AS_SECOND = "markAsSecond";
         final String TOGGLE_CHART_TYPE = "toggleChartType";
+        final String TOGGLE_COMMITS_BAR_TYPE = "toggleCommitsBarType";
+
 
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_B,0), MARK_AS_FIRST);
@@ -88,9 +93,9 @@ public class TTMSingleFileView
                 if(firstMarked_cIndex!=INVALID)
                     codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
 
-                if( commitsBar.activeCommit_cIndex != firstMarked_cIndex) // New Place
+                if( activeCommit_cIndex != firstMarked_cIndex) // New Place
                 {
-                    firstMarked_cIndex = commitsBar.activeCommit_cIndex;
+                    firstMarked_cIndex = activeCommit_cIndex;
                     codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, true, Color.GREEN);
                 }
                 else
@@ -107,9 +112,9 @@ public class TTMSingleFileView
                 if(secondMarked_cIndex != INVALID)
                     codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
 
-                if(commitsBar.activeCommit_cIndex != secondMarked_cIndex) //New Place
+                if(activeCommit_cIndex != secondMarked_cIndex) //New Place
                 {
-                    secondMarked_cIndex = commitsBar.activeCommit_cIndex;
+                    secondMarked_cIndex = activeCommit_cIndex;
                     codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, true,  Color.CYAN);
                 }
                 else
@@ -187,7 +192,6 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                int activeCommit_cIndex = commitsBar.activeCommit_cIndex;
                 if(activeCommit_cIndex+1 >= commits.size()) return;
                 activeCommit_cIndex++;
                 navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
@@ -201,7 +205,6 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                int activeCommit_cIndex = commitsBar.activeCommit_cIndex;
                 if(activeCommit_cIndex-1 < 0) return;
                 activeCommit_cIndex--;
                 navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
@@ -229,6 +232,28 @@ public class TTMSingleFileView
             }
         });
 
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_O,0), INCREASE_RENDERER_Y_OFFSET);
+        thisComponent.getActionMap().put(INCREASE_RENDERER_Y_OFFSET, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                MyRenderer.getInstance().Y_OFFSET_FACTOR += 10;
+                codeHistory3DView.render();
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_L,0), DECREASE_RENDERER_Y_OFFSET);
+        thisComponent.getActionMap().put(DECREASE_RENDERER_Y_OFFSET, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                MyRenderer.getInstance().Y_OFFSET_FACTOR -= 10;
+                codeHistory3DView.render();
+            }
+        });
+
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C,0), TOGGLE_CHART_TYPE);
         thisComponent.getActionMap().put(TOGGLE_CHART_TYPE, new AbstractAction()
         {
@@ -247,6 +272,26 @@ public class TTMSingleFileView
                         codeHistory3DView.setChartType(Commits3DView.ChartType.NONE);
                         break;
                 }
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F,0), TOGGLE_COMMITS_BAR_TYPE);
+        thisComponent.getActionMap().put(TOGGLE_COMMITS_BAR_TYPE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                switch (commitsBarType)
+                {
+                    case OLD:
+                        commitsBarType = CommitsBarType.TREE;
+                        break;
+                    case TREE:
+                    default:
+                        commitsBarType = CommitsBarType.OLD;
+                        break;
+                }
+                changeCommitsBarType(commitsBarType);
             }
         });
 
@@ -302,12 +347,35 @@ public class TTMSingleFileView
         return commitsBar;
     }
 
+    private void changeCommitsBarType(CommitsBarType newType)
+    {
+        CommitsBarBase newCommitsBar = null;
+
+        switch (commitsBarType)
+        {
+            case OLD:
+                newCommitsBar = new CommitsBar(CommitsBar.CommitItemDirection.LTR, ClassType.SUBJECT_CLASS, this);
+                break;
+            case TREE:
+            default:
+                newCommitsBar = new CommitsBarTreeView(this);
+                break;
+        }
+
+        groupLayout.replace(commitsBar.getComponent(), newCommitsBar.getComponent());
+        commitsBar = newCommitsBar;
+
+        commitsTimelineZoomable.t.updateCommitsBarWithActiveRange();
+        commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+
+    }
+
     private CommitsTimelineZoomable setupUI_createCommitsTimeline(ArrayList<CommitWrapper> commitsList)
     {
         return new CommitsTimelineZoomable(commitsList, this);
     }
 
-    private void setupLayout(GroupLayout groupLayout)
+    private void setupLayout()
     {
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
                 .addComponent(commitsBar.getComponent())
