@@ -46,4 +46,14 @@ public class MyRenderer
         return p;
     }
 
+    public Point calculateChartTimeLinePoint(int xCenterDefault, int yCenterDefault, int wDefault, int hDefault, float renderingDepth)
+    {
+        Point p = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
+        int w = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
+        int h = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
+        p.x = p.x + (int)(TIME_LINE_GAP*w/2); // The only different with above function is here. //TODO better API ?
+        p.y = p.y - h/2;
+        return p;
+    }
+
 }

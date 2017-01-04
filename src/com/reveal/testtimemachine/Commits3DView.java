@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.lang.management.GarbageCollectorMXBean;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Commits3DView extends JComponent implements ComponentListener
 {
@@ -46,6 +47,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final float MAX_VISIBLE_DEPTH_CHANGE_VALUE = 0.3f;
     final float EPSILON = 0.01f;
     Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
+    Point startPointOfChartTimeLine = new Point(0,0);
     /////
     int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
     float topLayerOffset;
@@ -255,29 +257,61 @@ public class Commits3DView extends JComponent implements ComponentListener
                 virtualEditorWindows[i].draw(g);
 
 
-                Point mySelf = virtualEditorWindows[i].timeLinePoint;
-                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible) // I'm not the first one in for-loop (OR) I'm not the oldest point of time
+
+                Point timeLineMyPoint = virtualEditorWindows[i].timeLinePoint;
+                Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
+                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].chartValuePoint;
+
+
+                // TimeLine Lines
+                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
                 {
-                    // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
-                    Point nextOne = virtualEditorWindows[i+1].timeLinePoint;
+                    // I'm not the first one in for-loop (OR) I'm not the oldest point of time
+
+                    Point timeLineNextPoint = virtualEditorWindows[i+1].timeLinePoint; // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
+                    Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
+
+                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].chartValuePoint;
 
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
-                    g.drawLine(mySelf.x, mySelf.y, nextOne.x, nextOne.y);
+
+                    g.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timeLineNextPoint.x, timeLineNextPoint.y);
+                    g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
+                    g.setColor(new Color(0,0,0,virtualEditorWindows[i].alpha));
+                    g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
+
+
+
                 }
 
 
-                // Point
+                // TimeLine Point
                 if(i==targetLayerIndex)
                     g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
                 else
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                 g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
-                final Dimension timeLinePointSize = new Dimension(10,4);
-                g.fillRoundRect(mySelf.x-timeLinePointSize.width/2, mySelf.y-timeLinePointSize.height/2,
-                        timeLinePointSize.width,timeLinePointSize.height,1,1);
-                g2d.setFont(new Font("Arial",Font.BOLD, 10));
-                //g.drawString( CalendarHelper.convertDateToString(commitList.get(i).getDate()) , mySelf.x-68, mySelf.y+2);
 
+                final Dimension TIME_LINE_POINT_SIZE = new Dimension(10,4);
+
+                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                g2d.setFont(new Font("Arial",Font.BOLD, 10));
+                g.drawString( CalendarHelper.convertDateToString(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
+
+                // ChartTimeLine Point
+                g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                Color metricC = virtualEditorWindows[i].someRandomMetricColor;
+                g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
+                g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
+                g.fillOval(chartTimeLineMyValuePoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyValuePoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height);
             }
         }
 
@@ -310,9 +344,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         if(targetDepthAbs<=LAYERS_DEPTH_ERROR_THRESHOLD)
             speed_depthPerSec = targetDepth/dt_sec;
         else if(targetDepthAbs<=LAYER_DISTANCE)
-            speed_depthPerSec = LAYER_DISTANCE*sign;
+            speed_depthPerSec = 3*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<4*LAYER_DISTANCE)
-            speed_depthPerSec = 2*LAYER_DISTANCE*sign;
+            speed_depthPerSec = 4*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<5)
             speed_depthPerSec = 2*sign;
         else
@@ -548,6 +582,10 @@ public class Commits3DView extends JComponent implements ComponentListener
                                                                         topIdealLayerDimention.width, topIdealLayerDimention.height,
                                                                         0.2f+MyRenderer.getInstance().BASE_DEPTH);
 
+        startPointOfChartTimeLine = MyRenderer.getInstance().calculateChartTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
+                                                            topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                            0+MyRenderer.getInstance().BASE_DEPTH);
+
         trianglePoint = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
                                                                         topIdealLayerDimention.width, topIdealLayerDimention.height,
                                                                         -0.2f+MyRenderer.getInstance().BASE_DEPTH);
@@ -558,6 +596,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         final float Y_OFFSET_FACTOR = 250;
         ////////
         int cIndex =-1;
+        int someRandomMetric = 0;
+        Color someRandomMetricColor = Color.BLACK;
         CommitWrapper commitWrapper = null;
 
         boolean isVisible=true;
@@ -570,7 +610,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
-        Point timeLinePoint = new Point(0,0);
+        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0), chartValuePoint= new Point(0,0);
         ////////
 
         public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
@@ -578,6 +618,13 @@ public class Commits3DView extends JComponent implements ComponentListener
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
 
+            someRandomMetric = ThreadLocalRandom.current().nextInt(5, 100);
+            if(someRandomMetric<30)
+                someRandomMetricColor = Color.GREEN;
+            else if(someRandomMetric<70)
+                someRandomMetricColor = Color.YELLOW;
+            else
+                someRandomMetricColor = Color.RED;
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -658,10 +705,21 @@ public class Commits3DView extends JComponent implements ComponentListener
             ////////////// TimeLine
             // We also could use "MyRenderer.getInstance().calculateTimeLinePoint()". But it's worthless and that function
             // is designed for external user ( check 'updateTimeLineDrawing()' function)
-
             timeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             timeLinePoint.x = rect.x - (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
             timeLinePoint.y = rect.y - drawingRect.height/2;
+
+            ///////////// Chart TimeLine
+            chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
+            chartTimeLinePoint.x = rect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
+            chartTimeLinePoint.y = rect.y - drawingRect.height/2;
+
+            chartValuePoint = (Point) chartTimeLinePoint.clone();
+
+            int MAX_UI_HEIGHT = 200;
+            float v = someRandomMetric*MAX_UI_HEIGHT/100.f;
+            v = MyRenderer.getInstance().render3DTo2D((int)v,renderingDepth);
+            chartValuePoint.y -= (int)v;
 
         }
 
@@ -697,11 +755,9 @@ public class Commits3DView extends JComponent implements ComponentListener
             y = this.drawingRect.y - h/2;
 
            draw_mainRect(g2d, x, y, w, h);
-
-            draw_mainRectBorder(g2d, x, y, w, h);
-            draw_topBar(g2d, x, y, w);
-
-            draw_topBarText(g, x, y, w);
+           draw_mainRectBorder(g2d, x, y, w, h);
+           draw_topBar(g2d, x, y, w);
+           draw_topBarText(g, x, y, w);
         }
 
         private void draw_topBarText(Graphics g, int x, int y, int w)
