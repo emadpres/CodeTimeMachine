@@ -17,7 +17,9 @@ import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
+import java.lang.management.GarbageCollectorMXBean;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Commits3DView extends JComponent implements ComponentListener
 {
@@ -38,23 +40,25 @@ public class Commits3DView extends JComponent implements ComponentListener
     ///////
 
     ///////// ++ UI: 3D Prespective Variables ++ /////////
-    final float BASE_DEPTH = 2f; // Min:1.0
     final float LAYER_DISTANCE = 0.2f;
     final float LAYERS_DEPTH_ERROR_THRESHOLD = LAYER_DISTANCE/10;
     float maxVisibleDepth = 2f;
     final float MIN_VISIBLE_DEPTH = -LAYER_DISTANCE;
     final float MAX_VISIBLE_DEPTH_CHANGE_VALUE = 0.3f;
     final float EPSILON = 0.01f;
+    Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
+    Point startPointOfChartTimeLine = new Point(0,0);
     /////
     int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
     float topLayerOffset;
-    Dimension topLayerDimention = new Dimension(0,0);
-    Point topLayerCenterPos = new Point(0,0);
+    Dimension topIdealLayerDimention = new Dimension(0,0);
+    Point topIdealLayerCenterPos = new Point(0,0);
     int lastHighlightVirtualWindowIndex=-1;
     ///////// ++ UI
     final boolean COLORFUL = false;
     final int TOP_BAR_HEIGHT = 25;
     final int VIRTUAL_WINDOW_BORDER_TICKNESS = 1;
+    final int TIME_LINE_WIDTH = 3;
     ////////
 
 
@@ -151,10 +155,10 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateVirtualWindowsBoundaryAfterComponentResize()
     {
         int xCenter, yCenter, w, h;
-        w = topLayerDimention.width;
-        h = topLayerDimention.height;
-        xCenter = topLayerCenterPos.x;
-        yCenter = topLayerCenterPos.y;
+        w = topIdealLayerDimention.width;
+        h = topIdealLayerDimention.height;
+        xCenter = topIdealLayerCenterPos.x;
+        yCenter = topIdealLayerCenterPos.y;
 
         for (int i = 0; i< commitList.size() ; i++)
             virtualEditorWindows[i].setDefaultValues(xCenter, yCenter, w, h);
@@ -223,6 +227,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     @Override
     protected void paintComponent(Graphics g)
     {
+        Graphics2D g2d = (Graphics2D) g;
+
         super.paintComponent(g);
 
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
@@ -235,6 +241,8 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         if(virtualEditorWindows!=null)
         {
+            draw_tipOfTimeLine(g2d);
+
             for(int i = commitList.size()-1; i>=0; i--)
             {
                 if(virtualEditorWindows[i].isVisible==false) continue;
@@ -248,11 +256,80 @@ public class Commits3DView extends JComponent implements ComponentListener
 //                }
                 virtualEditorWindows[i].draw(g);
 
+
+
+                Point timeLineMyPoint = virtualEditorWindows[i].timeLinePoint;
+                Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
+                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].chartValuePoint;
+
+
+                // TimeLine Lines
+                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
+                {
+                    // I'm not the first one in for-loop (OR) I'm not the oldest point of time
+
+                    Point timeLineNextPoint = virtualEditorWindows[i+1].timeLinePoint; // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
+                    Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
+
+                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].chartValuePoint;
+
+                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
+
+                    g.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timeLineNextPoint.x, timeLineNextPoint.y);
+                    g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
+                    g.setColor(new Color(0,0,0,virtualEditorWindows[i].alpha));
+                    g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
+
+
+
+                }
+
+
+                // TimeLine Point
+                if(i==targetLayerIndex)
+                    g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
+                else
+                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
+                g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
+
+                final Dimension TIME_LINE_POINT_SIZE = new Dimension(10,4);
+
+                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                g2d.setFont(new Font("Arial",Font.BOLD, 10));
+                g.drawString( CalendarHelper.convertDateToString(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
+
+                // ChartTimeLine Point
+                g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
+                Color metricC = virtualEditorWindows[i].someRandomMetricColor;
+                g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
+                g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
+                g.fillOval(chartTimeLineMyValuePoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyValuePoint.y-TIME_LINE_POINT_SIZE.height/2,
+                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height);
             }
         }
 
 
         //g.drawString(debuggingText,20,20);
+    }
+
+    private void draw_tipOfTimeLine(Graphics2D g2d)
+    {
+        //// Line from tip of TimeLine (ACTUALLY: startPoint+0.1depth) of time line to Triangle
+        g2d.setColor(Color.BLUE);
+        g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
+        g2d.drawLine(startPointOfTimeLine.x, startPointOfTimeLine.y, trianglePoint.x, trianglePoint.y);
+
+        //// Triangle
+        int[] triangleVertices_x = new int[]{trianglePoint.x-6,trianglePoint.x-14,trianglePoint.x+4};
+        int[] triangleVertices_y = new int[]{trianglePoint.y-2,trianglePoint.y+10,trianglePoint.y+3};
+        g2d.fillPolygon(triangleVertices_x, triangleVertices_y, 3);
     }
 
     private void tick(float dt_sec)
@@ -267,9 +344,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         if(targetDepthAbs<=LAYERS_DEPTH_ERROR_THRESHOLD)
             speed_depthPerSec = targetDepth/dt_sec;
         else if(targetDepthAbs<=LAYER_DISTANCE)
-            speed_depthPerSec = LAYER_DISTANCE*sign;
+            speed_depthPerSec = 3*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<4*LAYER_DISTANCE)
-            speed_depthPerSec = 2*LAYER_DISTANCE*sign;
+            speed_depthPerSec = 4*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<5)
             speed_depthPerSec = 2*sign;
         else
@@ -483,11 +560,11 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateTopIdealLayerBoundary()
     {
         final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
-        ////
-        //topLayerDimention = new Dimension(  getSize().width - FREE_SPACE_HORIZONTAL /*Almost Fill Width*/,
-        //                                    2*getSize().height/3 /*2/3 of whole vertical*/);
-        topLayerDimention = new Dimension(  getSize().width/2, 2*getSize().height/3 /*2/3 of whole vertical*/);
-        topLayerCenterPos = new Point(centerOfThisComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
+        topIdealLayerDimention = new Dimension(  getSize().width/2, 2*getSize().height/3 /*2/3 of whole vertical*/);
+        topIdealLayerDimention.width *= MyRenderer.getInstance().BASE_DEPTH; // because Renderer divide it by BASE_DEPTH
+        topIdealLayerDimention.height *= MyRenderer.getInstance().BASE_DEPTH;
+
+        topIdealLayerCenterPos = new Point(centerOfThisComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
         ////
         updateEverythingAfterComponentResize();
     }
@@ -496,6 +573,22 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         updateVirtualWindowsBoundaryAfterComponentResize();
         updateMainEditorWindowBoundaryAfterComponentResize();
+        updateTimeLineDrawing();
+    }
+
+    private void updateTimeLineDrawing()
+    {
+        startPointOfTimeLine = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
+                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                                        0.2f+MyRenderer.getInstance().BASE_DEPTH);
+
+        startPointOfChartTimeLine = MyRenderer.getInstance().calculateChartTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
+                                                            topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                            0+MyRenderer.getInstance().BASE_DEPTH);
+
+        trianglePoint = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
+                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                                        -0.2f+MyRenderer.getInstance().BASE_DEPTH);
     }
 
     protected class VirtualEditorWindow
@@ -503,6 +596,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         final float Y_OFFSET_FACTOR = 250;
         ////////
         int cIndex =-1;
+        int someRandomMetric = 0;
+        Color someRandomMetricColor = Color.BLACK;
         CommitWrapper commitWrapper = null;
 
         boolean isVisible=true;
@@ -515,6 +610,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
+        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0), chartValuePoint= new Point(0,0);
         ////////
 
         public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
@@ -522,6 +618,13 @@ public class Commits3DView extends JComponent implements ComponentListener
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
 
+            someRandomMetric = ThreadLocalRandom.current().nextInt(5, 100);
+            if(someRandomMetric<30)
+                someRandomMetricColor = Color.GREEN;
+            else if(someRandomMetric<70)
+                someRandomMetricColor = Color.YELLOW;
+            else
+                someRandomMetricColor = Color.RED;
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -540,8 +643,8 @@ public class Commits3DView extends JComponent implements ComponentListener
 
             this.xCenterDefault = xCenterDefault;
             this.yCenterDefault = yCenterDefault;
-            this.wDefault = (int) (wDefault*BASE_DEPTH);
-            this.hDefault = (int) (hDefault*BASE_DEPTH);
+            this.wDefault = (int) (wDefault);
+            this.hDefault = (int) (hDefault);
 
             // Now update Boundary according to current depth and new DefaultValues
             updateDepth(depth);
@@ -575,7 +678,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         public void doRenderCalculation()
         {
-            float renderingDepth = depth + BASE_DEPTH;
+            float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
             Rectangle rect = new Rectangle(0, 0, 0, 0);
 
             //////////////// Alpha
@@ -591,26 +694,33 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
             //////////////// Size
-            rect.width = render3DTo2D(wDefault, renderingDepth);
-            rect.height = render3DTo2D(hDefault, renderingDepth);
-            Point p = render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
+            rect.width = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
+            rect.height = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
+            Point p = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             rect.x = p.x;
             rect.y = p.y;
-
             drawingRect = rect;
-        }
 
-        private int render3DTo2D(int dis, float z)
-        {
-            return ((int) (dis / z));
-        }
 
-        private Point render3DTo2D(int x, int y, float z)
-        {
-            Point p = new Point();
-            p.x = x;
-            p.y = y - (int) (Math.log(z - BASE_DEPTH + Math.exp(0)) * Y_OFFSET_FACTOR);
-            return p;
+            ////////////// TimeLine
+            // We also could use "MyRenderer.getInstance().calculateTimeLinePoint()". But it's worthless and that function
+            // is designed for external user ( check 'updateTimeLineDrawing()' function)
+            timeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
+            timeLinePoint.x = rect.x - (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
+            timeLinePoint.y = rect.y - drawingRect.height/2;
+
+            ///////////// Chart TimeLine
+            chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
+            chartTimeLinePoint.x = rect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
+            chartTimeLinePoint.y = rect.y - drawingRect.height/2;
+
+            chartValuePoint = (Point) chartTimeLinePoint.clone();
+
+            int MAX_UI_HEIGHT = 200;
+            float v = someRandomMetric*MAX_UI_HEIGHT/100.f;
+            v = MyRenderer.getInstance().render3DTo2D((int)v,renderingDepth);
+            chartValuePoint.y -= (int)v;
+
         }
 
         public void setHighlightBorder(boolean newStatus)
@@ -644,24 +754,18 @@ public class Commits3DView extends JComponent implements ComponentListener
             x = this.drawingRect.x - w/2;
             y = this.drawingRect.y - h/2;
 
-            /// Rect
-            g.setColor( this.myColor);
-            g.fillRect(x, y, w, h);
+           draw_mainRect(g2d, x, y, w, h);
+           draw_mainRectBorder(g2d, x, y, w, h);
+           draw_topBar(g2d, x, y, w);
+           draw_topBarText(g, x, y, w);
+        }
 
-            /// Border
-            g2d.setStroke(new BasicStroke(2));
-            g2d.setColor( this.myBorderColor);
-            g2d.drawRect(x, y, w, h);
-
-            /// TopBar
-            g.setColor( this.myTopBarColor);
-            g.fillRect(x, y+VIRTUAL_WINDOW_BORDER_TICKNESS, w, TOP_BAR_HEIGHT);
-
+        private void draw_topBarText(Graphics g, int x, int y, int w)
+        {
             /// Name
-            g.setColor(new Color(0,0,0,alpha));
-
             String text="";
             Graphics g2 = g.create();
+            g2.setColor(new Color(0,0,0,alpha));
             Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(x,y,w,TOP_BAR_HEIGHT);
             g2.setClip(rectangleToDrawIn);
             if(cIndex ==topLayerIndex)
@@ -677,12 +781,34 @@ public class Commits3DView extends JComponent implements ComponentListener
             }
             else
             {
-                float fontSize = 20.f/(BASE_DEPTH+depth);
+                float fontSize = 20.f/(MyRenderer.getInstance().BASE_DEPTH+depth);
                 g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
                 text = getTopBarMessage();
                 //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: "+fontSize + "Alpha: "+alpha;
                 DrawingHelper.drawStringCenter(g2, text, x+w/2, y+15);
             }
+        }
+
+        private void draw_topBar(Graphics2D g2d, int x, int y, int w)
+        {
+            /// TopBar
+            g2d.setColor( this.myTopBarColor);
+            g2d.fillRect(x, y+VIRTUAL_WINDOW_BORDER_TICKNESS, w, TOP_BAR_HEIGHT);
+        }
+
+        private void draw_mainRectBorder(Graphics2D g2d, int x, int y, int w, int h)
+        {
+            /// Border
+            g2d.setStroke(new BasicStroke(2));
+            g2d.setColor( this.myBorderColor);
+            g2d.drawRect(x, y, w, h);
+        }
+
+        private void draw_mainRect(Graphics2D g2d, int x, int y, int w, int h)
+        {
+            /// Rect
+            g2d.setColor( this.myColor);
+            g2d.fillRect(x, y, w, h);
         }
 
         private String getTopBarMessage()
