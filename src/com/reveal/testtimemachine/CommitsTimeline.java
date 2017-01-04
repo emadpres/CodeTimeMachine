@@ -312,10 +312,9 @@ public class CommitsTimeline extends JComponent
     {
         int s = getSectorIndexForcIndex(commits3DViewTopLayer_cIndex);
         Point p = getCenterOfSector(s);
-        g.setColor(Color.RED);
+        g.setColor(Color.BLUE);
         g.fillRoundRect(p.x-line_sectorsLength/2, p.y, line_sectorsLength, PRIMARY_LINE_TICKNESS, 3, 3);
     }
-
 
     private void draw_helpingInformation(Graphics2D g2d)
     {
