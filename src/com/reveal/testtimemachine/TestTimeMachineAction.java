@@ -1,12 +1,13 @@
 package com.reveal.testtimemachine;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.analysis.AnalysisScope;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vcs.AbstractVcs;
 import com.intellij.openapi.vcs.FilePath;
 import com.intellij.openapi.vcs.ProjectLevelVcsManager;
@@ -20,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.psi.*;
 import com.intellij.ui.content.Content;
 
 import java.io.File;
@@ -41,7 +43,7 @@ public class TestTimeMachineAction extends AnAction
     public void actionPerformed(AnActionEvent e)
     {
         project = e.getProject();
-
+        //findAllPackages(e);
 
         VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
         if(chosenVirtualFiles[0] == null)
@@ -139,6 +141,36 @@ public class TestTimeMachineAction extends AnAction
 
     }
 
+    public void findAllPackages(AnActionEvent e) {
+        DataContext dataContext = e.getDataContext();
+        final Project project = DataKeys.PROJECT.getData(dataContext);
+        final Module module = DataKeys.MODULE.getData(dataContext);
+
+        final Set<String> packageNameSet = new HashSet<String>();
+
+        AnalysisScope moduleScope = new AnalysisScope(module);
+        moduleScope.accept(new PsiRecursiveElementVisitor() {
+            @Override
+            public void visitFile(final PsiFile file) {
+                if (file instanceof PsiJavaFile) {
+                    PsiJavaFile psiJavaFile = (PsiJavaFile) file;
+                    final PsiPackage aPackage =
+                            JavaPsiFacade.getInstance(project).findPackage(psiJavaFile.getPackageName());
+                    if (aPackage != null) {
+                        packageNameSet.add(aPackage.getQualifiedName());
+                    }
+                }
+            }
+        });
+
+        String allPackageNames = "";
+        for (String packageName : packageNameSet) {
+            allPackageNames = allPackageNames + packageName + "\n";
+        }
+
+        Messages.showMessageDialog(project, allPackageNames,
+                "All packages in selected module", Messages.getInformationIcon());
+    }
 
     private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
     {
@@ -187,7 +219,6 @@ public class TestTimeMachineAction extends AnAction
 
         return chosenVirtualFiles;
     }
-
 
     private VirtualFile[] selectVirtualFiles_auto(AnActionEvent e)
     {
