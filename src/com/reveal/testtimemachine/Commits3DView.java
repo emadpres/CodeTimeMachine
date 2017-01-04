@@ -591,6 +591,12 @@ public class Commits3DView extends JComponent implements ComponentListener
                                                                         -0.2f+MyRenderer.getInstance().BASE_DEPTH);
     }
 
+    public void setTopBarHighlight(int cIndex, boolean newStatus, Color c)
+    {
+        virtualEditorWindows[cIndex].setHighlightTopBar(newStatus, c);
+        repaint();
+    }
+
     protected class VirtualEditorWindow
     {
         final float Y_OFFSET_FACTOR = 250;
@@ -733,14 +739,19 @@ public class Commits3DView extends JComponent implements ComponentListener
             setAlpha(alpha); //Apply current alpha to above solid colors
         }
 
-        public void setHighlightTopBar(boolean newStatus)
+        public void setHighlightTopBar(boolean newStatus, Color c)
         {
             if(newStatus==true)
-                myTopBarColor = Color.GREEN;
+                myTopBarColor = c;
             else
                 myTopBarColor = DEFAULT_TOP_BAR_COLOR;
 
             setAlpha(alpha); //Apply current alpha to above solid colors
+        }
+
+        public void setHighlightTopBar(boolean newStatus)
+        {
+           setHighlightTopBar(newStatus, Color.ORANGE);
         }
 
         public void draw(Graphics g)

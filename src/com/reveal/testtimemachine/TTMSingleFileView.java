@@ -9,9 +9,11 @@ import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.diff.SimpleContent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.siyeh.ig.numeric.ImplicitNumericConversionInspection;
 
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -34,6 +36,9 @@ public class TTMSingleFileView
     CommitsBarBase commitsBar = null;
     CommitsTimelineZoomable commitsTimelineZoomable = null;
     //////////////////////////////
+
+    int INVALID = -1;
+    int firstMarked_cIndex = INVALID, secondMarked_cIndex = INVALID;
 
     TTMSingleFileView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commits)
     {
@@ -68,7 +73,47 @@ public class TTMSingleFileView
         final String NEXT_COMMIT_ACTION_NAME = "showNextCommitIn3DView";
         final String INCREASE_MAX_VISIBLE_DEPTH = "increaseMaxVisibleDepth";
         final String DECREASE_MAX_VISIBLE_DEPTH = "decreaseMaxVisibleDepth";
+        final String MARK_AS_FIRST = "markAsFirst";
+        final String MARK_AS_SECOND = "markAsSecond";
 
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_B,0), MARK_AS_FIRST);
+        thisComponent.getActionMap().put(MARK_AS_FIRST, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if(firstMarked_cIndex!=INVALID)
+                    codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
+
+                if( commitsBar.activeCommit_cIndex != firstMarked_cIndex) // New Place
+                {
+                    firstMarked_cIndex = commitsBar.activeCommit_cIndex;
+                    codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, true, Color.GREEN);
+                }
+                else
+                    firstMarked_cIndex = INVALID;
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_N,0), MARK_AS_SECOND);
+        thisComponent.getActionMap().put(MARK_AS_SECOND, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if(secondMarked_cIndex != INVALID)
+                    codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
+
+                if(commitsBar.activeCommit_cIndex != secondMarked_cIndex) //New Place
+                {
+                    secondMarked_cIndex = commitsBar.activeCommit_cIndex;
+                    codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, true,  Color.CYAN);
+                }
+                else
+                    secondMarked_cIndex = INVALID;
+            }
+        });
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0), SHOW_DIFF_ACTION_NAME);
         thisComponent.getActionMap().put(SHOW_DIFF_ACTION_NAME, new AbstractAction()
@@ -76,7 +121,17 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                showDiff();
+                if(firstMarked_cIndex == INVALID && secondMarked_cIndex==INVALID)
+                    return;
+                else if(firstMarked_cIndex != INVALID && secondMarked_cIndex!=INVALID)
+                    showDiff(firstMarked_cIndex, secondMarked_cIndex);
+                else
+                {
+                    if(firstMarked_cIndex==INVALID)
+                        showDiff(secondMarked_cIndex);
+                    else
+                        showDiff(firstMarked_cIndex);
+                }
             }
         });
 
@@ -175,7 +230,19 @@ public class TTMSingleFileView
 
     }
 
-    private void showDiff()
+    private void showDiff(int first_cIndex, int second_cIndex)
+    {
+        String firstCommitContent_str = commits.get(first_cIndex).getFileContent();
+        String secondCommitContent_str = commits.get(second_cIndex).getFileContent();
+        DocumentContent firstCommitContent = DiffContentFactory.getInstance().create(firstCommitContent_str);
+        DocumentContent secondCommitContent = DiffContentFactory.getInstance().create(secondCommitContent_str);
+
+        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", firstCommitContent, secondCommitContent, "First: "+commits.get(first_cIndex).getHash()+" | "+commits.get(first_cIndex).getCommitMessage(), "Second: "+commits.get(second_cIndex).getHash()+" | "+commits.get(second_cIndex).getCommitMessage());
+
+        DiffManager.getInstance().showDiff(project, diffReqFromString);
+    }
+
+    private void showDiff(int cIndex)
     {
         int latestsCommittedRevision = -1;
         for( int i=0; i<commits.size(); i++)
@@ -187,14 +254,7 @@ public class TTMSingleFileView
         if(latestsCommittedRevision==-1) return;
         ///////////
 
-        final String latestCommitContent_str = commits.get(latestsCommittedRevision).getFileContent(), activeCommitContent_str = commits.get(commitsBar.activeCommit_cIndex).getFileContent();
-        DocumentContent latestCommitContent = DiffContentFactory.getInstance().create(latestCommitContent_str);
-        DocumentContent activeCommitContent = DiffContentFactory.getInstance().create(activeCommitContent_str);
-
-        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", latestCommitContent, activeCommitContent, "Base ("+commits.get(latestsCommittedRevision).getHash()+")", "Selected Commit ("+commits.get(0).getHash()+")");
-
-        DiffManager.getInstance().showDiff(project, diffReqFromString);
-
+        showDiff(latestsCommittedRevision, cIndex);
     }
 
     private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
