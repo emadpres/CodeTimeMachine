@@ -17,7 +17,6 @@ import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
-import java.lang.management.GarbageCollectorMXBean;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -914,6 +913,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         // >>>>>>>> Scroll for EditorTextField
         // https://intellij-support.jetbrains.com/hc/en-us/community/posts/206759275-EditorTextField-and-surrounding-JBScrollPane
 
+        final Rectangle INVISBLE_BOUND_RECT = new Rectangle(-100, -100, 0,0);
+        Rectangle lastBoundBeforeInvisible;
+        boolean isVisible=true;
+
         public CustomEditorTextField(Document document, Project project, FileType fileType, boolean isViewer, boolean oneLineMode)
         {
             super(document,project,fileType,isViewer,oneLineMode);
@@ -938,6 +941,27 @@ public class Commits3DView extends JComponent implements ComponentListener
             EditorSettings settings = editor.getSettings();
             settings.setLineNumbersShown(true);
             editor.reinitSettings();
+        }
+
+        public void setVisible(boolean newStatus)
+        {
+            // if we use normal behaviour of setVisible(), while visibility is False the KeyBinding doesn't work strangely.
+            if(isVisible == newStatus) return;
+
+            if(newStatus==false)
+            {
+                isVisible = false;
+                lastBoundBeforeInvisible = this.getBounds();
+                setBounds(INVISBLE_BOUND_RECT);
+            }
+            else
+            {
+                isVisible = true;
+                setBounds(lastBoundBeforeInvisible);
+            }
+
+
+
         }
 
     }
