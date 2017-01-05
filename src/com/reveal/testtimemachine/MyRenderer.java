@@ -51,7 +51,7 @@ public class MyRenderer
         Point p = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
         int w = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
         int h = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
-        p.x = p.x + w/2 + (int)(TIME_LINE_GAP*w); // The only different with above function is here. //TODO better API ?
+        p.x = p.x + w/2 + (int)(TIME_LINE_GAP*w);
         p.y = p.y - h/2;
         return p;
     }

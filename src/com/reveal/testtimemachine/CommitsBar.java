@@ -17,7 +17,6 @@ public class CommitsBar extends CommitsBarBase
     protected JPanel thisComponentWithoutScroll = null;
 
     public enum CommitItemDirection {NONE, LTR, RTL};
-    public enum CommitItemInfoType {NONE, DATE, TIME}
 
 
     private CommitUIItem[] commitUIItems /* Most recent commit at 0*/;
@@ -149,7 +148,7 @@ public class CommitsBar extends CommitsBarBase
 
             }
 
-            commitUIItems[i]= new CommitUIItem(direction, i, commitList.get(i), this, CommitItemInfoType.TIME);
+            commitUIItems[i]= new CommitUIItem(direction, i, commitList.get(i), this);
 
             UI_items.add(commitUIItems[i].getComponent());
             ///
@@ -325,7 +324,7 @@ public class CommitsBar extends CommitsBarBase
             return monthNames[month];
         }
 
-        private void updateMarkerLocation() //TODO: Move this duplicate to Base class
+        private void updateMarkerLocation()
         {
             if(direction== CommitItemDirection.LTR)
                 marker.setLocation( 0/*Align Left*/,
@@ -337,7 +336,7 @@ public class CommitsBar extends CommitsBarBase
             }
         }
 
-        private void updateCommitInfoLocation() //TODO: Move this duplicate to Base class
+        private void updateCommitInfoLocation()
         {
             final int DELTA_DIS_FROM_MARKER = 3;
             if(direction== CommitItemDirection.LTR)
@@ -361,7 +360,7 @@ public class CommitsBar extends CommitsBarBase
             updateCommitInfoLocation();
         }
 
-        private void setupComponentResizingBehaviour() //TODO: Move this duplicate to Base class
+        private void setupComponentResizingBehaviour()
         {
             myComponent.addComponentListener(new ComponentListener()
             {
@@ -373,30 +372,22 @@ public class CommitsBar extends CommitsBarBase
                     we need to reaarange objects when size chnages.
                     if thisComponentWithoutScroll had layout (for its children) we wouldn't manage its children after each size change.
                      */
-                    int sd=0;
-                    sd++;
                     updateUIToNewSize();
                 }
 
                 @Override
                 public void componentMoved(ComponentEvent e)
                 {
-                    int sd=0;
-                    sd++;
                 }
 
                 @Override
                 public void componentShown(ComponentEvent e)
                 {
-                    int sd=0;
-                    sd++;
                 }
 
                 @Override
                 public void componentHidden(ComponentEvent e)
                 {
-                    int sd=0;
-                    sd++;
                 }
             });
         }
@@ -414,11 +405,8 @@ public class CommitsBar extends CommitsBarBase
         private final int LONG_FACTOR = 5;
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 17,5 );
         private final Dimension MARKER_HOVERED_SIZE = new Dimension( 20,8 );
-        private final Dimension MARKERT_NORMAL_SIZE_LONG = new Dimension( 10+LONG_FACTOR,5 );
-        private final Dimension MARKER_HOVERED_SIZE_LONG = new Dimension( 15+LONG_FACTOR,8 );
         //
         private final Color NORMAL_COLOR = Color.LIGHT_GRAY;
-        private final Color NORMAL_COLOR_LONG = Color.GRAY; //TODO : LONG ==> BOLD_COMMITS
         private final Color HOVERED_COLOR = new Color(255,0,0,150);
         ///////// ++ Constant -- /////////
 
@@ -430,27 +418,25 @@ public class CommitsBar extends CommitsBarBase
 
         private int commitUIItemIndex=-1;
         private CommitItemDirection direction;
-        CommitItemInfoType infoType;
 
         private boolean isActive=false;
         private CommitsBar commitsBar=null;
 
 
 
-        public CommitUIItem(CommitItemDirection direction, int commitUIItemIndex, CommitWrapper commitWrapper, CommitsBar commitBar, CommitItemInfoType infoType)
+        public CommitUIItem(CommitItemDirection direction, int commitUIItemIndex, CommitWrapper commitWrapper, CommitsBar commitBar)
         {
             this.commitsBar = commitBar;
             this.direction = direction;
             this.commitUIItemIndex = commitUIItemIndex;
-            this.infoType = infoType;
 
-            setupUI(commitWrapper, infoType);
+            setupUI(commitWrapper);
 
             setupMouseBeahaviour();
             setupComponentResizingBehaviour();
         }
 
-        private void setupUI(CommitWrapper commitWrapper, CommitItemInfoType infoType)
+        private void setupUI(CommitWrapper commitWrapper)
         {
             createEmptyJComponent();
             if(direction == CommitItemDirection.LTR)
@@ -472,7 +458,7 @@ public class CommitsBar extends CommitsBarBase
                 myComponent.setBackground(Color.GREEN);
 
             setupUI_marker();
-            setupUI_commitInfo(commitWrapper, infoType);
+            setupUI_commitInfo(commitWrapper);
 
             updateToNormalUI();
         }
@@ -524,7 +510,7 @@ public class CommitsBar extends CommitsBarBase
             myComponent.add(marker);
         }
 
-        private void setupUI_commitInfo(CommitWrapper commitWrapper, CommitItemInfoType infoType)
+        private void setupUI_commitInfo(CommitWrapper commitWrapper)
         {
             String commitInfoStr = "";
 
@@ -594,31 +580,17 @@ public class CommitsBar extends CommitsBarBase
 
         private void updateToNormalUI()
         {
-            if(infoType== CommitItemInfoType.DATE)
-            {
-                marker.setSize(MARKERT_NORMAL_SIZE_LONG);
-                marker.setBackground(NORMAL_COLOR_LONG);
-            }
-            else
-            {
-                marker.setSize(MARKERT_NORMAL_SIZE);
-                marker.setBackground(NORMAL_COLOR);
-            }
+            marker.setSize(MARKERT_NORMAL_SIZE);
+            marker.setBackground(NORMAL_COLOR);
 
             updateMarkerLocation();
-            if(infoType== CommitItemInfoType.DATE)
-                commitInfo.setForeground(NORMAL_COLOR_LONG);
-            else
-                commitInfo.setForeground(NORMAL_COLOR);
+            commitInfo.setForeground(NORMAL_COLOR);
             updateCommitInfoLocation();
         }
 
         private void updateToActiveUI()
         {
-            if(infoType== CommitItemInfoType.DATE)
-                marker.setSize(MARKER_HOVERED_SIZE_LONG);
-            else
-                marker.setSize(MARKER_HOVERED_SIZE);
+            marker.setSize(MARKER_HOVERED_SIZE);
             marker.setBackground(HOVERED_COLOR);
             updateMarkerLocation();
 

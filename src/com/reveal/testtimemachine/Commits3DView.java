@@ -385,7 +385,13 @@ public class Commits3DView extends JComponent implements ComponentListener
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
 
-                if(i==targetLayerIndex ||  (i!=0 && !CalendarHelper.isSameDay(commitList.get(i).getDate(),commitList.get(i-1).getDate())) )
+                if(i==targetLayerIndex)
+                {
+                    g2d.setFont(new Font("Arial",Font.BOLD, 11));
+                    g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 70, timeLineMyPoint.y + 2);
+                    g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x +10, timeLineMyPoint.y + 2);
+                }
+                else if(i==commitList.size()-1 || !CalendarHelper.isSameDay(commitList.get(i).getDate(),commitList.get(i+1).getDate()) )
                 {
                     g2d.setFont(new Font("Arial",Font.BOLD, 10));
                     g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 68, timeLineMyPoint.y + 2);
@@ -515,11 +521,11 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     }
 
-    public void showCommit(int newCommit_cIndex, boolean withAnimation) // TODO: without animation
+    public void showCommit(int newCommit_cIndex, boolean withAnimation)
     {
         if(withAnimation==false)
         {
-            // TODO
+            // TODO: without animation
             //loadMainEditorWindowContent();
             //virtualEditorWindows[topLayerIndex].setHighlightBorder();
             // Arrange VirtualEditorWindows
@@ -527,7 +533,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         }
         else
         {
-            if( targetLayerIndex==newCommit_cIndex) //TODO : is cIndex ?
+            if( targetLayerIndex==newCommit_cIndex)
                 return;
             this.targetLayerIndex = newCommit_cIndex;
 
@@ -839,12 +845,6 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             Graphics2D g2d = (Graphics2D) g;
             if(this.isVisible!=true) return;
-
-            int x,y,w,h; //TODO: Create drawingRect not centered and make a function for below
-            w = this.drawingRect.width;
-            h = this.drawingRect.height;
-            x = this.drawingRect.x;
-            y = this.drawingRect.y;
 
            draw_mainRect(g2d, drawingRect);
            draw_mainRectBorder(g2d, drawingRect);
