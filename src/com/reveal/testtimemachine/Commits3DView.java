@@ -128,11 +128,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 {
                     if(virtualEditorWindows[i].isVisible==false) continue;
 
-                    Rectangle r= new Rectangle(virtualEditorWindows[i].drawingRect.x-virtualEditorWindows[i].drawingRect.width/2,
-                            virtualEditorWindows[i].drawingRect.y-virtualEditorWindows[i].drawingRect.height/2,
-                            virtualEditorWindows[i].drawingRect.width,
-                            virtualEditorWindows[i].drawingRect.height);
-                    if(r.contains(currentPoint))
+                    if(virtualEditorWindows[i].drawingRect.contains(currentPoint))
                     {
                         if(currentMouseHoveredIndex ==i)
                             return;
@@ -660,8 +656,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         int x,y,w,h;
         w = virtualEditorWindows[topLayerIndex].drawingRect.width-2*VIRTUAL_WINDOW_BORDER_TICKNESS;
         h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
-        x = virtualEditorWindows[topLayerIndex].drawingRect.x-w/2+VIRTUAL_WINDOW_BORDER_TICKNESS;
-        y = virtualEditorWindows[topLayerIndex].drawingRect.y-h/2+TOP_BAR_HEIGHT/2;
+        x = virtualEditorWindows[topLayerIndex].drawingRect.x+VIRTUAL_WINDOW_BORDER_TICKNESS;
+        y = virtualEditorWindows[topLayerIndex].drawingRect.y+TOP_BAR_HEIGHT/2;
         //mainEditorWindow.setSize(w,h);
         //mainEditorWindow.setLocation(x,y);
         mainEditorWindow.setBounds(x,y,w,h);
@@ -832,7 +828,6 @@ public class Commits3DView extends JComponent implements ComponentListener
         public void doRenderCalculation()
         {
             float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
-            Rectangle rect = new Rectangle(0, 0, 0, 0);
 
             //////////////// Alpha
             int newAlpha;
@@ -847,25 +842,24 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
             //////////////// Size
-            rect.width = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
-            rect.height = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
+            drawingRect.width = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
+            drawingRect.height = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
             Point p = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
-            rect.x = p.x;
-            rect.y = p.y;
-            drawingRect = rect;
+            drawingRect.x = p.x - drawingRect.width/2;
+            drawingRect.y = p.y - drawingRect.height/2;
 
 
             ////////////// TimeLine
             // We also could use "MyRenderer.getInstance().calculateTimeLinePoint()". But it's worthless and that function
             // is designed for external user ( check 'updateTimeLineDrawing()' function)
             timeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
-            timeLinePoint.x = rect.x - (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
-            timeLinePoint.y = rect.y - drawingRect.height/2;
+            timeLinePoint.x = drawingRect.x - (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
+            timeLinePoint.y = drawingRect.y;
 
             ///////////// Chart TimeLine
             chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
-            chartTimeLinePoint.x = rect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width/2);
-            chartTimeLinePoint.y = rect.y - drawingRect.height/2;
+            chartTimeLinePoint.x = drawingRect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
+            chartTimeLinePoint.y = drawingRect.y;
         }
 
         public void setHighlightBorder(boolean newStatus)
@@ -915,33 +909,33 @@ public class Commits3DView extends JComponent implements ComponentListener
             int x,y,w,h; //TODO: Create drawingRect not centered and make a function for below
             w = this.drawingRect.width;
             h = this.drawingRect.height;
-            x = this.drawingRect.x - w/2;
-            y = this.drawingRect.y - h/2;
+            x = this.drawingRect.x;
+            y = this.drawingRect.y;
 
-           draw_mainRect(g2d, x, y, w, h);
-           draw_mainRectBorder(g2d, x, y, w, h);
-           draw_topBar(g2d, x, y, w);
-           draw_topBarText(g, x, y, w);
+           draw_mainRect(g2d, drawingRect);
+           draw_mainRectBorder(g2d, drawingRect);
+           draw_topBar(g2d, drawingRect);
+           draw_topBarText(g, drawingRect);
         }
 
-        private void draw_topBarText(Graphics g, int x, int y, int w)
+        private void draw_topBarText(Graphics g, Rectangle drawingRect)
         {
             /// Name
             String text="";
             Graphics g2 = g.create();
             g2.setColor(new Color(0,0,0,alpha));
-            Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(x,y,w,TOP_BAR_HEIGHT);
+            Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(drawingRect.x,drawingRect.y,drawingRect.width,TOP_BAR_HEIGHT);
             g2.setClip(rectangleToDrawIn);
             if(cIndex ==topLayerIndex)
             {
                 g2.setFont(new Font("Courier", Font.BOLD, 10));
                 text = getTopBarMessage();
                 //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: --  "+ "Alpha: "+alpha;
-                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+8);
+                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+8);
                 String path = virtualFile.getPath();
                 path = fit(path, 70, g2);
                 text = new String(path);
-                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+18);
+                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+18);
             }
             else
             {
@@ -949,33 +943,33 @@ public class Commits3DView extends JComponent implements ComponentListener
                 g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
                 text = getTopBarMessage();
                 //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: "+fontSize + "Alpha: "+alpha;
-                DrawingHelper.drawStringCenter(g2, text, x+w/2, y+15);
+                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+15);
             }
         }
 
-        private void draw_topBar(Graphics2D g2d, int x, int y, int w)
+        private void draw_topBar(Graphics2D g2d, Rectangle drawingRect)
         {
             /// TopBar
             if(!isTopBarTempColorValid)
                 g2d.setColor( this.myTopBarColor);
             else
                 g2d.setColor( this.myTopBarTempColor);
-            g2d.fillRect(x, y+VIRTUAL_WINDOW_BORDER_TICKNESS, w, TOP_BAR_HEIGHT);
+            g2d.fillRect(drawingRect.x, drawingRect.y+VIRTUAL_WINDOW_BORDER_TICKNESS, drawingRect.width, TOP_BAR_HEIGHT);
         }
 
-        private void draw_mainRectBorder(Graphics2D g2d, int x, int y, int w, int h)
+        private void draw_mainRectBorder(Graphics2D g2d, Rectangle drawingRect)
         {
             /// Border
             g2d.setStroke(new BasicStroke(2));
             g2d.setColor( this.myBorderColor);
-            g2d.drawRect(x, y, w, h);
+            g2d.drawRect(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
         }
 
-        private void draw_mainRect(Graphics2D g2d, int x, int y, int w, int h)
+        private void draw_mainRect(Graphics2D g2d, Rectangle drawingRect)
         {
             /// Rect
             g2d.setColor( this.myColor);
-            g2d.fillRect(x, y, w, h);
+            g2d.fillRect(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
         }
 
         public int getMetricValue(ChartType c)
