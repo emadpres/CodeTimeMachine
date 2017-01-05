@@ -55,7 +55,7 @@ public class TTMSingleFileView
         activeCommit_cIndex = 0 ;
         commitsBar.updateCommitsList(this.commits);
         commitsBar.setActiveCommit_cIndex();
-        codeHistory3DView.showCommit(0, false);
+        //codeHistory3DView.showCommit(0, true); //It's initially at 0
 
         addKeyBindings();
     }

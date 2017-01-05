@@ -10,7 +10,6 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
-import com.siyeh.ig.numeric.ImplicitNumericConversionInspection;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -386,7 +385,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
                 g2d.setFont(new Font("Arial",Font.BOLD, 10));
-                g.drawString( CalendarHelper.convertDateToString(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
+                g.drawString( CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
 
 
                 ////////////////////////  (Right) Chart
@@ -505,81 +504,6 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         return;
 
-
-
-
-        /*final int LAST_STEP_SPEED = 4;
-        int sign = (int) Math.signum(topLayerIndex - targetLayerIndex);
-        int diff = Math.abs(targetLayerIndex - topLayerIndex);
-        if(targetLayerIndex == topLayerIndex)
-            numberOfPassingLayersPerSec_forAnimation = -LAST_STEP_SPEED;
-        else if(diff < 2)
-            numberOfPassingLayersPerSec_forAnimation = LAST_STEP_SPEED*sign;
-        else if(diff<6)
-            numberOfPassingLayersPerSec_forAnimation = 6*sign;
-        else
-            numberOfPassingLayersPerSec_forAnimation = 9*sign;
-
-
-        ////// TEMP ///////////////
-        ////// TEMP ///////////////
-        ////// TEMP ///////////////
-        numberOfPassingLayersPerSec_forAnimation = sign*4;
-
-
-        // TODO: maybe we overpass the target cIndex commit
-        topLayerOffset += numberOfPassingLayersPerSec_forAnimation * dt_sec * LAYER_DISTANCE;
-
-        // When: numberOfPassingLayersPerSec_forAnimation is NEGATIVE
-        // When: Moving direction FROM screen
-        // currentCommitIndex = 0 ===> targetCommitIndex = 10
-        if(topLayerOffset < 0)
-        {
-            // TODO: Still the result of sum may be negative
-            topLayerOffset = (topLayerOffset+LAYER_DISTANCE)%LAYER_DISTANCE; // Here we may need to pass two layers
-            topLayerIndex++;                                                // Here we may need to pass two layers
-            //assert topLayerIndex >= commitList.size(); // TODO
-            //if(topLayerIndex >= commitList.size())
-            //    topLayerIndex=0;
-        }
-
-        // When: numberOfPassingLayersPerSec_forAnimation is POSITIVE
-        // When: Moving direction INTO screen
-        if(topLayerOffset > LAYER_DISTANCE)
-        {
-            topLayerOffset = topLayerOffset%LAYER_DISTANCE; // Here we may need to pass two layers
-            topLayerIndex--;                                // Here we may need to pass two layers
-            //assert topLayerIndex < 0; // TODO
-            //if(topLayerIndex < 0)
-            //    topLayerIndex=commitList.size()-1;
-        }
-
-        for(int i=0; i<commitList.size(); i++)
-        {
-            virtualEditorWindows[i].updateDepth((i-topLayerIndex)*LAYER_DISTANCE + topLayerOffset);
-            if(virtualEditorWindows[i].depth<0 || virtualEditorWindows[i].depth>maxVisibleDepth)
-                virtualEditorWindows[i].isVisible=false;
-            else
-                virtualEditorWindows[i].isVisible=true;
-
-            //int layerIndex_ith_after_topLayer = (topLayerIndex+i)%commitList.size();
-
-            //if(layerIndex_ith_after_topLayer < topLayerIndex
-                    //|| layerIndex_ith_after_topLayer>topLayerIndex + maxVisibleDepth)
-                //virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = false;
-            //else
-                //virtualEditorWindows[layerIndex_ith_after_topLayer].isVisible = true;
-
-            //virtualEditorWindows[layerIndex_ith_after_topLayer].updateDepth(i*LAYER_DISTANCE + topLayerOffset);
-        }
-
-        float d = virtualEditorWindows[targetLayerIndex].depth - 0;
-        float abs = Math.abs(d);
-        if(abs<0.1)
-        {
-            stopAnimation();
-            virtualEditorWindows[topLayerIndex].setHighlightBorder();
-        }*/
     }
 
     public void showCommit(int newCommit_cIndex, boolean withAnimation) // TODO: without animation
@@ -589,7 +513,8 @@ public class Commits3DView extends JComponent implements ComponentListener
             // TODO
             //loadMainEditorWindowContent();
             //virtualEditorWindows[topLayerIndex].setHighlightBorder();
-            // TODO: Arrange VirtualEditorWindows
+            // Arrange VirtualEditorWindows
+            // After implementing this function, we could call "codeHistory3DView.showCommit(0, false);" after instancing this class
         }
         else
         {

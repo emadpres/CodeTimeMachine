@@ -22,12 +22,21 @@ public class CalendarHelper
         return reportDate;
     }
 
-    static String convertDateToString(Date d)
+    static String convertDateToStringYMD(Date d)
     {
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
 
         String result = cal.get(Calendar.YEAR)+" "+convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+cal.get(Calendar.DAY_OF_MONTH);
+        return result;
+    }
+
+    static String convertDateToStringMDY(Date d)
+    {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(d);
+
+        String result = convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+cal.get(Calendar.DAY_OF_MONTH)+" "+cal.get(Calendar.YEAR);
         return result;
     }
 
@@ -38,4 +47,19 @@ public class CalendarHelper
         String month_name = month_date.format(d);
         return month_name;
     }
+
+    static boolean isSameDay(Date d1, Date d2)
+    {
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(d1);
+
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(d2);
+
+
+        boolean isSameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+        return isSameDay;
+    }
+
 }

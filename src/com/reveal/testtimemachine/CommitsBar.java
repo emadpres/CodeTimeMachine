@@ -122,7 +122,6 @@ public class CommitsBar extends CommitsBarBase
     {
         if(commitList.size()==0) return;
         // commitList: Most recent commit at 0
-        // commitItems: Most recent commit at 0
 
         Calendar currentCommitCal = Calendar.getInstance();
         Calendar lastCommitCal = Calendar.getInstance();
@@ -142,11 +141,7 @@ public class CommitsBar extends CommitsBarBase
 
             if(!sameDay)
             {
-                if(i==0)
-                {
-                    //TODO
-                }
-                else
+                if(i!=0)
                 {
                     NewDayItem newDayMarker = new NewDayItem(direction, commitList.get(i-1).getDate());
                     UI_items.add(newDayMarker.getComponent());
@@ -280,33 +275,22 @@ public class CommitsBar extends CommitsBarBase
         {
             String commitInfoStr = "";
 
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
 
+            Calendar cal = Calendar.getInstance(); //today by default
+            cal.add(Calendar.DATE, -1);
+            Date yesterday = cal.getTime();
 
-            long tillCommit = date.getTime();
-            long tillToday = new Date().getTime();
-            long daysTillCommit = tillCommit  / (24 * 60 * 60 * 1000);
-            long daysTillToday = tillToday / (24 * 60 * 60 * 1000); // TODO: BUG: when we are between 12:00am to 1:00am
-
-            if(daysTillToday - daysTillCommit == 0)
+            if(CalendarHelper.isSameDay(new Date(), date))
             {
                 commitInfoStr = "Today";
             }
-            else if(daysTillToday - daysTillCommit == 1)
+            else if(CalendarHelper.isSameDay(yesterday, date))
             {
                 commitInfoStr = "Yesterday";
             }
             else
             {
-                // Month
-                int mInt = cal.get(Calendar.MONTH);
-                String mStr = getMonthName(mInt);
-                commitInfoStr = mStr;
-                // Day
-                commitInfoStr += " "+cal.get(Calendar.DAY_OF_MONTH);
-                // Year
-                commitInfoStr += " "+ cal.get(Calendar.YEAR);
+                commitInfoStr = CalendarHelper.convertDateToStringYMD(date);
             }
 
 
@@ -476,7 +460,7 @@ public class CommitsBar extends CommitsBarBase
 
             String tooltipText = "<html>" + "<body bgcolor=\"#C0C0C0\">"
                                     + "<h4 style=\"color:#3C3C3C;\">"
-                                        + "&nbsp Commit-Date: " + CalendarHelper.convertDateToString(commitWrapper.getDate()) + "<br>"
+                                        + "&nbsp Commit-Date: " + CalendarHelper.convertDateToStringYMD(commitWrapper.getDate()) + "<br>"
                                         + "&nbsp Commit-Id: " + commitWrapper.getCommitID() + "<br>"
                                         + "&nbsp Author: " + commitWrapper.getAuthor() + "<br>"
                                         + "&nbsp Commit-message: " + commitWrapper.getCommitMessage()
