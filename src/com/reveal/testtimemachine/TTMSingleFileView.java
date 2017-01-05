@@ -51,7 +51,10 @@ public class TTMSingleFileView
         ////////////
         setupLayout();
 
-
+        ///// Initialing
+        activeCommit_cIndex = 0 ;
+        commitsBar.updateCommitsList(this.commits);
+        commitsBar.setActiveCommit_cIndex();
         codeHistory3DView.showCommit(0, false);
 
         addKeyBindings();
@@ -190,7 +193,7 @@ public class TTMSingleFileView
                 if(activeCommit_cIndex+1 >= commits.size()) return;
                 activeCommit_cIndex++;
                 navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
-                commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                commitsBar.setActiveCommit_cIndex();
             }
         });
 
@@ -203,7 +206,7 @@ public class TTMSingleFileView
                 if(activeCommit_cIndex-1 < 0) return;
                 activeCommit_cIndex--;
                 navigateToCommit(ClassType.SUBJECT_CLASS, activeCommit_cIndex);
-                commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                commitsBar.setActiveCommit_cIndex();
             }
         });
 
@@ -337,8 +340,6 @@ public class TTMSingleFileView
                 commitsBar = new CommitsBarTreeView(this);
                 break;
         }
-        commitsBar.updateCommitsList(commitsList);
-        commitsBar.setActiveCommit_cIndex(0);
         return commitsBar;
     }
 
@@ -361,7 +362,7 @@ public class TTMSingleFileView
         commitsBar = newCommitsBar;
 
         commitsTimelineZoomable.t.updateCommitsBarWithActiveRange();
-        commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+        commitsBar.setActiveCommit_cIndex();
 
     }
 

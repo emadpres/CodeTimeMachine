@@ -24,6 +24,8 @@ public class CommitsBar extends CommitsBarBase
     CommitItemDirection direction = CommitItemDirection.NONE;
     int contentHeight =0;
 
+    int myLastActive_cIndex = -1;
+
 
     public CommitsBar(CommitItemDirection direction, ClassType s, TTMSingleFileView TTMWindow)
     {
@@ -189,11 +191,12 @@ public class CommitsBar extends CommitsBarBase
     }
 
     @Override
-    public void setActiveCommit_cIndex(int cIndex)
+    /*Get Active_cIndex from TTMWindow*/
+    public void setActiveCommit_cIndex()
     {
-        if( TTMWindow.activeCommit_cIndex!=-1)
+        if( myLastActive_cIndex!=-1)
         {
-            int x = findCommitUIItemIndexFromcIndex(TTMWindow.activeCommit_cIndex);
+            int x = findCommitUIItemIndexFromcIndex(myLastActive_cIndex);
             if(x!= -1)
             {
                 /*If we are here, it means last active commit was also in the current CommitsBar list*/
@@ -201,7 +204,9 @@ public class CommitsBar extends CommitsBarBase
             }
         }
 
-        TTMWindow.activeCommit_cIndex = cIndex;
+        // we keep it here, because anytime from anywhere somebody may change TTMWindow.activeCommit_cIndex and call this function
+        myLastActive_cIndex = TTMWindow.activeCommit_cIndex;
+
         int x = findCommitUIItemIndexFromcIndex(TTMWindow.activeCommit_cIndex);
         if(x!= -1)
         {
@@ -215,8 +220,7 @@ public class CommitsBar extends CommitsBarBase
         int newActivecommit_cIndex = commitList.get(clickedCommitUIItemIndex).cIndex;
         TTMWindow.activeCommit_cIndex = newActivecommit_cIndex;
         TTMWindow.navigateToCommit(classType, newActivecommit_cIndex);
-
-        setActiveCommit_cIndex(newActivecommit_cIndex);
+        setActiveCommit_cIndex();
     }
 
     @Override

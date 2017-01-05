@@ -10,6 +10,7 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import com.siyeh.ig.numeric.ImplicitNumericConversionInspection;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -35,8 +36,9 @@ public class Commits3DView extends JComponent implements ComponentListener
     //////// ++ Timer and Timing
     Timer playing3DAnimationTimer;
     final int TICK_INTERVAL_MS = 50;
-    boolean onChangingCommitProcess = false;
+    //boolean onChangingCommitProcess = false; // instead you can use playing3DAnimationTimer.isRunning()
     ///////
+    final Color DUMMY_COLOR = Color.black;
 
     ///////// ++ UI: 3D Prespective Variables ++ /////////
     final float LAYER_DISTANCE = 0.2f;
@@ -52,7 +54,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     float topLayerOffset;
     Dimension topIdealLayerDimention = new Dimension(0,0);
     Point topIdealLayerCenterPos = new Point(0,0);
-    int lastHighlightVirtualWindowIndex=-1;
+    final int INVALID = -1;
+    int lastHighlightVirtualWindowIndex=-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
     final boolean COLORFUL = false;
     final int TOP_BAR_HEIGHT = 25;
@@ -102,6 +105,88 @@ public class Commits3DView extends JComponent implements ComponentListener
         });
 
         addMouseWheelListener();
+        addMouseMotionListener();
+        addMouseListener();
+    }
+
+
+    private void addMouseMotionListener()
+    {
+        this.addMouseMotionListener(new MouseMotionListener()
+        {
+            @Override
+            public void mouseDragged(MouseEvent e)
+            {
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e)
+            {
+                Point currentPoint = e.getPoint();
+
+                for (int i=0; i<virtualEditorWindows.length; i++)
+                {
+                    if(virtualEditorWindows[i].isVisible==false) continue;
+
+                    Rectangle r= new Rectangle(virtualEditorWindows[i].drawingRect.x-virtualEditorWindows[i].drawingRect.width/2,
+                            virtualEditorWindows[i].drawingRect.y-virtualEditorWindows[i].drawingRect.height/2,
+                            virtualEditorWindows[i].drawingRect.width,
+                            virtualEditorWindows[i].drawingRect.height);
+                    if(r.contains(currentPoint))
+                    {
+                        if(currentMouseHoveredIndex ==i)
+                            return;
+                        if(currentMouseHoveredIndex !=INVALID)
+                            virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
+                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, Color.orange);
+                        currentMouseHoveredIndex =i;
+                        repaint();
+                        return;
+                    }
+                }
+
+                // Here = mouse hovred no virtualWindows
+                if(currentMouseHoveredIndex !=INVALID)
+                {
+                    virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false, DUMMY_COLOR);
+                    currentMouseHoveredIndex = INVALID;
+                    repaint();
+                }
+            }
+        });
+    }
+
+    private void addMouseListener()
+    {
+        this.addMouseListener(new MouseListener()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                if(currentMouseHoveredIndex!= INVALID)
+                {
+                    TTMWindow.activeCommit_cIndex = currentMouseHoveredIndex;
+                    showCommit(currentMouseHoveredIndex, true);
+                    TTMWindow.commitsBar.setActiveCommit_cIndex();
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e)
+            {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+            }
+        });
     }
 
     private void addMouseWheelListener()
@@ -115,19 +200,24 @@ public class Commits3DView extends JComponent implements ComponentListener
                 if (notches < 0)
                 {
                     //Mouse wheel moved UP for -1*notches
-                    int activeCommit_cIndex = targetLayerIndex;
+
+                    int activeCommit_cIndex = TTMWindow.activeCommit_cIndex;
+                    //int activeCommit_cIndex = targetLayerIndex;
                     if(activeCommit_cIndex+1 >= commitList.size()) return;
                     activeCommit_cIndex++;
+                    TTMWindow.activeCommit_cIndex = activeCommit_cIndex;
                     showCommit(activeCommit_cIndex, true);
-                    TTMWindow.commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                    TTMWindow.commitsBar.setActiveCommit_cIndex();
                 }
                 else
                 {
-                    int activeCommit_cIndex = targetLayerIndex;
+                    //int activeCommit_cIndex = targetLayerIndex;
+                    int activeCommit_cIndex = TTMWindow.activeCommit_cIndex;
                     if(activeCommit_cIndex-1 <0) return;
                     activeCommit_cIndex--;
+                    TTMWindow.activeCommit_cIndex = activeCommit_cIndex;
                     showCommit(activeCommit_cIndex, true);
-                    TTMWindow.commitsBar.setActiveCommit_cIndex(activeCommit_cIndex);
+                    TTMWindow.commitsBar.setActiveCommit_cIndex();
                 }
             }
         });
@@ -496,7 +586,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         }*/
     }
 
-    public void showCommit(int newCommitIndex, boolean withAnimation) // TODO: without animation
+    public void showCommit(int newCommit_cIndex, boolean withAnimation) // TODO: without animation
     {
         if(withAnimation==false)
         {
@@ -507,21 +597,17 @@ public class Commits3DView extends JComponent implements ComponentListener
         }
         else
         {
-            if( targetLayerIndex==newCommitIndex) //TODO : is cIndex ?
+            if( targetLayerIndex==newCommit_cIndex) //TODO : is cIndex ?
                 return;
+            this.targetLayerIndex = newCommit_cIndex;
 
-            playAnimation(newCommitIndex);
+            highlight(targetLayerIndex);
+
+            if(!playing3DAnimationTimer.isRunning())
+                playing3DAnimationTimer.start();
+
             mainEditorWindow.setVisible(false);
         }
-    }
-
-    private void playAnimation(int newCommitIndex)
-    {
-        onChangingCommitProcess = true;
-        this.targetLayerIndex = newCommitIndex;
-        highlight(targetLayerIndex);
-        if(!playing3DAnimationTimer.isRunning())
-            playing3DAnimationTimer.start();
     }
 
     private String getStringFromCommits(int commitIndex)
@@ -535,7 +621,6 @@ public class Commits3DView extends JComponent implements ComponentListener
         loadMainEditorWindowContent();
 
         playing3DAnimationTimer.stop();
-        onChangingCommitProcess = false;
     }
 
     public void render()
@@ -651,6 +736,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         Color DEFAULT_TOP_BAR_COLOR = Color.GRAY;
 
         Color myColor=Color.WHITE, myBorderColor=DEFAULT_BORDER_COLOR, myTopBarColor=DEFAULT_TOP_BAR_COLOR;
+        Color myTopBarTempColor;
+        boolean isTopBarTempColorValid = false;
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
         Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0);
@@ -722,7 +809,10 @@ public class Commits3DView extends JComponent implements ComponentListener
                 newAlpha=0;
             alpha = newAlpha;
             myBorderColor = new Color(myBorderColor.getRed(), myBorderColor.getGreen(), myBorderColor.getBlue(), alpha);
-            myTopBarColor = new Color(myTopBarColor.getRed(), myTopBarColor.getGreen(), myTopBarColor.getBlue(), alpha);
+            if(!isTopBarTempColorValid)
+                myTopBarColor = new Color(myTopBarColor.getRed(), myTopBarColor.getGreen(), myTopBarColor.getBlue(), alpha);
+            else
+                myTopBarTempColor = new Color(myTopBarTempColor.getRed(), myTopBarTempColor.getGreen(), myTopBarTempColor.getBlue(), alpha);
             myColor = new Color(myColor.getRed(), myColor.getGreen(), myColor.getBlue(), alpha);
         }
 
@@ -788,6 +878,20 @@ public class Commits3DView extends JComponent implements ComponentListener
             setAlpha(alpha); //Apply current alpha to above solid colors
         }
 
+        public void setTemporaryHighlightTopBar(boolean newStatus, Color c)
+        {
+            if(newStatus==true)
+            {
+                myTopBarTempColor = c;
+                isTopBarTempColorValid = true;
+            }
+            else
+            {
+                isTopBarTempColorValid = false;
+            }
+
+            setAlpha(alpha); //Apply current alpha to above solid colors
+        }
         public void setHighlightTopBar(boolean newStatus, Color c)
         {
             if(newStatus==true)
@@ -852,7 +956,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         private void draw_topBar(Graphics2D g2d, int x, int y, int w)
         {
             /// TopBar
-            g2d.setColor( this.myTopBarColor);
+            if(!isTopBarTempColorValid)
+                g2d.setColor( this.myTopBarColor);
+            else
+                g2d.setColor( this.myTopBarTempColor);
             g2d.fillRect(x, y+VIRTUAL_WINDOW_BORDER_TICKNESS, w, TOP_BAR_HEIGHT);
         }
 

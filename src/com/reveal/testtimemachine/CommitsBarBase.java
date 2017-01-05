@@ -23,5 +23,5 @@ public abstract class CommitsBarBase
 
     public abstract JComponent getComponent();
 
-    public abstract void setActiveCommit_cIndex(int cIndex);
+    public abstract void setActiveCommit_cIndex();
 }

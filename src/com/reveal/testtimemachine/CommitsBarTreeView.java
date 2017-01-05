@@ -101,7 +101,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
             TTMWindow.activeCommit_cIndex = commitwrapper.cIndex;
             TTMWindow.navigateToCommit(classType.SUBJECT_CLASS, commitwrapper.cIndex);
 
-            setActiveCommit_cIndex(commitwrapper.cIndex);
+            setActiveCommit_cIndex();
         }
     }
 
@@ -112,7 +112,8 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
     }
 
     @Override
-    public void setActiveCommit_cIndex(int cIndex)
+    /*Get Active_cIndex from TTMWindow*/
+    public void setActiveCommit_cIndex()
     {
     }
 }
