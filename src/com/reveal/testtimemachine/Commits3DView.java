@@ -657,7 +657,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         w = virtualEditorWindows[topLayerIndex].drawingRect.width-2*VIRTUAL_WINDOW_BORDER_TICKNESS;
         h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
         x = virtualEditorWindows[topLayerIndex].drawingRect.x+VIRTUAL_WINDOW_BORDER_TICKNESS;
-        y = virtualEditorWindows[topLayerIndex].drawingRect.y+TOP_BAR_HEIGHT/2;
+        y = virtualEditorWindows[topLayerIndex].drawingRect.y+TOP_BAR_HEIGHT;
         //mainEditorWindow.setSize(w,h);
         //mainEditorWindow.setLocation(x,y);
         mainEditorWindow.setBounds(x,y,w,h);
@@ -858,7 +858,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
             ///////////// Chart TimeLine
             chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
-            chartTimeLinePoint.x = drawingRect.x + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
+            chartTimeLinePoint.x = drawingRect.x + drawingRect.width + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
             chartTimeLinePoint.y = drawingRect.y;
         }
 
