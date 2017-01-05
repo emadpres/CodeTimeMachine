@@ -1,10 +1,8 @@
 package com.reveal.testtimemachine;
 
 
-import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.history.VcsFileRevision;
 
-import java.io.IOException;
 import java.util.Date;
 
 public class CommitWrapper // A Wrapper for `fileRevision` class
@@ -65,7 +63,7 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
         return date;
     }
 
-    public String getHash()
+    public String getCommitID()
     {
         String hash;
         if (!isFake)
@@ -74,9 +72,23 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
         }
         else
         {
-            hash = fakeCommit.getHash();
+            hash = fakeCommit.getCommitID();
         }
         return hash;
+    }
+
+    public String getAuthor()
+    {
+        String commitMessage;
+        if (!isFake)
+        {
+            commitMessage = fileRevision.getAuthor();
+        }
+        else
+        {
+            commitMessage = fakeCommit.getAuthor();
+        }
+        return commitMessage;
     }
 
     public String getCommitMessage()
@@ -96,7 +108,7 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
 
     private class FakeCommit
     {
-        private String content, commitMessage, hash;
+        private String content, commitMessage, commitID;
         private Date date;
 
         public FakeCommit(String content, String commitMessage, Date date, String hash)
@@ -104,7 +116,7 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
             this.content = content;
             this.commitMessage = commitMessage;
             this.date = date;
-            this.hash = hash;
+            this.commitID = hash;
         }
 
         public String getFileContent()
@@ -122,9 +134,14 @@ public class CommitWrapper // A Wrapper for `fileRevision` class
             return date;
         }
 
-        public String getHash()
+        public String getAuthor()
         {
-            return hash;
+            return "";
+        }
+
+        public String getCommitID()
+        {
+            return commitID;
         }
     }
 }

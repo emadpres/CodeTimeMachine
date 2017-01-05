@@ -470,7 +470,15 @@ public class CommitsBar extends CommitsBarBase
             else
                 myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-            myComponent.setToolTipText(commitWrapper.getCommitMessage());
+            String tooltipText = "<html>" + "<body bgcolor=\"#C0C0C0\">"
+                                    + "<h4 style=\"color:#3C3C3C;\">"
+                                        + "&nbsp Commit-Date: " + CalendarHelper.convertDateToString(commitWrapper.getDate()) + "<br>"
+                                        + "&nbsp Commit-Id: " + commitWrapper.getCommitID() + "<br>"
+                                        + "&nbsp Author: " + commitWrapper.getAuthor() + "<br>"
+                                        + "&nbsp Commit-message: " + commitWrapper.getCommitMessage()
+                                    + "</h4>"
+                                + "</body>" + "</html>";
+            myComponent.setToolTipText(tooltipText);
 
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.GREEN);

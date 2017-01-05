@@ -899,9 +899,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             String text;
             if(commitWrapper.isFake())
-                text = new String(commitWrapper.getHash());
+                text = new String(commitWrapper.getCommitID());
             else
-                text = new String("Commit "+commitWrapper.getHash());
+                text = new String("Commit "+commitWrapper.getCommitID());
             return text;
         }
 

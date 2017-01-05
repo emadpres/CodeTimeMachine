@@ -2,21 +2,16 @@ package com.reveal.testtimemachine;
 
 import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;
-import com.intellij.diff.DiffRequestFactory;
 import com.intellij.diff.contents.DocumentContent;
-import com.intellij.diff.requests.ContentDiffRequest;
 import com.intellij.diff.requests.SimpleDiffRequest;
-import com.intellij.openapi.diff.SimpleContent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.siyeh.ig.numeric.ImplicitNumericConversionInspection;
 
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.*;
 
 ///////// ++ UI ++ /////////
@@ -304,7 +299,7 @@ public class TTMSingleFileView
         DocumentContent firstCommitContent = DiffContentFactory.getInstance().create(firstCommitContent_str);
         DocumentContent secondCommitContent = DiffContentFactory.getInstance().create(secondCommitContent_str);
 
-        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", firstCommitContent, secondCommitContent, "First: "+commits.get(first_cIndex).getHash()+" | "+commits.get(first_cIndex).getCommitMessage(), "Second: "+commits.get(second_cIndex).getHash()+" | "+commits.get(second_cIndex).getCommitMessage());
+        SimpleDiffRequest diffReqFromString = new SimpleDiffRequest("Diff Window", firstCommitContent, secondCommitContent, "First: "+commits.get(first_cIndex).getCommitID()+" | "+commits.get(first_cIndex).getCommitMessage(), "Second: "+commits.get(second_cIndex).getCommitID()+" | "+commits.get(second_cIndex).getCommitMessage());
 
         DiffManager.getInstance().showDiff(project, diffReqFromString);
     }
