@@ -460,7 +460,7 @@ public class CommitsBar extends CommitsBarBase
 
             String tooltipText = "<html>" + "<body bgcolor=\"#C0C0C0\">"
                                     + "<h4 style=\"color:#3C3C3C;\">"
-                                        + "&nbsp Commit-Date: " + CalendarHelper.convertDateToStringYMD(commitWrapper.getDate()) + "<br>"
+                                        + "&nbsp Commit-Date: " + CalendarHelper.convertDateToStringYMDHM(commitWrapper.getDate()) + "<br>"
                                         + "&nbsp Commit-Id: " + commitWrapper.getCommitID() + "<br>"
                                         + "&nbsp Author: " + commitWrapper.getAuthor() + "<br>"
                                         + "&nbsp Commit-message: " + commitWrapper.getCommitMessage()
@@ -532,8 +532,7 @@ public class CommitsBar extends CommitsBarBase
                 commitInfoStr = "Uncommited";
             else
             {
-                SimpleDateFormat format = new SimpleDateFormat("HH:mm"); //"yyyy-MM-dd HH:mm:ss.SSS"
-                commitInfoStr = format.format(commitWrapper.getDate());
+                commitInfoStr = CalendarHelper.convertDateToTime(commitWrapper.getDate());
             }
 
 

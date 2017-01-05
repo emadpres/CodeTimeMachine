@@ -31,6 +31,12 @@ public class CalendarHelper
         return result;
     }
 
+    static String convertDateToStringYMDHM(Date d)
+    {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy,MM,dd HH:mm");
+        return format.format(d);
+    }
+
     static String convertDateToStringMDY(Date d)
     {
         Calendar cal = Calendar.getInstance();
@@ -62,4 +68,9 @@ public class CalendarHelper
         return isSameDay;
     }
 
+    static String convertDateToTime(Date d)
+    {
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm"); //"yyyy-MM-dd HH:mm:ss.SSS"
+        return format.format(d);
+    }
 }

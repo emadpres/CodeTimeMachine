@@ -384,8 +384,17 @@ public class Commits3DView extends JComponent implements ComponentListener
                 g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
-                g2d.setFont(new Font("Arial",Font.BOLD, 10));
-                g.drawString( CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()) , timeLineMyPoint.x-68, timeLineMyPoint.y+2);
+
+                if(i==targetLayerIndex ||  (i!=0 && !CalendarHelper.isSameDay(commitList.get(i).getDate(),commitList.get(i-1).getDate())) )
+                {
+                    g2d.setFont(new Font("Arial",Font.BOLD, 10));
+                    g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 68, timeLineMyPoint.y + 2);
+                }
+                else
+                {
+                    g2d.setFont(new Font("Arial",Font.ITALIC, 9));
+                    g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x - 30, timeLineMyPoint.y + 2);
+                }
 
 
                 ////////////////////////  (Right) Chart
