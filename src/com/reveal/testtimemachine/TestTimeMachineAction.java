@@ -76,7 +76,10 @@ public class TestTimeMachineAction extends AnAction
                 e1.printStackTrace();
             }
 
-            String mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(i).get(0));
+            String mostRecentCommitContent = "";
+            if(_fileRevisionsLists.get(i).size()>0)
+                mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(i).get(0));
+
             if(! mostRecentCommitContent.equals(currentContent) )
             {
                 final String UNCOMMITED_CHANGE_TEXT  = "Uncommited Changes";

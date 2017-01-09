@@ -32,6 +32,7 @@ public class CommitsTimeline extends JComponent
     int original_sectorsLength=0;
     int line_sectorsLength = 0;
     int PRIMARY_LINE_TICKNESS = 3;
+    int BIG_ENOUGH_LENGTH_TO_SHOW_IN_DETAIL_PIXEL = 50;
     int LOD = 1;
 
     final int PRIMARY_LINE_OUTTER_SIDES_GAP = 20;
@@ -75,6 +76,7 @@ public class CommitsTimeline extends JComponent
     {
         int maxPossibleLineLength = scrollComponent.getSize().width - 2 * PRIMARY_LINE_OUTTER_SIDES_GAP;
         original_sectorsLength = maxPossibleLineLength / n_monthes;  // => "int" value
+        original_sectorsLength = Integer.min(original_sectorsLength, BIG_ENOUGH_LENGTH_TO_SHOW_IN_DETAIL_PIXEL-1);
         setSectorsLength(original_sectorsLength);
     }
 
@@ -91,8 +93,8 @@ public class CommitsTimeline extends JComponent
 
     private void updateDrawingVariablesForNewSectorsLength()
     {
-        int BIG_ENOUGH_LENGTH = 50;
-        if(line_sectorsLength > BIG_ENOUGH_LENGTH)
+
+        if(line_sectorsLength >= BIG_ENOUGH_LENGTH_TO_SHOW_IN_DETAIL_PIXEL)
             LOD=2;
         else
             LOD=1;
@@ -100,13 +102,16 @@ public class CommitsTimeline extends JComponent
 
         line_effectiveLength = n_monthes * line_sectorsLength; // Because "Ponit(x,y)" and therefor the "line_sectorsLength" shoudl be INT.
 
-        Dimension componentDimension = new Dimension(line_effectiveLength+50, scrollComponent.getSize().height);
+        int newWidth = line_effectiveLength+50 ;
+
+        Dimension componentDimension = new Dimension(newWidth, scrollComponent.getSize().height);
         setSize(componentDimension);
         setPreferredSize(componentDimension);
         setMaximumSize(componentDimension);
         setMinimumSize(componentDimension);
 
-        line_effectiveBegin = new Point( (getSize().width-line_effectiveLength)/2, getSize().height/2);
+
+        line_effectiveBegin = new Point( (newWidth-line_effectiveLength)/2, getSize().height/2);
     }
 
     private void preCalculation_commitsStat()
@@ -305,8 +310,9 @@ public class CommitsTimeline extends JComponent
         draw_primaryLine(g2d);
         draw_primaryLineSectors(g2d);
         draw_highlightActiveMonth(g2d);
-        draw_commits(g2d);
         draw_commits3DActiveRange(g2d);
+        draw_commits(g2d);
+
 
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
             draw_helpingInformation(g2d);
@@ -346,11 +352,11 @@ public class CommitsTimeline extends JComponent
         /// Drawing Points
         final Dimension CIRCLE_SIZE = new Dimension(7,7);
 
-        g2d.setStroke(new BasicStroke(0.5f));
+        g2d.setStroke(new BasicStroke(1));
 
         Date currentDate;
 
-        for(int i=0 ; i<commitList.size()-1; i++)
+        for(int i=0 ; i<commitList.size(); i++)
         {
             currentDate = commitList.get(i).getDate();
             int sectorIndex = getSectorIndexForDate(currentDate);
@@ -362,7 +368,7 @@ public class CommitsTimeline extends JComponent
             Point p = (Point) line_effectiveBegin.clone();
             p.x = p.x + (int) ((sectorIndex+(dayInMonth/31.0))*line_sectorsLength);
 
-            g2d.setColor(Color.BLUE);
+            g2d.setColor(Color.BLACK);
             g2d.fillOval(p.x - CIRCLE_SIZE.width/2, p.y - CIRCLE_SIZE.height/2, CIRCLE_SIZE.width, CIRCLE_SIZE.height);
             g2d.setColor(Color.WHITE);
             g2d.drawOval(p.x - CIRCLE_SIZE.width/2, p.y - CIRCLE_SIZE.height/2, CIRCLE_SIZE.width, CIRCLE_SIZE.height);
@@ -465,7 +471,7 @@ public class CommitsTimeline extends JComponent
 
         int SECTOR_SPLITTER_LENGTH_YEAR = 15;
         if(LOD>1)
-            SECTOR_SPLITTER_LENGTH_YEAR *=2;
+            SECTOR_SPLITTER_LENGTH_YEAR *= 2;
 
         int year_strokeWidth = 3;
         if(LOD>1)
@@ -481,7 +487,8 @@ public class CommitsTimeline extends JComponent
         {
             if(getMonthForSector(splitter)== FIRST_MONTH_OF_YEAR_INDEX)
             {
-                g2d.setColor(Color.LIGHT_GRAY);
+                // New Year
+                g2d.setColor(Color.WHITE);
                 g2d.setStroke(SECTOR_SPLITTER_STROKE_YEAR);
                 sectorSplitter_vecticalLineLength = SECTOR_SPLITTER_LENGTH_YEAR;
             }
