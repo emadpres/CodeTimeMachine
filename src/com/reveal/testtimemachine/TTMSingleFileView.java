@@ -5,6 +5,7 @@ import com.intellij.diff.DiffManager;
 import com.intellij.diff.contents.DocumentContent;
 import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 
 
@@ -79,6 +80,9 @@ public class TTMSingleFileView
         final String MARK_AS_SECOND = "markAsSecond";
         final String TOGGLE_CHART_TYPE = "toggleChartType";
         final String TOGGLE_COMMITS_BAR_TYPE = "toggleCommitsBarType";
+        final String SHOW_ALL_FILES = "showAllFiles";
+        final String SHOW_CHANGED_FILES = "showChangedFiles";
+
 
 
 
@@ -137,6 +141,46 @@ public class TTMSingleFileView
                     else
                         showDiff(firstMarked_cIndex);
                 }
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,0), SHOW_CHANGED_FILES);
+        thisComponent.getActionMap().put(SHOW_CHANGED_FILES, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                final String DIALOG_TITLE = "Other changes files";
+                if(commits.get(activeCommit_cIndex).isFake())
+                {
+                    Messages.showInfoMessage(project, "Please select a valid commit ID.", DIALOG_TITLE);
+                    return;
+                }
+
+               String commitId = commits.get(activeCommit_cIndex).getCommitID();
+                GitHelper instance = GitHelper.getInstance(project);
+                String allFiles = instance.getListOfChangedFile(commitId);
+                Messages.showInfoMessage(project, allFiles, DIALOG_TITLE);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD,0), SHOW_ALL_FILES);
+        thisComponent.getActionMap().put(SHOW_ALL_FILES, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                final String DIALOG_TITLE = "All files at this time";
+                if(commits.get(activeCommit_cIndex).isFake())
+                {
+                    Messages.showInfoMessage(project, "Please select a valid commit ID.", DIALOG_TITLE);
+                    return;
+                }
+
+                String commitId = commits.get(activeCommit_cIndex).getCommitID();
+                GitHelper instance = GitHelper.getInstance(project);
+                String allFiles = instance.getListOfAllFile(commitId);
+                Messages.showInfoMessage(project, allFiles, DIALOG_TITLE);
             }
         });
 
