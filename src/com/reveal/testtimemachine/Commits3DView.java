@@ -56,6 +56,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int INVALID = -1;
     int lastHighlightVirtualWindowIndex=-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
+    final Color MOUSE_HOVERED_COLOR = Color.ORANGE;
     final boolean COLORFUL = false;
     final int TOP_BAR_HEIGHT = 25;
     final int VIRTUAL_WINDOW_BORDER_TICKNESS = 1;
@@ -133,7 +134,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                             return;
                         if(currentMouseHoveredIndex !=INVALID)
                             virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
-                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, Color.orange);
+                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
                         currentMouseHoveredIndex =i;
                         repaint();
                         return;
@@ -372,17 +373,18 @@ public class Commits3DView extends JComponent implements ComponentListener
                 // TimeLine Point
                 if(i==targetLayerIndex)
                     g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
+                else if(i == currentMouseHoveredIndex)
+                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                 else
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                 g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
 
                 final Dimension TIME_LINE_POINT_SIZE = new Dimension(10,4);
 
-                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
-                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
                 g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+
 
 
                 if(i==targetLayerIndex)
@@ -417,13 +419,25 @@ public class Commits3DView extends JComponent implements ComponentListener
                     Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
                     Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentChartType);
 
-                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
+                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH/3));
+                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                     g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
-                    g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
+
+                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
+                    if(i != currentMouseHoveredIndex && i+1!=currentMouseHoveredIndex)
+                        g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
+                    else
+                        g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                     g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
                 }
 
                 // ChartTimeLine Point
+                if(i==targetLayerIndex)
+                    g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
+                else if(i == currentMouseHoveredIndex)
+                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                else
+                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                 g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
