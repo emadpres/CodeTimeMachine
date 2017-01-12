@@ -687,7 +687,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
-            this.metricResults = new MetricCalculationResults(commitWrapper.getFileContent());
+            this.metricResults = new MetricCalculationResults(commitWrapper.getFileContent(), virtualFile.getName());
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -703,7 +703,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             Point p = (Point) chartTimeLinePoint.clone();
             int MAX_UI_HEIGHT = 200;
-            float v = metricResults.getMetricValue(metricType)*MAX_UI_HEIGHT/100.f;
+
+            float v = metricResults.getMetricValue(metricType);
+            v = v*MAX_UI_HEIGHT/metricResults.getMaxValue(metricType);
             if(v<30)
                 someRandomMetric1Color = Color.GREEN;
             else if(v<70)

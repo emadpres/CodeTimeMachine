@@ -7,10 +7,10 @@ public class CyclomaticComplexityCalculator implements MetricCalculatorBase
     @Override
     public void calculate(String input, MetricCalculationResults results)
     {
-        if(results.cyclomaticComplexity != MetricCalculationResults.INVALID) return;
+        if(results.CC != MetricCalculationResults.INVALID) return;
 
-        String[] lines = input.split("\r\n|\r|\n");
-        results.cyclomaticComplexity = lines.length;
+        String[] lines = input.split("return|if|else|case|default|for|while|do|break|continue|/&/&|/|/||/?|:|catch|finally|throw|throws");
+        results.CC = lines.length;
     }
 
     @Override
