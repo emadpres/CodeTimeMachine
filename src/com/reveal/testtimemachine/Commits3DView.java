@@ -193,7 +193,7 @@ public class Commits3DView extends JComponent implements ComponentListener
             public void mouseWheelMoved(MouseWheelEvent e)
             {
                 int notches = e.getWheelRotation();
-                if (notches < 0)
+                if (notches > 0)
                 {
                     //Mouse wheel moved UP for -1*notches
 
