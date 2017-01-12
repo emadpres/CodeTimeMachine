@@ -7,6 +7,9 @@ import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.reveal.metrics.Metrics;
+import com.reveal.metrics.MetricCalculationResults;
+import com.reveal.metrics.MetricCalculatorBase;
 
 
 import javax.swing.*;
@@ -37,6 +40,8 @@ public class TTMSingleFileView
     int activeCommit_cIndex = -1;
     int INVALID = -1;
     int firstMarked_cIndex = INVALID, secondMarked_cIndex = INVALID;
+
+    Metrics.Types currentMetricType = Metrics.Types.values()[0];
 
     TTMSingleFileView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commits)
     {
@@ -302,18 +307,10 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                switch (codeHistory3DView.currentChartType)
-                {
-                    case NONE:
-                        codeHistory3DView.setChartType(Commits3DView.ChartType.METRIC1);
-                        break;
-                    case METRIC1:
-                        codeHistory3DView.setChartType(Commits3DView.ChartType.METRIC2);
-                        break;
-                    case METRIC2:
-                        codeHistory3DView.setChartType(Commits3DView.ChartType.NONE);
-                        break;
-                }
+                Metrics.Types[] allMetrics = Metrics.Types.values();
+                int nextMetricIndex = (currentMetricType.ordinal()+1)%allMetrics.length;
+                currentMetricType = allMetrics[nextMetricIndex];
+                codeHistory3DView.setMetricCalculator(currentMetricType);
             }
         });
 

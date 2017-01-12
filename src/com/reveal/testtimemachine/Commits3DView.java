@@ -10,6 +10,8 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import com.reveal.metrics.Metrics;
+import com.reveal.metrics.MetricCalculationResults;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -18,7 +20,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Commits3DView extends JComponent implements ComponentListener
 {
@@ -63,16 +64,14 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int TIME_LINE_WIDTH = 3;
     ////////
 
-    enum ChartType{NONE, METRIC1, METRIC2};
-    ChartType currentChartType = ChartType.NONE;
-
-
     TTMSingleFileView TTMWindow = null;
     Project project;
     CustomEditorTextField mainEditorWindow = null;
     ArrayList<CommitWrapper> commitList = null;
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
+
+    Metrics.Types currentMetric = null;
 
 
 
@@ -84,6 +83,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.project = project;
         this.virtualFile = virtualFile;
         this.commitList = commitList;
+        this.currentMetric = Metrics.Types.NONE;
 
         this.setLayout(null);
         this.addComponentListener(this); // Check class definition as : ".. implements ComponentListener"
@@ -331,19 +331,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             draw_tipOfTimeLine(g2d);
 
-            if(currentChartType!=ChartType.NONE)
-            {
-
-                switch (currentChartType)
-                {
-                    case METRIC1:
-                        g.drawString("LOC", startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
-                        break;
-                    case METRIC2:
-                        g.drawString("Cyclomatic", startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
-                }
-
-            }
+            if(currentMetric != Metrics.Types.NONE)
+                g.drawString(currentMetric.toString(), startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
 
             for(int i = commitList.size()-1; i>=0; i--)
             {
@@ -406,10 +395,10 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
                 ////////////////////////  (Right) Chart
-                if(currentChartType==ChartType.NONE) continue;
+                if(currentMetric== Metrics.Types.NONE) continue;
 
                 Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
-                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentChartType);
+                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentMetric);
 
 
                 // TimeLine Lines
@@ -417,7 +406,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 {
                     // I'm not the first one in for-loop (OR) I'm not the oldest point of time
                     Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
-                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentChartType);
+                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentMetric);
 
                     g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH/3));
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
@@ -441,7 +430,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
-                Color metricC = virtualEditorWindows[i].getMetricColor(currentChartType);
+                Color metricC = virtualEditorWindows[i].getMetricColor();
                 g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
 
                 //Vertical Value Line
@@ -664,19 +653,18 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
-    public void setChartType(ChartType newChartType)
+    public void setMetricCalculator(Metrics.Types newMetric)
     {
-        currentChartType = newChartType;
-        repaint();
+        currentMetric = newMetric;
+        repaint(); //TODO: why not render() only ? or why not both?
     }
 
     protected class VirtualEditorWindow
     {
-        final float Y_OFFSET_FACTOR = 250;
+        //TODO: Extract whole class to another file
         ////////
         int cIndex =-1;
-        private int someRandomMetric1 = 0, someRandomMetric2 = 0;
-        private Color someRandomMetric1Color = Color.BLACK, someRandomMetric2Color = Color.BLACK;
+        private Color someRandomMetric1Color = Color.BLACK;
         CommitWrapper commitWrapper = null;
 
         boolean isVisible=true;
@@ -691,6 +679,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
         Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0);
+        MetricCalculationResults metricResults = null;
         //private Point chartValuePoint= new Point(0,0);
         ////////
 
@@ -698,23 +687,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
-
-            someRandomMetric1 = ThreadLocalRandom.current().nextInt(5, 100);
-            someRandomMetric2 = ThreadLocalRandom.current().nextInt(5, 100);
-
-            if(someRandomMetric1<30)
-                someRandomMetric1Color = Color.GREEN;
-            else if(someRandomMetric1<70)
-                someRandomMetric1Color = Color.YELLOW;
-            else
-                someRandomMetric1Color = Color.RED;
-
-            if(someRandomMetric2<30)
-                someRandomMetric2Color = Color.GREEN;
-            else if(someRandomMetric2<70)
-                someRandomMetric2Color = Color.YELLOW;
-            else
-                someRandomMetric2Color = Color.RED;
+            this.metricResults = new MetricCalculationResults(commitWrapper.getFileContent());
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -726,11 +699,17 @@ public class Commits3DView extends JComponent implements ComponentListener
             }
         }
 
-        public Point getChartValuePoint(ChartType c)
+        public Point getChartValuePoint(Metrics.Types metricType)
         {
             Point p = (Point) chartTimeLinePoint.clone();
             int MAX_UI_HEIGHT = 200;
-            float v = getMetricValue(c)*MAX_UI_HEIGHT/100.f;
+            float v = metricResults.getMetricValue(metricType)*MAX_UI_HEIGHT/100.f;
+            if(v<30)
+                someRandomMetric1Color = Color.GREEN;
+            else if(v<70)
+                someRandomMetric1Color = Color.YELLOW;
+            else
+                someRandomMetric1Color = Color.RED;
             v = MyRenderer.getInstance().render3DTo2D((int)v,depth+MyRenderer.getInstance().BASE_DEPTH);
             p.y -= (int)v;
             return p;
@@ -920,28 +899,21 @@ public class Commits3DView extends JComponent implements ComponentListener
             g2d.fillRect(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
         }
 
-        public int getMetricValue(ChartType c)
+        public int getMetricValue(Metrics.Types metric)
         {
-            switch (c)
+            /*switch (metric)
             {
                 case METRIC1:
                     return someRandomMetric1;
                 case METRIC2:
                     return  someRandomMetric2;
-            }
+            }*/
             return 0;
         }
 
-        public Color getMetricColor(ChartType c)
+        public Color getMetricColor()
         {
-            switch (c)
-            {
-                case METRIC1:
-                    return someRandomMetric1Color;
-                case METRIC2:
-                    return  someRandomMetric2Color;
-            }
-            return Color.BLACK;
+            return someRandomMetric1Color;
         }
 
         private String getTopBarMessage()
