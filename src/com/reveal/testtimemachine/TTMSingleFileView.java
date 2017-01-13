@@ -114,16 +114,29 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if(firstMarked_cIndex!=INVALID)
-                    codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
+                int newPlace = codeHistory3DView.currentMouseHoveredIndex;
 
-                if( activeCommit_cIndex != firstMarked_cIndex) // New Place
+                if( newPlace == codeHistory3DView.INVALID )
                 {
-                    firstMarked_cIndex = activeCommit_cIndex;
-                    codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, true, Color.GREEN);
+                    if(firstMarked_cIndex != INVALID)
+                        codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
+                    firstMarked_cIndex = INVALID;
                 }
                 else
-                    firstMarked_cIndex = INVALID;
+                {
+                    if( newPlace == secondMarked_cIndex) //we know "secondMarked_cIndex" also can't be INVALID here
+                    {
+                        codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
+                        secondMarked_cIndex = INVALID;
+                    }
+                    if(firstMarked_cIndex!=INVALID)
+                    {
+                        codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
+                    }
+
+                    firstMarked_cIndex = newPlace;
+                    codeHistory3DView.setTopBarHighlight(newPlace, true, Color.GREEN);
+                }
             }
         });
 
@@ -133,16 +146,30 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if(secondMarked_cIndex != INVALID)
-                    codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
 
-                if(activeCommit_cIndex != secondMarked_cIndex) //New Place
+                int newPlace = codeHistory3DView.currentMouseHoveredIndex;
+
+                if( newPlace == codeHistory3DView.INVALID )
                 {
-                    secondMarked_cIndex = activeCommit_cIndex;
-                    codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, true,  Color.CYAN);
+                    if(secondMarked_cIndex != INVALID)
+                        codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
+                    secondMarked_cIndex = INVALID;
                 }
                 else
-                    secondMarked_cIndex = INVALID;
+                {
+                    if( newPlace == firstMarked_cIndex) //we know "firstMarked_cIndex" also can't be INVALID here
+                    {
+                        codeHistory3DView.setTopBarHighlight(firstMarked_cIndex, false, Color.WHITE);
+                        firstMarked_cIndex = INVALID;
+                    }
+                    if(secondMarked_cIndex!=INVALID)
+                    {
+                        codeHistory3DView.setTopBarHighlight(secondMarked_cIndex, false, Color.WHITE);
+                    }
+
+                    secondMarked_cIndex = newPlace;
+                    codeHistory3DView.setTopBarHighlight(newPlace, true, Color.CYAN);
+                }
             }
         });
 
@@ -155,7 +182,12 @@ public class TTMSingleFileView
                 if(firstMarked_cIndex == INVALID && secondMarked_cIndex==INVALID)
                     return;
                 else if(firstMarked_cIndex != INVALID && secondMarked_cIndex!=INVALID)
-                    showDiff(firstMarked_cIndex, secondMarked_cIndex);
+                {
+                    if(firstMarked_cIndex > secondMarked_cIndex)
+                        showDiff(firstMarked_cIndex, secondMarked_cIndex);
+                    else
+                        showDiff(secondMarked_cIndex, firstMarked_cIndex);
+                }
                 else
                 {
                     if(firstMarked_cIndex==INVALID)
