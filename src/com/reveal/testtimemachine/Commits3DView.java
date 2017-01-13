@@ -40,6 +40,11 @@ public class Commits3DView extends JComponent implements ComponentListener
     final Color DUMMY_COLOR = Color.black;
 
     ///////// ++ UI: 3D Prespective Variables ++ /////////
+    final float LAYER_DISTANCE = 0.2f;
+    final float LAYERS_DEPTH_ERROR_THRESHOLD = LAYER_DISTANCE/10;
+    float maxVisibleDepth = 2f;
+    final float MIN_VISIBLE_DEPTH = -LAYER_DISTANCE;
+    final float MAX_VISIBLE_DEPTH_CHANGE_VALUE = 0.3f;
     final float EPSILON = 0.01f;
     Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
     Point startPointOfChartTimeLine = new Point(0,0);
@@ -51,6 +56,10 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int INVALID = -1;
     int lastHighlightVirtualWindowIndex=-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
+    final Color MOUSE_HOVERED_COLOR = Color.ORANGE;
+    final boolean COLORFUL = false;
+    final int TOP_BAR_HEIGHT = 25;
+    final int VIRTUAL_WINDOW_BORDER_TICKNESS = 1;
     final int TIME_LINE_WIDTH = 3;
     ////////
 
@@ -79,7 +88,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         this.setLayout(null);
         this.addComponentListener(this); // Check class definition as : ".. implements ComponentListener"
-        if (VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)   this.setBackground(Color.ORANGE);
+        if (CommonValues.IS_UI_IN_DEBUGGING_MODE)   this.setBackground(Color.ORANGE);
         this.setOpaque(true);
 
         setupUI_mainEditorWindow();
@@ -126,7 +135,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                             return;
                         if(currentMouseHoveredIndex !=INVALID)
                             virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
-                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, VisualizationParameters.MOUSE_HOVERED_COLOR);
+                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
                         currentMouseHoveredIndex =i;
                         repaint();
                         return;
@@ -252,7 +261,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         // Don't forget to call `updateVirtualWindowsBoundryAfterComponentResize()` before
         for (int i = 0; i< commitList.size() ; i++)
         {
-            float d = i *  VisualizationParameters.LAYER_DISTANCE;
+            float d = i * LAYER_DISTANCE;
             virtualEditorWindows[i].updateDepth(d);
         }
 
@@ -261,18 +270,18 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     public void increaseMaxVisibleDepth()
     {
-        changeMaxVisibleDepth(VisualizationParameters.MAX_VISIBLE_DEPTH_CHANGE_VALUE);
+        changeMaxVisibleDepth(MAX_VISIBLE_DEPTH_CHANGE_VALUE);
     }
 
     public void decreaseMaxVisibleDepth()
     {
-        changeMaxVisibleDepth(-1*VisualizationParameters.MAX_VISIBLE_DEPTH_CHANGE_VALUE);
+        changeMaxVisibleDepth(-1*MAX_VISIBLE_DEPTH_CHANGE_VALUE);
     }
 
     private void changeMaxVisibleDepth(float delta)
     {
-        if(VisualizationParameters.maxVisibleDepth+delta<=VisualizationParameters.LAYER_DISTANCE) return;
-        VisualizationParameters.maxVisibleDepth += delta;
+        if(maxVisibleDepth+delta<=LAYER_DISTANCE) return;
+        maxVisibleDepth += delta;
         render();
     }
 
@@ -311,7 +320,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         super.paintComponent(g);
 
-        if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+        if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
         {
             g.setColor(new Color(0,255,255));
             g.fillRect(0, 0,getSize().width,getSize().height);
@@ -355,10 +364,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 if(i==targetLayerIndex)
                     g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
                 else if(i == currentMouseHoveredIndex)
-                    g.setColor(new Color( VisualizationParameters.MOUSE_HOVERED_COLOR.getRed(),
-                                            VisualizationParameters.MOUSE_HOVERED_COLOR.getGreen(),
-                                            VisualizationParameters.MOUSE_HOVERED_COLOR.getBlue(),
-                                            virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                 else
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                 g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
@@ -411,10 +417,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     if(i != currentMouseHoveredIndex && i+1!=currentMouseHoveredIndex)
                         g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
                     else
-                        g.setColor(new Color(VisualizationParameters.MOUSE_HOVERED_COLOR.getRed(),
-                                            VisualizationParameters.MOUSE_HOVERED_COLOR.getGreen(),
-                                            VisualizationParameters.MOUSE_HOVERED_COLOR.getBlue(),
-                                            virtualEditorWindows[i].alpha));
+                        g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                     g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
                 }
 
@@ -422,10 +425,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 if(i==targetLayerIndex)
                     g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
                 else if(i == currentMouseHoveredIndex)
-                    g.setColor(new Color(VisualizationParameters.MOUSE_HOVERED_COLOR.getRed(),
-                                        VisualizationParameters.MOUSE_HOVERED_COLOR.getGreen(),
-                                        VisualizationParameters.MOUSE_HOVERED_COLOR.getBlue(),
-                                        virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                 else
                     g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
                 g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
@@ -468,12 +468,12 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         float speed_depthPerSec = 0;
 
-        if(targetDepthAbs<=VisualizationParameters.LAYERS_DEPTH_ERROR_THRESHOLD)
+        if(targetDepthAbs<=LAYERS_DEPTH_ERROR_THRESHOLD)
             speed_depthPerSec = targetDepth/dt_sec;
-        else if(targetDepthAbs<=VisualizationParameters.LAYER_DISTANCE)
-            speed_depthPerSec = 3*VisualizationParameters.LAYER_DISTANCE*sign;
-        else if(targetDepthAbs<4*VisualizationParameters.LAYER_DISTANCE)
-            speed_depthPerSec = 4*VisualizationParameters.LAYER_DISTANCE*sign;
+        else if(targetDepthAbs<=LAYER_DISTANCE)
+            speed_depthPerSec = 3*LAYER_DISTANCE*sign;
+        else if(targetDepthAbs<4*LAYER_DISTANCE)
+            speed_depthPerSec = 4*LAYER_DISTANCE*sign;
         else if(targetDepthAbs<5)
             speed_depthPerSec = 2*sign;
         else
@@ -598,10 +598,10 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateMainEditorWindowBoundaryAfterComponentResize()
     {
         int x,y,w,h;
-        w = virtualEditorWindows[topLayerIndex].drawingRect.width-2*VisualizationParameters.VIRTUAL_WINDOW_BORDER_TICKNESS;
-        h = virtualEditorWindows[topLayerIndex].drawingRect.height-VisualizationParameters.TOP_BAR_HEIGHT;
-        x = virtualEditorWindows[topLayerIndex].drawingRect.x+VisualizationParameters.VIRTUAL_WINDOW_BORDER_TICKNESS;
-        y = virtualEditorWindows[topLayerIndex].drawingRect.y+VisualizationParameters.TOP_BAR_HEIGHT;
+        w = virtualEditorWindows[topLayerIndex].drawingRect.width-2*VIRTUAL_WINDOW_BORDER_TICKNESS;
+        h = virtualEditorWindows[topLayerIndex].drawingRect.height-TOP_BAR_HEIGHT;
+        x = virtualEditorWindows[topLayerIndex].drawingRect.x+VIRTUAL_WINDOW_BORDER_TICKNESS;
+        y = virtualEditorWindows[topLayerIndex].drawingRect.y+TOP_BAR_HEIGHT;
         //mainEditorWindow.setSize(w,h);
         //mainEditorWindow.setLocation(x,y);
         mainEditorWindow.setBounds(x,y,w,h);
@@ -690,7 +690,7 @@ public class Commits3DView extends JComponent implements ComponentListener
             this.commitWrapper = commitWrapper;
             this.metricResults = metricResults;
 
-            if( VisualizationParameters.COLORFUL || VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+            if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
                 Random rand = new Random();
                 float r = rand.nextFloat();
@@ -752,7 +752,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             this.depth = depth;
 
-            if(depth<VisualizationParameters.MIN_VISIBLE_DEPTH || depth> VisualizationParameters.maxVisibleDepth)
+            if(depth<MIN_VISIBLE_DEPTH || depth> maxVisibleDepth)
                 isVisible=false;
             else
                 isVisible=true;
@@ -768,12 +768,12 @@ public class Commits3DView extends JComponent implements ComponentListener
             //////////////// Alpha
             int newAlpha;
             if(depth>0)
-                newAlpha = (int)(255*(1-depth/ VisualizationParameters.maxVisibleDepth));
+                newAlpha = (int)(255*(1-depth/ maxVisibleDepth));
             else
                 // By adding LAYERS_DEPTH_ERROR_THRESHOLD we make the layer invisible(alpha=0) before getting depth=-LAYER_DISTANCE
                 // It's needed because sometimes layers movement stops while the new top layer is 0+e (not 0) and so the layer
                 // which was supposed to go out (go to depth -LAYER_DISTANCE) get stuck at depth = -LAYERDISTANCE+e.
-                newAlpha = (int) (255*(1-depth/(VisualizationParameters.MIN_VISIBLE_DEPTH+VisualizationParameters.LAYERS_DEPTH_ERROR_THRESHOLD+EPSILON)));
+                newAlpha = (int) (255*(1-depth/(MIN_VISIBLE_DEPTH+LAYERS_DEPTH_ERROR_THRESHOLD+EPSILON)));
             setAlpha(newAlpha);
 
 
@@ -854,8 +854,7 @@ public class Commits3DView extends JComponent implements ComponentListener
             String text="";
             Graphics g2 = g.create();
             g2.setColor(new Color(0,0,0,alpha));
-            Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(drawingRect.x,drawingRect.y,drawingRect.width,
-                                                                    VisualizationParameters.TOP_BAR_HEIGHT);
+            Rectangle2D rectangleToDrawIn = new Rectangle2D.Double(drawingRect.x,drawingRect.y,drawingRect.width,TOP_BAR_HEIGHT);
             g2.setClip(rectangleToDrawIn);
             if(cIndex ==topLayerIndex)
             {
@@ -885,8 +884,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 g2d.setColor( this.myTopBarColor);
             else
                 g2d.setColor( this.myTopBarTempColor);
-            g2d.fillRect(drawingRect.x, drawingRect.y+VisualizationParameters.VIRTUAL_WINDOW_BORDER_TICKNESS,
-                            drawingRect.width, VisualizationParameters.TOP_BAR_HEIGHT);
+            g2d.fillRect(drawingRect.x, drawingRect.y+VIRTUAL_WINDOW_BORDER_TICKNESS, drawingRect.width, TOP_BAR_HEIGHT);
         }
 
         private void draw_mainRectBorder(Graphics2D g2d, Rectangle drawingRect)

@@ -5,6 +5,7 @@ import com.intellij.ui.components.JBScrollPane;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -177,7 +178,7 @@ public class CommitsBar extends CommitsBarBase
         BoxLayout boxLayout = new BoxLayout(c, BoxLayout.PAGE_AXIS);
         c.setLayout(boxLayout);
 
-        if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+        if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
             c.setBackground(Color.RED);
 
         return c;
@@ -251,7 +252,7 @@ public class CommitsBar extends CommitsBarBase
                 myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
 
-            if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+            if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.YELLOW);
 
 
@@ -294,7 +295,7 @@ public class CommitsBar extends CommitsBarBase
 
             commitInfo = new JLabel(commitInfoStr);
 
-            if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+            if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 commitInfo.setBackground(Color.CYAN);
             commitInfo.setOpaque(true);
             Font font = commitInfo.getFont();
@@ -453,7 +454,7 @@ public class CommitsBar extends CommitsBarBase
                                 + "</body>" + "</html>";
             myComponent.setToolTipText(tooltipText);
 
-            if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+            if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.GREEN);
 
             setupUI_marker();
@@ -522,7 +523,7 @@ public class CommitsBar extends CommitsBarBase
 
 
             commitInfo = new JLabel(commitInfoStr);
-            if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
+            if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 commitInfo.setBackground(Color.CYAN);
             commitInfo.setOpaque(true);
             Font font = commitInfo.getFont();
