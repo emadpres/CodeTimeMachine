@@ -1,9 +1,6 @@
 package com.reveal.metrics;
 
 
-import com.siyeh.ig.methodmetrics.CyclomaticComplexityInspection;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +11,7 @@ public class MetricCalculationResults
     String code = "", groupID = "";
     int loc = INVALID;
     static Map<String, Integer> MaxLOCPerGroup = new HashMap<String, Integer>();
-    int CC = INVALID;
+    int classCyclomaticComplexity = INVALID;
     static Map<String, Integer> MaxCCPerGroup = new HashMap<String, Integer>();
 
 
@@ -25,43 +22,54 @@ public class MetricCalculationResults
         this.groupID = groupID;
     }
 
-    public int getMaxValue(Metrics.Types metricType)
+    public void setMetricMaxValue(Metrics.Types metricType, int newMaxValue)
     {
         switch (metricType)
         {
             case NONE:
-                return INVALID;
+                return;
             case LOC:
-              return MaxLOCPerGroup.getOrDefault(groupID, 1).intValue();
+                MaxLOCPerGroup.put(groupID, newMaxValue);
+                break;
             case CyclomaticComplexity:
-                return MaxCCPerGroup.getOrDefault(groupID, 1).intValue();
+                MaxCCPerGroup.put(groupID, newMaxValue);
+                break;
         }
-        return 1;
+    }
+
+
+    public int getMetricMaxValue(Metrics.Types metricType)
+    {
+        int max = INVALID;
+        switch (metricType)
+        {
+            case NONE:
+                break;
+            case LOC:
+                max = MaxLOCPerGroup.getOrDefault(groupID, INVALID).intValue();
+                break;
+            case CyclomaticComplexity:
+                max = MaxCCPerGroup.getOrDefault(groupID, INVALID).intValue();
+                break;
+        }
+
+        return max;
     }
 
     public int getMetricValue(Metrics.Types metricType)
     {
+        int v = INVALID;
         switch (metricType)
         {
             case NONE:
-                return INVALID;
+                break;
             case LOC:
-                if(loc==INVALID)
-                {
-                    LineOfCodeCalculator.getInstance().calculate(code, this);
-                    if(loc > MaxLOCPerGroup.getOrDefault(groupID, -1).intValue())
-                        MaxLOCPerGroup.put(groupID, loc);
-                }
-                return loc;
+                v = loc;
+                break;
             case CyclomaticComplexity:
-                if(CC==INVALID)
-                {
-                    CyclomaticComplexityCalculator.getInstance().calculate(code, this);
-                    if(CC > MaxCCPerGroup.getOrDefault(groupID, -1).intValue())
-                        MaxCCPerGroup.put(groupID, CC);
-                }
-                return CC;
+                v = classCyclomaticComplexity;
+                break;
         }
-        return INVALID;
+        return v;
     }
 }

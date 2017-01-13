@@ -36,7 +36,6 @@ public class Commits3DView extends JComponent implements ComponentListener
     //////// ++ Timer and Timing
     Timer playing3DAnimationTimer;
     final int TICK_INTERVAL_MS = 50;
-    //boolean onChangingCommitProcess = false; // instead you can use playing3DAnimationTimer.isRunning()
     ///////
     final Color DUMMY_COLOR = Color.black;
 
@@ -68,6 +67,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     Project project;
     CustomEditorTextField mainEditorWindow = null;
     ArrayList<CommitWrapper> commitList = null;
+    ArrayList<MetricCalculationResults> metricResultsList = null;
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
 
@@ -75,7 +75,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
 
-    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow)
+    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList, ArrayList<MetricCalculationResults> metricResultsList, TTMSingleFileView TTMWindow)
     {
         super();
 
@@ -84,6 +84,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.virtualFile = virtualFile;
         this.commitList = commitList;
         this.currentMetric = Metrics.Types.NONE;
+        this.metricResultsList = metricResultsList;
 
         this.setLayout(null);
         this.addComponentListener(this); // Check class definition as : ".. implements ComponentListener"
@@ -236,7 +237,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         for (int i = 0; i< commitList.size() ; i++)
         {
-            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i));
+            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i), metricResultsList.get(i));
         }
     }
 
@@ -666,6 +667,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         int cIndex =-1;
         private Color someRandomMetric1Color = Color.BLACK;
         CommitWrapper commitWrapper = null;
+        MetricCalculationResults metricResults = null;
 
         boolean isVisible=true;
         float depth;
@@ -679,15 +681,14 @@ public class Commits3DView extends JComponent implements ComponentListener
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
         Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0);
-        MetricCalculationResults metricResults = null;
         //private Point chartValuePoint= new Point(0,0);
         ////////
 
-        public VirtualEditorWindow(int index, CommitWrapper commitWrapper)
+        public VirtualEditorWindow(int index, CommitWrapper commitWrapper, MetricCalculationResults metricResults)
         {
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
-            this.metricResults = new MetricCalculationResults(commitWrapper.getFileContent(), virtualFile.getName());
+            this.metricResults = metricResults;
 
             if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -704,8 +705,8 @@ public class Commits3DView extends JComponent implements ComponentListener
             Point p = (Point) chartTimeLinePoint.clone();
             int MAX_UI_HEIGHT = 200;
 
-            float v = metricResults.getMetricValue(metricType);
-            v = v*MAX_UI_HEIGHT/metricResults.getMaxValue(metricType);
+            float v =  metricResults.getMetricValue(metricType);
+            v = v*MAX_UI_HEIGHT/metricResults.getMetricMaxValue(metricType);
             if(v<30)
                 someRandomMetric1Color = Color.GREEN;
             else if(v<70)

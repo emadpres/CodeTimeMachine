@@ -3,7 +3,7 @@ package com.reveal.metrics;
 
 public interface MetricCalculatorBase
 {
-    void calculate(String input, MetricCalculationResults results);
+    void calculate(MetricCalculationResults results);
 
     @Override
     String toString();

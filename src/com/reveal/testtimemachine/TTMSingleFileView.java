@@ -31,6 +31,7 @@ public class TTMSingleFileView
     private Project project;
     private VirtualFile virtualFile = null;
     private ArrayList<CommitWrapper> commits = null;
+    private ArrayList<MetricCalculationResults> metricResults = null;
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
     CommitsBarBase commitsBar = null;
@@ -48,6 +49,12 @@ public class TTMSingleFileView
         this.project = project;
         this.virtualFile = virtualFile;
         this.commits = commits;
+        /////
+        metricResults = new ArrayList<>(commits.size());
+        for(int i=0;i<commits.size(); i++)
+            metricResults.add(new MetricCalculationResults(commits.get(i).getFileContent(), virtualFile.getName()));
+        for( Metrics.Types m: Metrics.Types.values() )
+            calculateMetricResults(m);
         ////////////////////////////////////////////////////
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
@@ -64,6 +71,16 @@ public class TTMSingleFileView
         //codeHistory3DView.showCommit(0, true); //It's initially at 0
 
         addKeyBindings();
+    }
+
+    private void calculateMetricResults(Metrics.Types m)
+    {
+        if(m == Metrics.Types.NONE) return;
+
+        MetricCalculatorBase calculator = Metrics.getCalculatorForType(m);
+        for(int i=0;i<metricResults.size(); i++)
+                calculator.calculate(metricResults.get(i));
+        int highestValue = metricResults.get(0).getMetricMaxValue(m);
     }
 
     private void addKeyBindings()
@@ -365,7 +382,7 @@ public class TTMSingleFileView
 
     private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
     {
-         return new Commits3DView(project, virtualFiles, commits, this);
+         return new Commits3DView(project, virtualFiles, commits, metricResults, this);
     }
 
     private CommitsBarBase setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
