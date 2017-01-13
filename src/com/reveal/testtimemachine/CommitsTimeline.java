@@ -7,7 +7,6 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -298,7 +297,7 @@ public class CommitsTimeline extends JComponent
         g.setColor(new Color(50, 50, 50));
         g.fillRect(0, 0, getSize().width, getSize().height);
 
-        if (CommonValues.IS_UI_IN_DEBUGGING_MODE)
+        if (VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
         {
             g.setColor(new Color(255, 0, 0));
             g.fillOval(getSize().width / 2 - 10, getSize().height / 2 - 10, 20, 20); //Show Center
@@ -314,7 +313,7 @@ public class CommitsTimeline extends JComponent
         draw_commits(g2d);
 
 
-        if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
+        if(VisualizationParameters.IS_UI_IN_DEBUGGING_MODE)
             draw_helpingInformation(g2d);
     }
 
