@@ -9,11 +9,15 @@ public class MetricCalculationResults
     static final int INVALID = -1;
 
     String code = "", groupID = "";
+
     int loc = INVALID;
     static Map<String, Integer> MaxLOCPerGroup = new HashMap<String, Integer>();
+
     int classCyclomaticComplexity = INVALID;
     static Map<String, Integer> MaxCCPerGroup = new HashMap<String, Integer>();
 
+    int lineOfComment = INVALID;
+    static Map<String, Integer> MaxLineOfCommentPerGroup = new HashMap<String, Integer>();
 
 
     public MetricCalculationResults(String code, String groupID)
@@ -34,6 +38,9 @@ public class MetricCalculationResults
             case CyclomaticComplexity:
                 MaxCCPerGroup.put(groupID, newMaxValue);
                 break;
+            case LineOfComment:
+                MaxLineOfCommentPerGroup.put(groupID, newMaxValue);
+                break;
         }
     }
 
@@ -50,6 +57,9 @@ public class MetricCalculationResults
                 break;
             case CyclomaticComplexity:
                 max = MaxCCPerGroup.getOrDefault(groupID, INVALID).intValue();
+                break;
+            case LineOfComment:
+                max = MaxLineOfCommentPerGroup.getOrDefault(groupID, INVALID).intValue();
                 break;
         }
 
@@ -68,6 +78,9 @@ public class MetricCalculationResults
                 break;
             case CyclomaticComplexity:
                 v = classCyclomaticComplexity;
+                break;
+            case LineOfComment:
+                v = lineOfComment;
                 break;
         }
         return v;
