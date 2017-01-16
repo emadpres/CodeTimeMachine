@@ -970,6 +970,14 @@ public class Commits3DView extends JComponent implements ComponentListener
             return editor;
         }
 
+        private String getSelectedText()
+        {
+            String s = getEditor().getSelectionModel().getSelectedText();
+            if(s==null)
+                s = "";
+            return s;
+        }
+
         private void addLineNumberToEditor(EditorEx editor)
         {
             EditorSettings settings = editor.getSettings();
