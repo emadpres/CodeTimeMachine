@@ -37,7 +37,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     String debuggingText = "";
 
     //////// ++ Timer and Timing
-    Timer playing3DAnimationTimer;
+    Timer playing3DAnimationTimer=null, mouseHovredItemTimer=null;
     final int TICK_INTERVAL_MS = 50;
     ///////
     final Color DUMMY_COLOR = Color.black;
@@ -51,6 +51,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     final float EPSILON = 0.01f;
     Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
     Point startPointOfChartTimeLine = new Point(0,0);
+
+    Point currentMousePoint = new Point(-100,-100);
     /////
     int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
     float topLayerOffset;
@@ -110,6 +112,14 @@ public class Commits3DView extends JComponent implements ComponentListener
                 repaint();
             }
         });
+
+        mouseHovredItemTimer = new Timer(TICK_INTERVAL_MS,  new ActionListener(){
+            public void actionPerformed(ActionEvent e)
+            {
+                updateHoveredWindow();
+            }
+        });
+        mouseHovredItemTimer.start();
 
         addMouseWheelListener();
         addMouseMotionListener();
@@ -199,34 +209,45 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void mouseMoved(MouseEvent e)
             {
-                Point currentPoint = e.getPoint();
-
-                for (int i=0; i<virtualEditorWindows.length; i++)
-                {
-                    if(virtualEditorWindows[i].isVisible==false) continue;
-
-                    if(virtualEditorWindows[i].drawingRect.contains(currentPoint))
-                    {
-                        if(currentMouseHoveredIndex ==i)
-                            return;
-                        if(currentMouseHoveredIndex !=INVALID)
-                            virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
-                        virtualEditorWindows[i].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
-                        currentMouseHoveredIndex =i;
-                        repaint();
-                        return;
-                    }
-                }
-
-                // Here = mouse hovred no virtualWindows
-                if(currentMouseHoveredIndex !=INVALID)
-                {
-                    virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false, DUMMY_COLOR);
-                    currentMouseHoveredIndex = INVALID;
-                    repaint();
-                }
+                currentMousePoint = e.getPoint();
+                //updateHovredWindow //Sometimes we don't move mosue, but underneath the windows are moving.
             }
         });
+    }
+
+    private void updateHoveredWindow()
+    {
+        for (int i=0; i<virtualEditorWindows.length; i++)
+        {
+            if(virtualEditorWindows[i].isVisible==false) continue;
+
+            if(virtualEditorWindows[i].drawingRect.contains(currentMousePoint))
+            {
+                if(currentMouseHoveredIndex ==i)
+                    return;
+                UpdateHoveredVirtualWindow(i);
+                return;
+            }
+        }
+        if(currentMouseHoveredIndex!=INVALID)
+            UpdateHoveredVirtualWindow(INVALID);// Here = mouse hovered no virtualWindows
+    }
+
+    private void UpdateHoveredVirtualWindow(int new_cIndex)
+    {
+        if(currentMouseHoveredIndex !=INVALID)
+            virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
+
+        currentMouseHoveredIndex =new_cIndex;
+
+        if(currentMouseHoveredIndex!=INVALID)
+        {
+            virtualEditorWindows[new_cIndex].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
+        }
+
+        TTMWindow.updateTopLayerCommitsInfoData(currentMouseHoveredIndex);
+
+        repaint();
     }
 
     private void addMouseListener()
@@ -538,6 +559,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void tick(float dt_sec)
     {
 
+        // Moving virtual windows towards active_cIndex codes
         float targetDepth = virtualEditorWindows[targetLayerIndex].depth;
         float targetDepthAbs = Math.abs(virtualEditorWindows[targetLayerIndex].depth);
         int sign = (int) Math.signum(targetDepth);
@@ -555,7 +577,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         else
             speed_depthPerSec = 5*sign;
 
-        debuggingText = "> "+targetDepth+" > Speed: "+speed_depthPerSec;
+        //debuggingText = "> "+targetDepth+" > Speed: "+speed_depthPerSec;
 
 
         /*/ Slow for debugging

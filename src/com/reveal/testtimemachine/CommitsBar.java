@@ -1,6 +1,7 @@
 package com.reveal.testtimemachine;
 
 import com.intellij.ui.components.JBScrollPane;
+import org.omg.CORBA.INVALID_ACTIVITY;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +16,8 @@ public class CommitsBar extends CommitsBarBase
 
     protected JBScrollPane commitsBarView = null;
     protected JPanel thisComponentWithoutScroll = null;
+
+    int currentHovredItem_localUIIndex = INVALID;
 
     public enum CommitItemDirection {NONE, LTR, RTL};
 
@@ -164,9 +167,9 @@ public class CommitsBar extends CommitsBarBase
         {
             thisComponentWithoutScroll.add(UI_items.get(i));
 
-            final int GAP_H = 10;
-            thisComponentWithoutScroll.add(Box.createRigidArea(new Dimension(1, GAP_H)));
-            contentHeight += UI_items.get(i).getSize().height + GAP_H;
+            //final int GAP_H = 10;
+            //thisComponentWithoutScroll.add(Box.createRigidArea(new Dimension(1, GAP_H)));
+            contentHeight += UI_items.get(i).getSize().height ;//+ GAP_H;
 
         }
     }
@@ -207,6 +210,33 @@ public class CommitsBar extends CommitsBarBase
                 /*If we are here, it means new active commit was also in the current CommitsBar list*/
             commitUIItems[x].setActivated(true);
         }
+    }
+
+
+    private void updateHovredItem(int hoveredCommitUIItemIndex, boolean newStatus)
+    {
+
+        if(newStatus == true)
+        {
+            if(currentHovredItem_localUIIndex==hoveredCommitUIItemIndex) return;
+            currentHovredItem_localUIIndex = hoveredCommitUIItemIndex;
+            int newHoveredItem_cIndex = commitList.get(hoveredCommitUIItemIndex).cIndex;
+            TTMWindow.updateTopLayerCommitsInfoData(newHoveredItem_cIndex);
+        }
+        else
+        {
+            if(currentHovredItem_localUIIndex!=hoveredCommitUIItemIndex)
+            {
+                // It means, probably, we moved from A to B. B has already call this with "true" status,
+                // and the A is calling this function with "false" status. So, we shouldn't invisible top bar. because
+                // it's showing B's info.
+                return;
+            }
+            currentHovredItem_localUIIndex = INVALID;
+            TTMWindow.updateTopLayerCommitsInfoData(INVALID);
+        }
+
+
     }
 
     private void activateCommit(int clickedCommitUIItemIndex)
@@ -401,7 +431,7 @@ public class CommitsBar extends CommitsBarBase
     static private class CommitUIItem
     {
         ///////// ++ Constant ++ /////////
-        private final Dimension COMPONENT_SIZE = new Dimension( 140,20 );
+        private final Dimension COMPONENT_SIZE = new Dimension( 80,20 );
         private final int LONG_FACTOR = 5;
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 17,5 );
         private final Dimension MARKER_HOVERED_SIZE = new Dimension( 20,8 );
@@ -515,7 +545,7 @@ public class CommitsBar extends CommitsBarBase
             String commitInfoStr = "";
 
             if(commitWrapper.isFake())
-                commitInfoStr = "Uncommited";
+                commitInfoStr = "Uncommitted";
             else
             {
                 commitInfoStr = CalendarHelper.convertDateToTime(commitWrapper.getDate());
@@ -556,15 +586,22 @@ public class CommitsBar extends CommitsBarBase
                 @Override
                 public void mouseEntered(MouseEvent e)
                 {
+                    commitsBar.updateHovredItem(commitUIItemIndex, true);
+
                     if(!isActive)
+                    {
                         updateToActiveUI();
+                    }
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e)
                 {
+                    commitsBar.updateHovredItem(commitUIItemIndex, false);
                     if(!isActive)
+                    {
                         updateToNormalUI();
+                    }
                 }
             });
         }

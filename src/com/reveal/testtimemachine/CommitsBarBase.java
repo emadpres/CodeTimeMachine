@@ -9,6 +9,8 @@ import java.util.ArrayList;
 
 public abstract class CommitsBarBase
 {
+    final int INVALID = -1;
+
     protected TTMSingleFileView TTMWindow = null;
 
     protected Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(200,1000);

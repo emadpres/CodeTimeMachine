@@ -35,7 +35,9 @@ public class TTMSingleFileView
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
     CommitsBarBase commitsBar = null;
-    CommitsTimelineZoomable commitsTimelineZoomable = null;
+    CommitsTimelineZoomable commitsTimelineZoomable = null; // part of "topLayer"
+    CommitsInfoLayerUI commitsInfoLayerUI = null; // part of "topLayer"
+    JLayer<JComponent> topLayer = null; // Consists of: (1)commitsTimelineZoomable and (2)commitsInfoLayerUI
     //////////////////////////////
     GroupLayout groupLayout = null;
     int activeCommit_cIndex = -1;
@@ -59,7 +61,7 @@ public class TTMSingleFileView
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
         ////////////
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
-        commitsTimelineZoomable = setupUI_createCommitsTimeline(commits);
+        setupUI_createTopLayer(commits);
         codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
         ////////////
         setupLayout();
@@ -456,9 +458,21 @@ public class TTMSingleFileView
 
     }
 
-    private CommitsTimelineZoomable setupUI_createCommitsTimeline(ArrayList<CommitWrapper> commitsList)
+    private void setupUI_createTopLayer(ArrayList<CommitWrapper> commitsList)
     {
-        return new CommitsTimelineZoomable(commitsList, this);
+        this.commitsTimelineZoomable = new CommitsTimelineZoomable(commitsList, this);
+        commitsInfoLayerUI = new CommitsInfoLayerUI();
+
+        topLayer = new JLayer<>(commitsTimelineZoomable, commitsInfoLayerUI);
+    }
+
+    public void updateTopLayerCommitsInfoData(int commitToDisplay_cIndex)
+    {
+        if(commitToDisplay_cIndex != INVALID)
+            commitsInfoLayerUI.displayInfo(commits.get(commitToDisplay_cIndex));
+        else
+            commitsInfoLayerUI.invisble();
+        topLayer.repaint();
     }
 
     private void setupLayout()
@@ -467,14 +481,14 @@ public class TTMSingleFileView
                 .addComponent(commitsBar.getComponent())
                 .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                         .addComponent(codeHistory3DView)
-                        .addComponent(commitsTimelineZoomable)
+                        .addComponent(topLayer)
                 )
         );
 
         groupLayout.setVerticalGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                 .addComponent(commitsBar.getComponent())
                 .addGroup(groupLayout.createSequentialGroup()
-                        .addComponent(commitsTimelineZoomable)
+                        .addComponent(topLayer)
                         .addComponent(codeHistory3DView)
                 )
         );
