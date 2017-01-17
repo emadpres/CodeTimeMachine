@@ -84,7 +84,7 @@ public class TestTimeMachineAction extends AnAction
 
             if(! mostRecentCommitContent.equals(currentContent) )
             {
-                final String UNCOMMITED_CHANGE_TEXT  = "Uncommited Changes";
+                final String UNCOMMITED_CHANGE_TEXT  = "Uncommitted Changes";
                 aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT,new Date(),UNCOMMITED_CHANGE_TEXT, -1);
                 subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
             }

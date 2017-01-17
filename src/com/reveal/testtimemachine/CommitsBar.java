@@ -545,7 +545,7 @@ public class CommitsBar extends CommitsBarBase
             String commitInfoStr = "";
 
             if(commitWrapper.isFake())
-                commitInfoStr = "Uncommitted";
+                commitInfoStr = "*Now*";
             else
             {
                 commitInfoStr = CalendarHelper.convertDateToTime(commitWrapper.getDate());
