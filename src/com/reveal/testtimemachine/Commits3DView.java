@@ -1,14 +1,17 @@
 package com.reveal.testtimemachine;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.EditorTextField;
 import com.reveal.metrics.Metrics;
 import com.reveal.metrics.MetricCalculationResults;
@@ -71,6 +74,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
 
+    JButton previewBtn = null;
+
     Metrics.Types currentMetric = null;
 
 
@@ -92,6 +97,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.setOpaque(true);
 
         setupUI_mainEditorWindow();
+        setupUI_buttons();
         setupUI_virtualWindows();
         initialVirtualWindowsVisualizations(); // initial 3D Variables
 
@@ -108,6 +114,48 @@ public class Commits3DView extends JComponent implements ComponentListener
         addMouseWheelListener();
         addMouseMotionListener();
         addMouseListener();
+    }
+
+    private void setupUI_buttons()
+    {
+        //ImageIcon icon = new ImageIcon("/images/travelTime.png");
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTime.png"));
+        previewBtn = new JButton("Restore this file",icon);
+        previewBtn.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                final Runnable readRunner = new Runnable() {
+                    @Override
+                    public void run() {
+                        Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+                        document.setText(commitList.get(TTMWindow.activeCommit_cIndex).getFileContent());
+                    }
+                };
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
+                            @Override
+                            public void run() {
+                                ApplicationManager.getApplication().runWriteAction(readRunner);
+                            }
+                        }, "DiskRead", null);
+                    }
+                });
+
+                TestTimeMachineAction.toolWindow.hide(null);
+            }
+        });
+
+
+        previewBtn.setFocusable(false);
+        //previewBtn.setBorderPainted(false);
+        previewBtn.setFocusPainted(false);
+        previewBtn.setContentAreaFilled(false);
+
+        this.add(previewBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
 
@@ -623,7 +671,13 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         updateVirtualWindowsBoundaryAfterComponentResize();
         updateMainEditorWindowBoundaryAfterComponentResize();
+        updateButtonsAfterComponentResize();
         updateTimeLineDrawing();
+    }
+
+    private void updateButtonsAfterComponentResize()
+    {
+        previewBtn.setBounds(100,600,180,27);
     }
 
     private void updateTimeLineDrawing()

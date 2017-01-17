@@ -37,7 +37,7 @@ public class TestTimeMachineAction extends AnAction
     final int MAX_NUM_OF_FILES = 2;
     //////////////////////////////
     Project project = null;
-    ToolWindow toolWindow = null;
+    static ToolWindow toolWindow = null;
 
     @Override
     public void actionPerformed(AnActionEvent e)
@@ -121,9 +121,7 @@ public class TestTimeMachineAction extends AnAction
 
 
         if(toolWindow == null)
-            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("((Time Machine Plugin))", false, ToolWindowAnchor.TOP);
-
-
+            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine \t", false, ToolWindowAnchor.RIGHT);
 
 
         String contentName = "";
