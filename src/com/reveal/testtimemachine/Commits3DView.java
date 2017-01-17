@@ -74,7 +74,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
 
-    JButton previewBtn = null;
+    JButton updateActiveFileToThisCommitBtn = null, updateProjectToThisCommitBtn = null;
 
     Metrics.Types currentMetric = null;
 
@@ -118,10 +118,15 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void setupUI_buttons()
     {
-        //ImageIcon icon = new ImageIcon("/images/travelTime.png");
+        setupUI_buttons_updateActiveFile();
+        setupUI_buttons_updateProjectFile();
+    }
+
+    private void setupUI_buttons_updateActiveFile()
+    {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTime.png"));
-        previewBtn = new JButton("Restore this file",icon);
-        previewBtn.addActionListener(new ActionListener()
+        updateActiveFileToThisCommitBtn = new JButton("Reset File to ...",icon);
+        updateActiveFileToThisCommitBtn.addActionListener(new ActionListener()
         {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -141,23 +146,46 @@ public class Commits3DView extends JComponent implements ComponentListener
                             public void run() {
                                 ApplicationManager.getApplication().runWriteAction(readRunner);
                             }
-                        }, "DiskRead", null);
+                        }, "Update__ActiveFile__ToThisCommitBtn", null);
                     }
                 });
 
                 TestTimeMachineAction.toolWindow.hide(null);
             }
         });
-
-
-        previewBtn.setFocusable(false);
-        //previewBtn.setBorderPainted(false);
-        previewBtn.setFocusPainted(false);
-        previewBtn.setContentAreaFilled(false);
-
-        this.add(previewBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
+        updateActiveFileToThisCommitBtn.setFocusable(false);
+        updateActiveFileToThisCommitBtn.setFocusPainted(false);
+        updateActiveFileToThisCommitBtn.setForeground(Color.GREEN);
+        this.add(updateActiveFileToThisCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
+    private void setupUI_buttons_updateProjectFile()
+    {
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTimeProject.png"));
+        updateProjectToThisCommitBtn = new JButton("Reset Project to ...",icon);
+        updateProjectToThisCommitBtn.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                GitHelper instance = GitHelper.getInstance(project);
+                if(commitList.get(TTMWindow.activeCommit_cIndex).isFake() == true)
+                {
+                    // It means that: TTMWindow.activeCommit_cIndex = 0 , Plus, we have uncommited changes
+                    instance.checkoutCommitID(commitList.get(1).getCommitID());
+                    instance.applyStash();
+                }
+                else
+                    instance.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
+
+                TestTimeMachineAction.toolWindow.hide(null);
+            }
+        });
+        updateProjectToThisCommitBtn.setFocusable(false);
+        updateProjectToThisCommitBtn.setFocusPainted(false);
+        updateProjectToThisCommitBtn.setForeground(Color.RED);
+        this.add(updateProjectToThisCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
+    }
 
     private void addMouseMotionListener()
     {
@@ -677,7 +705,8 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateButtonsAfterComponentResize()
     {
-        previewBtn.setBounds(100,600,180,27);
+        updateActiveFileToThisCommitBtn.setBounds(100,550,180,27);
+        updateProjectToThisCommitBtn.setBounds(100,600,180,27);
     }
 
     private void updateTimeLineDrawing()

@@ -211,7 +211,7 @@ public class TTMSingleFileView
                     return;
                 }
 
-               String commitId = commits.get(activeCommit_cIndex).getCommitID();
+                String commitId = commits.get(activeCommit_cIndex).getCommitID();
                 GitHelper instance = GitHelper.getInstance(project);
                 String allFiles = instance.getListOfChangedFile(commitId);
                 Messages.showInfoMessage(project, allFiles, DIALOG_TITLE);

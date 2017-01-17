@@ -43,6 +43,8 @@ public class TestTimeMachineAction extends AnAction
     public void actionPerformed(AnActionEvent e)
     {
         project = e.getProject();
+        GitHelper.getInstance(project).backupAllChangesAsStash();
+
         //findAllPackages(e);
 
         VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
