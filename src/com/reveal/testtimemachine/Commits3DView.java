@@ -11,7 +11,6 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.EditorTextField;
 import com.reveal.metrics.Metrics;
 import com.reveal.metrics.MetricCalculationResults;
@@ -59,7 +58,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     Dimension topIdealLayerDimention = new Dimension(0,0);
     Point topIdealLayerCenterPos = new Point(0,0);
     final int INVALID = -1;
-    int lastHighlightVirtualWindowIndex=-1, currentMouseHoveredIndex =INVALID;
+    int lastBorderHighlighted_VirtualWindowIndex =-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
     final Color MOUSE_HOVERED_COLOR = Color.ORANGE;
     final boolean COLORFUL = false;
@@ -209,8 +208,11 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void mouseMoved(MouseEvent e)
             {
+                // Important Note: When mouse enter TextArea, we no longer get called until we get out of it.
+                // So "currentMousePoint" show that last location just before entering TextArea.
+
                 currentMousePoint = e.getPoint();
-                //updateHovredWindow //Sometimes we don't move mosue, but underneath the windows are moving.
+                //updateHovredWindow //This is not enough. Sometimes we don't move mosue, but underneath the windows are moving.
             }
         });
     }
@@ -353,7 +355,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void initialVirtualWindowsVisualizations()
     {
         topLayerOffset = 0;
-        topLayerIndex = lastHighlightVirtualWindowIndex = 0;
+        topLayerIndex = lastBorderHighlighted_VirtualWindowIndex = 0;
 
         // Don't forget to call `updateVirtualWindowsBoundryAfterComponentResize()` before
         for (int i = 0; i< commitList.size() ; i++)
@@ -384,11 +386,11 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void highlight( int virtualWindowIndex)
     {
-        virtualEditorWindows[lastHighlightVirtualWindowIndex].setHighlightBorder(false);
+        virtualEditorWindows[lastBorderHighlighted_VirtualWindowIndex].setHighlightBorder(false);
 
         virtualEditorWindows[virtualWindowIndex].setHighlightBorder(true);
 
-        lastHighlightVirtualWindowIndex = virtualWindowIndex;
+        lastBorderHighlighted_VirtualWindowIndex = virtualWindowIndex;
     }
 
     @Override
@@ -857,6 +859,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             this.depth = depth;
 
+            // we shouldn't "&& alpha<X". because if get invisible we never enter "doRenderCalculation()" and we never
+            // get visible again. :D
             if(depth<MIN_VISIBLE_DEPTH || depth> maxVisibleDepth)
                 isVisible=false;
             else
@@ -880,6 +884,14 @@ public class Commits3DView extends JComponent implements ComponentListener
                 // which was supposed to go out (go to depth -LAYER_DISTANCE) get stuck at depth = -LAYERDISTANCE+e.
                 newAlpha = (int) (255*(1-depth/(MIN_VISIBLE_DEPTH+LAYERS_DEPTH_ERROR_THRESHOLD+EPSILON)));
             setAlpha(newAlpha);
+
+            if(newAlpha < 20)
+            {
+                // Optimization
+                isVisible=false;
+                return;
+            }
+
 
 
             //////////////// Size
@@ -927,6 +939,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
             setAlpha(alpha); //Apply current alpha to above solid colors
         }
+
         public void setHighlightTopBar(boolean newStatus, Color c)
         {
             if(newStatus==true)
