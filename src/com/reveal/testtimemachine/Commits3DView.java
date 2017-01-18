@@ -40,6 +40,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int TICK_INTERVAL_MS = 50;
     ///////
     final Color DUMMY_COLOR = Color.black;
+    final Color ACTIVE_WINDOW_COLOR = Color.RED;
 
     ///////// ++ UI: 3D Prespective Variables ++ /////////
     final float LAYER_DISTANCE = 0.2f;
@@ -52,6 +53,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     Point startPointOfChartTimeLine = new Point(0,0);
 
     Point currentMousePoint = new Point(-100,-100);
+    Map<String, Color> authorsColor = null;
+    boolean isAuthorsColorMode = false;
     /////
     int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
     float topLayerOffset;
@@ -97,6 +100,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         if (CommonValues.IS_UI_IN_DEBUGGING_MODE)   this.setBackground(Color.ORANGE);
         this.setOpaque(true);
 
+        preCalculateAuthorsColor();
         setupUI_mainEditorWindow();
         setupUI_buttons();
         setupUI_virtualWindows();
@@ -123,6 +127,43 @@ public class Commits3DView extends JComponent implements ComponentListener
         addMouseWheelListener();
         addMouseMotionListener();
         addMouseListener();
+    }
+
+    private void preCalculateAuthorsColor()
+    {
+        authorsColor = new HashMap<String, Color>();
+        Color c;
+        Random rand = new Random();
+        String s;
+        for(int i=0; i<commitList.size(); i++)
+        {
+            s = commitList.get(i).getAuthor();
+            if(authorsColor.containsKey(s)==true) continue;
+
+            float r = rand.nextFloat();
+            float g = rand.nextFloat();
+            float b = rand.nextFloat();
+            c = new Color(r,g,b);
+
+            authorsColor.put(s, c);
+        }
+    }
+
+    public void toggleAuthorsColorMode()
+    {
+        isAuthorsColorMode = !isAuthorsColorMode;
+
+        if(isAuthorsColorMode==true)
+        {
+            for(int i=0; i<commitList.size(); i++)
+                virtualEditorWindows[i].setTemporaryHighlightTopBar(true, authorsColor.get(commitList.get(i).getAuthor()));
+        }
+        else
+        {
+            for(int i=0; i<commitList.size(); i++)
+                virtualEditorWindows[i].setTemporaryHighlightTopBar(false, DUMMY_COLOR);
+        }
+        repaint();
     }
 
     private void setupUI_buttons()
@@ -237,14 +278,20 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void UpdateHoveredVirtualWindow(int new_cIndex)
     {
-        if(currentMouseHoveredIndex !=INVALID)
-            virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false,DUMMY_COLOR);
+        if(currentMouseHoveredIndex != INVALID)
+        {
+            virtualEditorWindows[currentMouseHoveredIndex].setHighlightBorder(false, DUMMY_COLOR);
+            if(!isAuthorsColorMode)
+                virtualEditorWindows[currentMouseHoveredIndex].setTemporaryHighlightTopBar(false, DUMMY_COLOR);
+        }
 
         currentMouseHoveredIndex =new_cIndex;
 
-        if(currentMouseHoveredIndex!=INVALID)
+        if(currentMouseHoveredIndex!=INVALID )
         {
-            virtualEditorWindows[new_cIndex].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
+            virtualEditorWindows[new_cIndex].setHighlightBorder(true, MOUSE_HOVERED_COLOR);
+            if(!isAuthorsColorMode)
+                virtualEditorWindows[new_cIndex].setTemporaryHighlightTopBar(true, MOUSE_HOVERED_COLOR);
         }
 
         TTMWindow.updateTopLayerCommitsInfoData(currentMouseHoveredIndex);
@@ -386,9 +433,9 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void highlight( int virtualWindowIndex)
     {
-        virtualEditorWindows[lastBorderHighlighted_VirtualWindowIndex].setHighlightBorder(false);
+        virtualEditorWindows[lastBorderHighlighted_VirtualWindowIndex].setHighlightBorder(false, DUMMY_COLOR);
 
-        virtualEditorWindows[virtualWindowIndex].setHighlightBorder(true);
+        virtualEditorWindows[virtualWindowIndex].setHighlightBorder(true, ACTIVE_WINDOW_COLOR);
 
         lastBorderHighlighted_VirtualWindowIndex = virtualWindowIndex;
     }
@@ -915,10 +962,12 @@ public class Commits3DView extends JComponent implements ComponentListener
             chartTimeLinePoint.y = drawingRect.y;
         }
 
-        public void setHighlightBorder(boolean newStatus)
+        public void setHighlightBorder(boolean newStatus, Color newColor)
         {
             if(newStatus==true)
-                myBorderColor = Color.RED;
+                myBorderColor = newColor;
+            else if(cIndex == TTMWindow.activeCommit_cIndex)
+                myBorderColor = ACTIVE_WINDOW_COLOR;
             else
                 myBorderColor = DEFAULT_BORDER_COLOR;
 

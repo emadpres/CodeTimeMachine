@@ -106,8 +106,19 @@ public class TTMSingleFileView
         final String TOGGLE_COMMITS_BAR_TYPE = "toggleCommitsBarType";
         final String SHOW_ALL_FILES = "showAllFiles";
         final String SHOW_CHANGED_FILES = "showChangedFiles";
+        final String TOGGLE_AUTHORS_COLOR_MODE = "toggleAuthorsColorMode";
 
 
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_T,0), TOGGLE_AUTHORS_COLOR_MODE);
+        thisComponent.getActionMap().put(TOGGLE_AUTHORS_COLOR_MODE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                codeHistory3DView.toggleAuthorsColorMode();
+            }
+        });
 
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_B,0), MARK_AS_FIRST);
