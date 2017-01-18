@@ -55,6 +55,7 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
 
         int w = c.getWidth();
         int h = c.getHeight();
+        final int LEFT_MARGIN_ICON_AND_COMMIT_MESSEGE = 10;
         final int LEFT_MARGIN = 30;
         final int LEFT_TEXT_MARGIN = LEFT_MARGIN+45;
         final int RIGHT_MARGIN = 20;
@@ -66,7 +67,7 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
 
         // Text 1-2-3-4
         ////////1
-        g.drawImage(commitIDImage, 8,11,this);
+        g.drawImage(commitIDImage, LEFT_MARGIN_ICON_AND_COMMIT_MESSEGE-2/*this icon width is longer than others*/,11,this);
         g2d.setFont(NORM_FONT);
         g2d.setColor(LIGHT_BLUE);
         g2d.drawString("ID: ",LEFT_MARGIN,20);
@@ -75,7 +76,7 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
         g2d.drawString(commitToDisplay.getCommitID(),LEFT_TEXT_MARGIN,20);
 
         ////////2
-        g.drawImage(authorImage, 10,26,this);
+        g.drawImage(authorImage, LEFT_MARGIN_ICON_AND_COMMIT_MESSEGE,26,this);
         g2d.setFont(NORM_FONT);
         g2d.setColor(Color.PINK);
         g2d.drawString("Author: ",LEFT_MARGIN,35);
@@ -84,13 +85,13 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
         g2d.drawString(commitToDisplay.getAuthor(),LEFT_TEXT_MARGIN,35);
 
         ////////3
-        g.drawImage(dateImage, 10,42,this);
+        g.drawImage(dateImage, LEFT_MARGIN_ICON_AND_COMMIT_MESSEGE,42,this);
         g2d.setFont(NORM_FONT);
         g2d.setColor(DARK_GREEN);
         g2d.drawString("Date: ",LEFT_MARGIN,50);
         g2d.setFont(BOLD_FONT);
         g2d.setColor(TEXT_COLOR);
-        g2d.drawString(CalendarHelper.convertDateToStringYMDHM(commitToDisplay.getDate()),LEFT_TEXT_MARGIN,50);
+        g2d.drawString(CalendarHelper.convertDateToStringYmDHM(commitToDisplay.getDate()),LEFT_TEXT_MARGIN,50);
 
         //////// line
         g2d.drawLine(LEFT_MARGIN,55,w-RIGHT_MARGIN, 55);
@@ -102,13 +103,13 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
 
         g2d.setFont(NORM_FONT);
         g2d.setColor(BROWN);
-        g2d.drawString(s1,LEFT_MARGIN,Y-2 /* Because following text's size will be much bigger*/);
+        g2d.drawString(s1,LEFT_MARGIN_ICON_AND_COMMIT_MESSEGE,Y-2 /* Because following text's size will be much bigger*/);
         int k = g2d.getFontMetrics().stringWidth(s1);
 
         g2d.setFont(BOLDER_FONT);
         g2d.setColor(TEXT_COLOR);
         int n =  DrawingHelper.howManyCharFitsInWidth(g2d,s2, w-k-LEFT_MARGIN-RIGHT_MARGIN);
-        g2d.drawString(s2.substring(0,n-3/*for ...*/)+"...",LEFT_MARGIN+k,Y);
+        g2d.drawString(s2.substring(0,n-3/*for ...*/)+"...",LEFT_TEXT_MARGIN,Y);
 
 
         g2d.dispose();

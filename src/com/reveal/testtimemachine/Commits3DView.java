@@ -135,7 +135,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void setupUI_buttons_updateActiveFile()
     {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTime.png"));
-        updateActiveFileToThisCommitBtn = new JButton("Reset File to ...",icon);
+        updateActiveFileToThisCommitBtn = new JButton("Put File to This Time",icon);
         updateActiveFileToThisCommitBtn.addActionListener(new ActionListener()
         {
             @Override
@@ -172,7 +172,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void setupUI_buttons_updateProjectFile()
     {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTimeProject.png"));
-        updateProjectToThisCommitBtn = new JButton("Reset Project to ...",icon);
+        updateProjectToThisCommitBtn = new JButton("Put Project to This Time",icon);
         updateProjectToThisCommitBtn.addActionListener(new ActionListener()
         {
             @Override
