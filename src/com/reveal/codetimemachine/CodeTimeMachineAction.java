@@ -1,10 +1,9 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -31,7 +30,7 @@ import java.util.*;
 /**
  * Created by emadpres on 11/23/16.
  */
-public class TestTimeMachineAction extends AnAction
+public class CodeTimeMachineAction extends AnAction
 {
     final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
     final int MAX_NUM_OF_FILES = 2;
@@ -123,7 +122,7 @@ public class TestTimeMachineAction extends AnAction
 
 
         if(toolWindow == null)
-            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine \t", false, ToolWindowAnchor.RIGHT);
+            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine      ", false, ToolWindowAnchor.RIGHT);
 
 
         String contentName = "";

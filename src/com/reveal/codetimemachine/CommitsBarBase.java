@@ -1,7 +1,5 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
-
-import com.intellij.ui.components.JBScrollPane;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

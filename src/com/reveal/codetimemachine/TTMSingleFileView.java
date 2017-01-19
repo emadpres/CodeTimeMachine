@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;

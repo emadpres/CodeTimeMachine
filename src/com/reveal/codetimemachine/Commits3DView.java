@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
@@ -200,7 +200,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     }
                 });
 
-                TestTimeMachineAction.toolWindow.hide(null);
+                CodeTimeMachineAction.toolWindow.hide(null);
             }
         });
         updateActiveFileToThisCommitBtn.setFocusable(false);
@@ -228,7 +228,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 else
                     instance.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
 
-                TestTimeMachineAction.toolWindow.hide(null);
+                CodeTimeMachineAction.toolWindow.hide(null);
             }
         });
         updateProjectToThisCommitBtn.setFocusable(false);

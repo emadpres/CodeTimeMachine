@@ -1,12 +1,10 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import com.intellij.ui.components.JBScrollPane;
-import org.omg.CORBA.INVALID_ACTIVITY;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;

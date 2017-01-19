@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 
 import org.junit.Test;
@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 
-public class TestTimeMachineWindowTest
+public class CodeTimeMachineWindowTest
 {
     @Test
     public void testInstantiating()

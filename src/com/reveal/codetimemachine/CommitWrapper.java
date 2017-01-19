@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 
 import com.intellij.openapi.vcs.history.VcsFileRevision;

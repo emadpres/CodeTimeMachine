@@ -1,12 +1,9 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import com.intellij.ui.components.JBScrollPane;
-import com.sun.org.apache.regexp.internal.RE;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 

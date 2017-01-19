@@ -1,4 +1,4 @@
-package com.reveal.testtimemachine;
+package com.reveal.codetimemachine;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

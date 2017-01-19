@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TestTimeMachine.iml" filepath="$PROJECT_DIR$/TestTimeMachine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CodeTimeMachine.iml" filepath="$PROJECT_DIR$/CodeTimeMachine.iml" />
     </modules>
   </component>
 </project>

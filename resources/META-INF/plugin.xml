@@ -1,8 +1,8 @@
 <idea-plugin version="2">
-  <id>com.reveal.testtimemachine</id>
-  <name>Test Time Machine</name>
+  <id>com.reveal.codetimemachine</id>
+  <name>Code Time Machine</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">REVEAL</vendor>
+  <vendor email="emad.aghajani@usi.ch" url="http://reveal.inf.usi.ch//">REVEAL Research Group</vendor>
 
   <description><![CDATA[
       Enter short description for your plugin here.<br>
@@ -30,8 +30,8 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="showTestTimeMachine" class="com.reveal.testtimemachine.TestTimeMachineAction"
-            text="Open TestTimeMachine Window" description="Open TestTimeMachine Window">
+    <action id="showCodeTimeMachine" class="com.reveal.codetimemachine.CodeTimeMachineAction"
+            text="Open CodeTimeMachine" description="Open CodeTimeMachine">
       <add-to-group group-id="ToolsMenu" anchor="first"/>
       <keyboard-shortcut keymap="$default" first-keystroke="shift meta L"/>
     </action>
