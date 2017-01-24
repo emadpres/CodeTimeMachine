@@ -484,7 +484,11 @@ public class CommitsTimeline extends JComponent
         int yearIterator = start_year;
         for (int splitter = 0; splitter < n_monthes; splitter++)
         {
+            boolean atBeginingOfNewYear = false;
             if(getMonthForSector(splitter)== FIRST_MONTH_OF_YEAR_INDEX)
+                atBeginingOfNewYear = true;
+
+            if(atBeginingOfNewYear)
             {
                 // New Year
                 g2d.setColor(Color.WHITE);
@@ -501,9 +505,10 @@ public class CommitsTimeline extends JComponent
             g2d.drawLine(lineIterator.x, lineIterator.y + sectorSplitter_vecticalLineLength / 2,
                     lineIterator.x, lineIterator.y - sectorSplitter_vecticalLineLength / 2);
 
-            if(getMonthForSector(splitter) == FIRST_MONTH_OF_YEAR_INDEX)
+            if(atBeginingOfNewYear)
             {
-                yearIterator++;
+                if(splitter!=0/*becaue if first commit in Jan, the year increase unnecessary*/)
+                    yearIterator++;
                 int y_pos = 0;
                 if(LOD==1)
                     y_pos= lineIterator.y+SECTOR_SPLITTER_LENGTH_YEAR+5/*5: text position considered as bottom-left*/;
