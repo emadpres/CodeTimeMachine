@@ -179,6 +179,7 @@ public class CommitsBar extends CommitsBarBase
         BoxLayout boxLayout = new BoxLayout(c, BoxLayout.PAGE_AXIS);
         c.setLayout(boxLayout);
 
+        c.setBackground(BG_COLOR);
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
             c.setBackground(Color.RED);
 
@@ -256,7 +257,7 @@ public class CommitsBar extends CommitsBarBase
         ///////// ++ Constant ++ /////////
         private final Dimension COMPONENT_SIZE = new Dimension( 140,30 );
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );//
-        private final Color NORMAL_COLOR = Color.DARK_GRAY;
+        private final Color NORMAL_COLOR = Color.WHITE;
         ///////// ++ Constant -- /////////
 
         ///////// ++ UI ++ /////////
@@ -280,6 +281,7 @@ public class CommitsBar extends CommitsBarBase
                 myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
 
+            myComponent.setBackground(Color.DARK_GRAY);
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.YELLOW);
 
@@ -295,6 +297,7 @@ public class CommitsBar extends CommitsBarBase
         {
             marker = new JLabel("");
             marker.setOpaque(true);
+            marker.setBackground(NORMAL_COLOR);
             myComponent.add(marker);
         }
 
@@ -320,15 +323,17 @@ public class CommitsBar extends CommitsBarBase
                 commitInfoStr = CalendarHelper.convertDateToStringYMD(date);
             }
 
-
             commitInfo = new JLabel(commitInfoStr);
 
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
+            {
+                commitInfo.setOpaque(true);
                 commitInfo.setBackground(Color.CYAN);
-            commitInfo.setOpaque(true);
+            }
             Font font = commitInfo.getFont();
             Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
             commitInfo.setFont(boldFont);
+            commitInfo.setForeground(NORMAL_COLOR);
             if(direction == CommitItemDirection.LTR)
                 commitInfo.setHorizontalAlignment(SwingConstants.LEFT);
             else
@@ -380,11 +385,9 @@ public class CommitsBar extends CommitsBarBase
         private void updateUIToNewSize()
         {
             marker.setSize(MARKERT_NORMAL_SIZE);
-            marker.setBackground(NORMAL_COLOR);
 
             updateMarkerLocation();
 
-            commitInfo.setForeground(NORMAL_COLOR);
             updateCommitInfoLocation();
         }
 
@@ -435,7 +438,7 @@ public class CommitsBar extends CommitsBarBase
         private final Dimension MARKER_HOVERED_SIZE = new Dimension( 20,8 );
         //
         private final Color NORMAL_COLOR = Color.LIGHT_GRAY;
-        private final Color HOVERED_COLOR = new Color(255,0,0,150);
+        private final Color HOVERED_COLOR = new Color(255,0,0,200);
         ///////// ++ Constant -- /////////
 
         ///////// ++ UI ++ /////////
@@ -480,8 +483,9 @@ public class CommitsBar extends CommitsBarBase
                                         + "&nbsp Commit-message: " + commitWrapper.getCommitMessage()
                                     + "</h4>"
                                 + "</body>" + "</html>";
-            myComponent.setToolTipText(tooltipText);
+            //myComponent.setToolTipText(tooltipText);
 
+            myComponent.setBackground(Color.DARK_GRAY);
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.GREEN);
 
@@ -552,8 +556,11 @@ public class CommitsBar extends CommitsBarBase
 
             commitInfo = new JLabel(commitInfoStr);
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
+            {
+                commitInfo.setOpaque(true);
                 commitInfo.setBackground(Color.CYAN);
-            commitInfo.setOpaque(true);
+            }
+
             Font font = commitInfo.getFont();
             Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
             commitInfo.setFont(boldFont);

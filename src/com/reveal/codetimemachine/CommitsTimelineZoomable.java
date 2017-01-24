@@ -34,7 +34,7 @@ public class CommitsTimelineZoomable extends JBScrollPane
         setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         getHorizontalScrollBar().setPreferredSize(new Dimension(0, 8));
         getHorizontalScrollBar().setForeground(Color.RED);
-        getHorizontalScrollBar().setOpaque(true);
+        //getHorizontalScrollBar().setOpaque(true);
 
         setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_NEVER);
     }

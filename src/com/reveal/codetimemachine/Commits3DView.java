@@ -40,7 +40,10 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int TICK_INTERVAL_MS = 50;
     ///////
     final Color DUMMY_COLOR = Color.black;
-    final Color ACTIVE_WINDOW_COLOR = Color.RED;
+    static final Color SHARP_RED = new Color(233,80,100);
+    static final Color SHARP_GREEN = new Color(91,205,120);
+    static final Color SHARP_YELLOW = new Color(216,190,103);
+    final Color ACTIVE_WINDOW_COLOR = SHARP_RED;
 
     ///////// ++ UI: 3D Prespective Variables ++ /////////
     final float LAYER_DISTANCE = 0.2f;
@@ -63,11 +66,14 @@ public class Commits3DView extends JComponent implements ComponentListener
     final int INVALID = -1;
     int lastBorderHighlighted_VirtualWindowIndex =-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
-    final Color MOUSE_HOVERED_COLOR = Color.ORANGE;
+    final Color MOUSE_HOVERED_COLOR = Color.WHITE;
     final boolean COLORFUL = false;
     final int TOP_BAR_HEIGHT = 25;
     final int VIRTUAL_WINDOW_BORDER_TICKNESS = 1;
     final int TIME_LINE_WIDTH = 3;
+    final Color TIMELINE_COLOR = new Color(64,255,64);
+    final Color CHART_TIMELINE_COLOR = TIMELINE_COLOR;//new Color(255,255,0);
+    final Color CHART_LINE_COLOR = Color.WHITE;
     ////////
 
     TTMSingleFileView TTMWindow = null;
@@ -133,19 +139,13 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         authorsColor = new HashMap<String, Color>();
         Color c;
-        Random rand = new Random();
         String s;
         for(int i=0; i<commitList.size(); i++)
         {
             s = commitList.get(i).getAuthor();
             if(authorsColor.containsKey(s)==true) continue;
 
-            float r = rand.nextFloat();
-            float g = rand.nextFloat();
-            float b = rand.nextFloat();
-            c = new Color(r,g,b);
-
-            authorsColor.put(s, c);
+            authorsColor.put(s, DistinctColorsProvider.GetDistinctColor(authorsColor.size()));
         }
     }
 
@@ -175,7 +175,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void setupUI_buttons_updateActiveFile()
     {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTime.png"));
-        updateActiveFileToThisCommitBtn = new JButton("Put File to This Time",icon);
+        updateActiveFileToThisCommitBtn = new JButton("Revert File",icon);
         updateActiveFileToThisCommitBtn.addActionListener(new ActionListener()
         {
             @Override
@@ -204,15 +204,15 @@ public class Commits3DView extends JComponent implements ComponentListener
             }
         });
         updateActiveFileToThisCommitBtn.setFocusable(false);
-        updateActiveFileToThisCommitBtn.setFocusPainted(false);
-        updateActiveFileToThisCommitBtn.setForeground(Color.GREEN);
+        updateActiveFileToThisCommitBtn.setForeground(SHARP_GREEN);
+        updateActiveFileToThisCommitBtn.setOpaque(false);
         this.add(updateActiveFileToThisCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
     private void setupUI_buttons_updateProjectFile()
     {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTimeProject.png"));
-        updateProjectToThisCommitBtn = new JButton("Put Project to This Time",icon);
+        updateProjectToThisCommitBtn = new JButton("Revert Project",icon);
         updateProjectToThisCommitBtn.addActionListener(new ActionListener()
         {
             @Override
@@ -232,8 +232,8 @@ public class Commits3DView extends JComponent implements ComponentListener
             }
         });
         updateProjectToThisCommitBtn.setFocusable(false);
-        updateProjectToThisCommitBtn.setFocusPainted(false);
-        updateProjectToThisCommitBtn.setForeground(Color.RED);
+        updateProjectToThisCommitBtn.setForeground(SHARP_RED);
+        updateProjectToThisCommitBtn.setOpaque(false);
         this.add(updateProjectToThisCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
@@ -503,16 +503,17 @@ public class Commits3DView extends JComponent implements ComponentListener
                 {
                     // I'm not the first one in for-loop (OR) I'm not the oldest point of time
                     Point timeLineNextPoint = virtualEditorWindows[i+1].timeLinePoint; // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
-                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(TIMELINE_COLOR.getRed(),TIMELINE_COLOR.getGreen(),TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
                     g.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timeLineNextPoint.x, timeLineNextPoint.y);
                 }
                 // TimeLine Point
                 if(i==targetLayerIndex)
-                    g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(ACTIVE_WINDOW_COLOR.getRed(),ACTIVE_WINDOW_COLOR.getGreen(),ACTIVE_WINDOW_COLOR.getBlue(),virtualEditorWindows[i].alpha));
                 else if(i == currentMouseHoveredIndex)
-                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                    //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                    g.setColor(MOUSE_HOVERED_COLOR);
                 else
-                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(TIMELINE_COLOR.getRed(),TIMELINE_COLOR.getGreen(),TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
                 g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
 
                 final Dimension TIME_LINE_POINT_SIZE = new Dimension(10,4);
@@ -548,7 +549,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                 Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentMetric);
 
 
-                // TimeLine Lines
+                // Chart TimeLine Lines
                 if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
                 {
                     // I'm not the first one in for-loop (OR) I'm not the oldest point of time
@@ -556,32 +557,34 @@ public class Commits3DView extends JComponent implements ComponentListener
                     Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentMetric);
 
                     g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH/3));
-                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
-                    g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
+                    g.setColor(new Color(CHART_TIMELINE_COLOR.getRed(),CHART_TIMELINE_COLOR.getGreen(),CHART_TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
+                    //g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
 
                     g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
                     if(i != currentMouseHoveredIndex && i+1!=currentMouseHoveredIndex)
-                        g.setColor(new Color(0, 0, 0, virtualEditorWindows[i].alpha));
+                        g.setColor(new Color(CHART_LINE_COLOR.getRed(), CHART_LINE_COLOR.getGreen(), CHART_LINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
                     else
-                        g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                        //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                    g.setColor(MOUSE_HOVERED_COLOR);
                     g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
                 }
 
+
+                Color metricC = virtualEditorWindows[i].getMetricColor();
+
+
                 // ChartTimeLine Point
-                if(i==targetLayerIndex)
-                    g.setColor(new Color(255,0,0,virtualEditorWindows[i].alpha));
-                else if(i == currentMouseHoveredIndex)
-                    g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                if(i == currentMouseHoveredIndex)
+                    //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                    g.setColor(MOUSE_HOVERED_COLOR);
                 else
-                    g.setColor(new Color(0,0,255,virtualEditorWindows[i].alpha));
+                    g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
                 g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
 
-                Color metricC = virtualEditorWindows[i].getMetricColor();
-                g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
-
                 //Vertical Value Line
                 g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
+
                 // Point on Value Height
                 g.fillOval(chartTimeLineMyValuePoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyValuePoint.y-TIME_LINE_POINT_SIZE.height/2,
                         TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height);
@@ -595,7 +598,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void draw_tipOfTimeLine(Graphics2D g2d)
     {
         //// Line from tip of TimeLine (ACTUALLY: startPoint+0.1depth) of time line to Triangle
-        g2d.setColor(Color.BLUE);
+        g2d.setColor(TIMELINE_COLOR);
         g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
         g2d.drawLine(startPointOfTimeLine.x, startPointOfTimeLine.y, trianglePoint.x, trianglePoint.y);
 
@@ -776,8 +779,8 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateButtonsAfterComponentResize()
     {
-        updateActiveFileToThisCommitBtn.setBounds(100,550,180,27);
-        updateProjectToThisCommitBtn.setBounds(100,600,180,27);
+        updateActiveFileToThisCommitBtn.setBounds(100,550,100,27);
+        updateProjectToThisCommitBtn.setBounds(100,600,120,27);
     }
 
     private void updateTimeLineDrawing()
@@ -860,15 +863,16 @@ public class Commits3DView extends JComponent implements ComponentListener
             int MAX_UI_HEIGHT = 200;
 
             float v =  metricResults.getMetricValue(metricType);
-            v = v*MAX_UI_HEIGHT/metricResults.getMetricMaxValue(metricType);
-            if(v<30)
-                someRandomMetric1Color = Color.GREEN;
-            else if(v<70)
-                someRandomMetric1Color = Color.YELLOW;
+            float vPercent = v*100/metricResults.getMetricMaxValue(metricType);
+            if(vPercent<45)
+                someRandomMetric1Color = SHARP_GREEN;
+            else if(vPercent<80)
+                someRandomMetric1Color = SHARP_YELLOW;
             else
-                someRandomMetric1Color = Color.RED;
-            v = MyRenderer.getInstance().render3DTo2D((int)v,depth+MyRenderer.getInstance().BASE_DEPTH);
-            p.y -= (int)v;
+                someRandomMetric1Color = SHARP_RED;
+            float lengthAtWindow = vPercent * MAX_UI_HEIGHT / 100;
+            lengthAtWindow = MyRenderer.getInstance().render3DTo2D((int)lengthAtWindow,depth+MyRenderer.getInstance().BASE_DEPTH);
+            p.y -= (int)lengthAtWindow;
             return p;
         }
 

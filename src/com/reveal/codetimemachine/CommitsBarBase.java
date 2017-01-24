@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public abstract class CommitsBarBase
 {
     final int INVALID = -1;
+    final Color BG_COLOR = Color.DARK_GRAY; //new Color(236,236,236): Default Light gray
 
     protected TTMSingleFileView TTMWindow = null;
 

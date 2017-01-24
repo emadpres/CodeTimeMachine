@@ -48,8 +48,7 @@ public class CommitsBarTreeView extends CommitsBarBase implements TreeSelectionL
         /////
         DefaultMutableTreeNode treeViewRoot = SwingTreeHelper.convertCommitsDataTree_to_SwingTreeNode(commitsDataTree);
         treeComponent = new Tree(treeViewRoot);
-        Color APP_BG_COLOR = new Color(236,236,236);
-        treeComponent.setBackground(APP_BG_COLOR);
+        treeComponent.setBackground(BG_COLOR);
         treeComponent.setRootVisible(false);
         treeComponent.setShowsRootHandles(false); // Toplevel 'Root' or (if Root invisible) it's children don't need + to expand)
         treeComponent.putClientProperty("JTree.lineStyle", "Angled"); //"Angled" (default) 	"Horizontal" 	"None"

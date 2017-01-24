@@ -59,6 +59,7 @@ public class TTMSingleFileView
             calculateMetricResults(m);
         ////////////////////////////////////////////////////
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
+        thisComponent.setBackground(Color.DARK_GRAY);
         ////////////
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         setupUI_createTopLayer(commits);

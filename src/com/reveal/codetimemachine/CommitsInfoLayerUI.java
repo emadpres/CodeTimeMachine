@@ -63,7 +63,7 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
 
         // Background
         g2d.setColor(bgColor);
-        g2d.fillRect(0,0,w, h-10 /*10: because the scroll-handle is not black, so if we make it black it's not pretty*/);
+        g2d.fillRect(0,0,w, h-0 /*10: because the scroll-handle is not black, so if we make it black it's not pretty*/);
 
         // Text 1-2-3-4
         ////////1
