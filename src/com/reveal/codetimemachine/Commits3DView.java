@@ -67,7 +67,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     int lastBorderHighlighted_VirtualWindowIndex =-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
     final Color MOUSE_HOVERED_COLOR = Color.WHITE;
-    final boolean COLORFUL = false;
+    final boolean COLORFUL_MODE_FOR_DEBUGGING = false;
     final int TOP_BAR_HEIGHT = 25;
     final int VIRTUAL_WINDOW_BORDER_TICKNESS = 1;
     final int TIME_LINE_WIDTH = 3;
@@ -847,7 +847,7 @@ public class Commits3DView extends JComponent implements ComponentListener
             this.commitWrapper = commitWrapper;
             this.metricResults = metricResults;
 
-            if(COLORFUL || CommonValues.IS_UI_IN_DEBUGGING_MODE)
+            if(COLORFUL_MODE_FOR_DEBUGGING || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
                 Random rand = new Random();
                 float r = rand.nextFloat();

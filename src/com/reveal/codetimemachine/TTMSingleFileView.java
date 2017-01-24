@@ -59,7 +59,7 @@ public class TTMSingleFileView
             calculateMetricResults(m);
         ////////////////////////////////////////////////////
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
-        thisComponent.setBackground(Color.DARK_GRAY);
+        thisComponent.setBackground(CommonValues.APP_COLOR_THEME);
         ////////////
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         setupUI_createTopLayer(commits);
@@ -489,8 +489,12 @@ public class TTMSingleFileView
 
     private void setupLayout()
     {
+        //General Rule: GroupLayour respect setPreferredSize() and also Min/Max
+        // So if you really SetMin(X) it doesn't allow to be less than X.
+        // If two things both try to not be shrinked because of SetMin(X), the below .addComponent(X,#1,#2,#3) affect.
+        // For examle check CommitsTimeline and CommitsTimelineZoomable versus the CommitsBar (scroll container and its inner layout).
         groupLayout.setHorizontalGroup( groupLayout.createSequentialGroup()
-                .addComponent(commitsBar.getComponent())
+                .addComponent(commitsBar.getComponent(),GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addGroup( groupLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                         .addComponent(codeHistory3DView)
                         .addComponent(topLayer)

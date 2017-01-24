@@ -105,9 +105,11 @@ public class CommitsTimeline extends JComponent
 
         Dimension componentDimension = new Dimension(newWidth, scrollComponent.getSize().height);
         setSize(componentDimension);
-        setPreferredSize(componentDimension);
         setMaximumSize(componentDimension);
-        setMinimumSize(componentDimension);
+        //setMinimumSize(componentDimension);
+        setPreferredSize(componentDimension);
+
+
 
 
         line_effectiveBegin = new Point( (newWidth-line_effectiveLength)/2, getSize().height/2);
@@ -294,7 +296,8 @@ public class CommitsTimeline extends JComponent
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        g.setColor(new Color(50, 50, 50));
+        //g.setColor(new Color(50, 50, 50));
+        g.setColor(CommonValues.APP_COLOR_THEME);
         g.fillRect(0, 0, getSize().width, getSize().height);
 
         if (CommonValues.IS_UI_IN_DEBUGGING_MODE)

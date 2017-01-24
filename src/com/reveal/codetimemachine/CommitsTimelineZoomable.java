@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class CommitsTimelineZoomable extends JBScrollPane
 {
-    private static final Dimension COMPONENT_SIZE = new Dimension(1000, 110); // Area which dedicated to this component in UI
+    private static final Dimension COMPONENT_SIZE = new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - CommitsBarBase.COMMITS_BAR_VIEW_DIMENSION.width, 110); // Area which dedicated to this component in UI
     CommitsTimeline t = null;
     int zoomScale = 1;
 
@@ -17,9 +17,12 @@ public class CommitsTimelineZoomable extends JBScrollPane
     public CommitsTimelineZoomable(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow)
     {
         setSize(COMPONENT_SIZE);
-        setPreferredSize(COMPONENT_SIZE);
         setMaximumSize(COMPONENT_SIZE); //The internal component should obviously be bigger than this Dimension for scrolling
-        setMinimumSize(COMPONENT_SIZE);
+        // Commenting next two lines => if whole toolwindow width decrease, this component decrease itself
+        // and doesn't force to decrease the CommitList view (as we want to keep the CommitList width fixed)
+        // Important: the inner component of ScrollView should also follow this guideline
+        //setPreferredSize(COMPONENT_SIZE);
+        //setMinimumSize(COMPONENT_SIZE);
 
 
         t = new CommitsTimeline(commitList, TTMWindow, this); //After setting scrollComponent size
@@ -33,7 +36,7 @@ public class CommitsTimelineZoomable extends JBScrollPane
     {
         setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         getHorizontalScrollBar().setPreferredSize(new Dimension(0, 8));
-        getHorizontalScrollBar().setForeground(Color.RED);
+        getHorizontalScrollBar().setForeground(Color.BLACK); //default WHITE
         //getHorizontalScrollBar().setOpaque(true);
 
         setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_NEVER);

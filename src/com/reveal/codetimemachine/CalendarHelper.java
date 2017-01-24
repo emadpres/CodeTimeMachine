@@ -7,6 +7,7 @@ import java.util.Date;
 
 public class CalendarHelper
 {
+    // General Rule: whenever use cal.get(Calendar.MONTH/HOUR/MIN) which return INT, check to add leading 0 for one digit.
     static String convertDateToString_(Date d)
     {
         // Create an instance of SimpleDateFormat used for formatting
@@ -27,7 +28,8 @@ public class CalendarHelper
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
 
-        String result = cal.get(Calendar.YEAR)+" "+convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+cal.get(Calendar.DAY_OF_MONTH);
+        int m = cal.get(Calendar.DAY_OF_MONTH);
+        String result = cal.get(Calendar.YEAR)+" "+convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+((m<10)?("0"+m):m);
         return result;
     }
 
@@ -36,8 +38,11 @@ public class CalendarHelper
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
 
-        String result = cal.get(Calendar.YEAR)+" "+convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+cal.get(Calendar.DAY_OF_MONTH)
-                        +"   "+cal.get(Calendar.HOUR_OF_DAY)+":"+cal.get(Calendar.MINUTE);
+        int m = cal.get(Calendar.DAY_OF_MONTH);
+        int h = cal.get(Calendar.HOUR_OF_DAY);
+        int min = cal.get(Calendar.MINUTE);
+        String result = cal.get(Calendar.YEAR)+" "+convertMonthIndexToShortName(cal.get(Calendar.MONTH))+" "+((m<10)?("0"+m):m)
+                        +"   "+((h<10)?("0"+h):h)+":"+((min<10)?("0"+min):min);
         return result;
     }
 

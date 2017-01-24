@@ -34,7 +34,7 @@ public class CommitsBar extends CommitsBarBase
         this.direction = direction;
 
         thisComponentWithoutScroll = createEmptyJComponent();
-        commitsBarView = addScrollToThisComponent(thisComponentWithoutScroll);
+        addScrollToThisComponent(thisComponentWithoutScroll);
 
         //setupToolTipSetting();
     }
@@ -73,7 +73,9 @@ public class CommitsBar extends CommitsBarBase
 
         activateCommitUIItemIfExists(TTMWindow.activeCommit_cIndex);
 
-        Dimension newDimension  = new Dimension(COMMITS_BAR_VIEW_DIMENSION.width-40/*scroll bar of parent scrollContainer*/, contentHeight);
+        // The dimension of Scroll::innerPanel is as below
+        //
+        Dimension newDimension  = new Dimension(COMMITS_BAR_VIEW_DIMENSION.width-30/*because of the scroll-handle of parent scrollContainer*/, contentHeight);
         thisComponentWithoutScroll.setPreferredSize(newDimension);
         thisComponentWithoutScroll.setSize(newDimension);
         thisComponentWithoutScroll.setMaximumSize(newDimension);
@@ -103,19 +105,19 @@ public class CommitsBar extends CommitsBarBase
         ToolTipManager.sharedInstance().setInitialDelay(0); // it needs ToolTipManager.sharedInstance().setEnabled(true); before
     }
 
-    private JBScrollPane addScrollToThisComponent(JPanel internalComponent)
+    private void addScrollToThisComponent(JPanel internalComponent)
     {
-        JBScrollPane s = new JBScrollPane();
-        s.setViewportView(internalComponent);
-        s.setBorder(null);
+        commitsBarView = new JBScrollPane();
+        commitsBarView.setViewportView(internalComponent);
+        commitsBarView.setBorder(null);
+        commitsBarView.setPreferredSize(COMMITS_BAR_VIEW_DIMENSION); //The Parent GroupLayout respects the .setPreferredSize()
+        commitsBarView.getHorizontalScrollBar().setForeground(Color.BLACK); //default WHITE
 
         // BoxLayout cannot handle different alignments: see http://download.oracle.com/javase/tutorial/uiswing/layout/box.html
         //commitsBarView.setMaximumSize(new Dimension(commitItems[0].getComponent().getSize().width+10, contentHeight+10));
-        s.setMaximumSize(COMMITS_BAR_VIEW_DIMENSION);
+        commitsBarView.setMaximumSize(COMMITS_BAR_VIEW_DIMENSION);
 
-        s.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        return s;
+        commitsBarView.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
     }
 
     private void creatingCommitsUIItem(ArrayList<CommitWrapper> commitList)
@@ -255,7 +257,7 @@ public class CommitsBar extends CommitsBarBase
     private class NewDayItem
     {
         ///////// ++ Constant ++ /////////
-        private final Dimension COMPONENT_SIZE = new Dimension( 140,30 );
+        private final Dimension COMPONENT_SIZE = new Dimension( COMMITS_BAR_VIEW_DIMENSION.width,30 );
         private final Dimension MARKERT_NORMAL_SIZE = new Dimension( 10,5 );//
         private final Color NORMAL_COLOR = Color.WHITE;
         ///////// ++ Constant -- /////////
@@ -281,7 +283,7 @@ public class CommitsBar extends CommitsBarBase
                 myComponent.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
 
-            myComponent.setBackground(Color.DARK_GRAY);
+            myComponent.setBackground(CommonValues.APP_COLOR_THEME);
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.YELLOW);
 
@@ -485,7 +487,7 @@ public class CommitsBar extends CommitsBarBase
                                 + "</body>" + "</html>";
             //myComponent.setToolTipText(tooltipText);
 
-            myComponent.setBackground(Color.DARK_GRAY);
+            myComponent.setBackground(CommonValues.APP_COLOR_THEME);
             if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
                 myComponent.setBackground(Color.GREEN);
 
