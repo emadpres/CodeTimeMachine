@@ -112,8 +112,6 @@ public class Commits3DView extends JComponent implements ComponentListener
         setupUI_virtualWindows();
         initialVirtualWindowsVisualizations(); // initial 3D Variables
 
-        componentResized(null); //to "updateTopIdealLayerBoundary()" and then "updateEverythingAfterComponentResize()"
-
         playing3DAnimationTimer = new Timer(TICK_INTERVAL_MS, new ActionListener(){
             public void actionPerformed(ActionEvent e)
             {
@@ -133,6 +131,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         addMouseWheelListener();
         addMouseMotionListener();
         addMouseListener();
+
+        loadMainEditorWindowContent();
+
+        componentResized(null); //to "updateTopIdealLayerBoundary()" and then "updateEverythingAfterComponentResize()"
     }
 
     private void preCalculateAuthorsColor()
@@ -369,7 +371,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void setupUI_mainEditorWindow()
     {
         //mainEditorWindow = new CustomEditorTextField(FileDocumentManager.getInstance().getDocument(virtualFile), project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"),true,false);
-        mainEditorWindow = new CustomEditorTextField("",project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
+        mainEditorWindow = new CustomEditorTextField("Loading...",project, FileTypeRegistry.getInstance().getFileTypeByExtension("java"));
         //mainEditorWindow.setBounds(100,100,100,50); //TEST
         mainEditorWindow.setEnabled(true);
         mainEditorWindow.setOneLineMode(false);
@@ -447,7 +449,6 @@ public class Commits3DView extends JComponent implements ComponentListener
         centerOfThisComponent = new Point(size.width/2, size.height/2);
         //////
         updateTopIdealLayerBoundary();
-        //virtualEditorWindows[topLayerIndex].setHighlightBorder(); // Why here?
     }
 
     @Override
@@ -740,7 +741,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         });
 
         updateMainEditorWindowBoundaryAfterComponentResize();
-        mainEditorWindow.setCaretPosition(0); // TODO: Doesn't Work
+        //mainEditorWindow.getEditor().getScrollingModel().scroll(0,0);
         mainEditorWindow.setVisible(true);
 
     }
@@ -1138,6 +1139,11 @@ public class Commits3DView extends JComponent implements ComponentListener
             editor.setVerticalScrollbarVisible(true);
             editor.setHorizontalScrollbarVisible(true);
             addLineNumberToEditor(editor);
+
+            //Because this editor initialized after all of my initialization (and after an unknown delay)
+            // So we can't call loadMainEditorWindowContent() before and we have to do it here
+            loadMainEditorWindowContent();
+
             return editor;
         }
 
@@ -1156,6 +1162,10 @@ public class Commits3DView extends JComponent implements ComponentListener
             editor.reinitSettings();
         }
 
+        public void _setVisible(boolean newStatus)
+        {
+            super.setVisible(newStatus);
+        }
         public void setVisible(boolean newStatus)
         {
             // if we use normal behaviour of setVisible(), while visibility is False the KeyBinding doesn't work strangely.
