@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="org.eclipse.core.runtime.compatibility.auth-3.2.200.v20100517">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/lib/eclipse/org.eclipse.core.runtime.compatibility.auth-3.2.200.v20100517.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

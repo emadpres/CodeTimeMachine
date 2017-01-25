@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="org.eclipse.core.contenttype-3.4.100">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/lib/eclipse/org.eclipse.core.contenttype-3.4.100.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

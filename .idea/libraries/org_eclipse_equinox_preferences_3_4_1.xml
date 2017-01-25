@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="org.eclipse.equinox.preferences-3.4.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/lib/eclipse/org.eclipse.equinox.preferences-3.4.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
