@@ -226,8 +226,8 @@ public class TTMSingleFileView
                 }
 
                 String commitId = commits.get(activeCommit_cIndex).getCommitID();
-                GitHelper instance = GitHelper.getInstance(project);
-                String allFiles = instance.getListOfChangedFile(commitId);
+                GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
+                String allFiles = gitHelper.getListOfChangedFile(commitId);
                 Messages.showInfoMessage(project, allFiles, DIALOG_TITLE);
             }
         });
@@ -246,8 +246,8 @@ public class TTMSingleFileView
                 }
 
                 String commitId = commits.get(activeCommit_cIndex).getCommitID();
-                GitHelper instance = GitHelper.getInstance(project);
-                String allFiles = instance.getListOfAllFile(commitId);
+                GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
+                String allFiles = gitHelper.getListOfAllFile(commitId);
                 Messages.showInfoMessage(project, allFiles, DIALOG_TITLE);
             }
         });

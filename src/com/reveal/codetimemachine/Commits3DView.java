@@ -84,7 +84,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
 
-    JButton updateActiveFileToThisCommitBtn = null, updateProjectToThisCommitBtn = null;
+    final String CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT="Checkout Latest Commit";
+    JButton updateActiveFileToThisCommitBtn = null, updateProjectToThisCommitBtn = null, checkoutProjectLatestCommitBtn = null;
 
     Metrics.Types currentMetric = null;
 
@@ -172,6 +173,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         setupUI_buttons_updateActiveFile();
         setupUI_buttons_updateProjectFile();
+        setupUI_buttons_checkoutProjectLatestCommit();
     }
 
     private void setupUI_buttons_updateActiveFile()
@@ -202,7 +204,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     }
                 });
 
-                CodeTimeMachineAction.toolWindow.hide(null);
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
             }
         });
         updateActiveFileToThisCommitBtn.setFocusable(false);
@@ -220,23 +222,55 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                GitHelper instance = GitHelper.getInstance(project);
+                GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
                 if(commitList.get(TTMWindow.activeCommit_cIndex).isFake() == true)
                 {
-                    // It means that: TTMWindow.activeCommit_cIndex = 0 , Plus, we have uncommited changes
-                    instance.checkoutCommitID(commitList.get(1).getCommitID());
-                    instance.applyStash();
+                    // Fact: It means that: TTMWindow.activeCommit_cIndex is 0 , Plus, we have uncommitted changes
+                    // Since  we are rebasing whole project using below code is wrong:
+                    // gitHelper.checkoutCommitID(commitList.get(1).getCommitID());
+                    // Instead we should use:
+                    // gitHelper.checkoutLatestCommit();
+                    // because by reverting project to index 1, we may revert projects to a lot older than latest commits
+                    // ( assume in scenario that last commit of this file done very earlier
+
+                    gitHelper.checkoutLatestCommit();
+                    gitHelper.applyStash();
                 }
                 else
-                    instance.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
+                    gitHelper.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
 
-                CodeTimeMachineAction.toolWindow.hide(null);
+                checkoutProjectLatestCommitBtn.setText("*"+CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
             }
         });
         updateProjectToThisCommitBtn.setFocusable(false);
         updateProjectToThisCommitBtn.setForeground(SHARP_RED);
         updateProjectToThisCommitBtn.setOpaque(false);
         this.add(updateProjectToThisCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
+    }
+
+    private void setupUI_buttons_checkoutProjectLatestCommit()
+    {
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTimeProject.png"));
+
+        checkoutProjectLatestCommitBtn = new JButton(CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT,icon);
+        checkoutProjectLatestCommitBtn.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
+                gitHelper.checkoutLatestCommit();
+                //gitHelper.applyStash(); not including uncommitted-changes !
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
+
+                checkoutProjectLatestCommitBtn.setText(CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
+            }
+        });
+        checkoutProjectLatestCommitBtn.setFocusable(false);
+        checkoutProjectLatestCommitBtn.setForeground(SHARP_YELLOW);
+        checkoutProjectLatestCommitBtn.setOpaque(false);
+        this.add(checkoutProjectLatestCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
     }
 
     private void addMouseMotionListener()
@@ -782,6 +816,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         updateActiveFileToThisCommitBtn.setBounds(100,550,100,27);
         updateProjectToThisCommitBtn.setBounds(100,600,120,27);
+        checkoutProjectLatestCommitBtn.setBounds(100,500,120,27);
     }
 
     private void updateTimeLineDrawing()

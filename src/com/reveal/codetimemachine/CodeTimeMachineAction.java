@@ -18,8 +18,6 @@ import com.intellij.openapi.vcs.history.VcsHistorySession;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowAnchor;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
 import com.intellij.ui.content.Content;
 
@@ -35,25 +33,29 @@ public class CodeTimeMachineAction extends AnAction
     final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
     final int MAX_NUM_OF_FILES = 2;
     //////////////////////////////
-    Project project = null;
-    static ToolWindow toolWindow = null;
+
+    static Map<Project, CodeTimeMachine> runningCodeTimeMachines = new HashMap<>();
+
 
     @Override
     public void actionPerformed(AnActionEvent e)
     {
-        project = e.getProject();
-        GitHelper.getInstance(project).backupAllChangesAsStash();
+        // We should not save project "project = e.getProject()" as this Action-class member,
+        // because this function call for different open IDE windows
+        // and thus for different project. So assume this function like a static function and don't keep project specific
+        // data. For solving this problem we have a high-level Code Time Machine concept which is stored as a map
+        // of <projoect, CodeTimeMachine>.
+        Project project = e.getProject();
 
-        //findAllPackages(e);
 
         VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
         if(chosenVirtualFiles[0] == null)
-            chosenVirtualFiles = selectVirtualFiles_manually();
+            chosenVirtualFiles = selectVirtualFiles_manually(project);
 
         if(chosenVirtualFiles == null || chosenVirtualFiles.length==0 || chosenVirtualFiles.length > MAX_NUM_OF_FILES)
             return;
 
-        VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider();
+        VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider(project);
         ArrayList<List<VcsFileRevision>> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles);
 
         ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[2];
@@ -121,8 +123,7 @@ public class CodeTimeMachineAction extends AnAction
         }
 
 
-        if(toolWindow == null)
-            toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine      ", false, ToolWindowAnchor.RIGHT);
+        ToolWindow toolWindow = getCodeTimeMachine(project).getToolWindow();
 
 
         String contentName = "";
@@ -141,6 +142,23 @@ public class CodeTimeMachineAction extends AnAction
 
 
 
+    }
+
+
+    static public CodeTimeMachine getCodeTimeMachine(Project project)
+    {
+        CodeTimeMachine ctm = null;
+
+        if(runningCodeTimeMachines.containsKey(project)==false)
+        {
+            ctm = new CodeTimeMachine(project);
+            runningCodeTimeMachines.put(project, ctm);
+        }
+        else
+        {
+            ctm = runningCodeTimeMachines.get(project);
+        }
+        return ctm;
     }
 
     public void findAllPackages(AnActionEvent e) {
@@ -194,7 +212,7 @@ public class CodeTimeMachineAction extends AnAction
         return _fileRevisionsLists;
     }
 
-    private VcsHistoryProvider getGitHistoryProvider()
+    private VcsHistoryProvider getGitHistoryProvider(Project project)
     {
         ProjectLevelVcsManager mgr = ProjectLevelVcsManager.getInstance( project );
         AbstractVcs[] allActiveVcss = mgr.getAllActiveVcss();
@@ -202,7 +220,7 @@ public class CodeTimeMachineAction extends AnAction
         return myGit.getVcsHistoryProvider();
     }
 
-    public VirtualFile[] selectVirtualFiles_manually()
+    public VirtualFile[] selectVirtualFiles_manually(Project project)
     {
         VirtualFile[] chosenVirtualFiles = null;
 

@@ -6,26 +6,25 @@ import com.intellij.execution.OutputListener;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GitHelper
 {
-    private static GitHelper instance = null;
     private boolean isChangesStashed = false;
+    private final String INVALID = "INVALID";
+    private String latestCommitID = INVALID;
 
     Project project = null;
     StringBuilder outContent = null;
     StringBuilder errContent = null;
 
-    private GitHelper(Project project)
+    public GitHelper(Project project)
     {
         this.project = project;
-    }
-
-    static public GitHelper getInstance(Project project)
-    {
-        if(instance == null)
-            instance = new GitHelper(project);
-        return instance;
+        this.backupAllChangesAsStash();
     }
 
     private GeneralCommandLine createGitCommandLine()
@@ -96,15 +95,38 @@ public class GitHelper
             return errContent.toString();
     }
 
-    public void backupAllChangesAsStash()
+    private void backupAllChangesAsStash()
     {
         clearStashList();
         stashChanges();
         applyStash(); //now we have changes not only on Stash List, but also in working dir
+        /////////////////
+        saveLatestCommitID();
+    }
+
+    private void saveLatestCommitID()
+    {
+        GeneralCommandLine myCommandLine = createGitCommandLine();
+        myCommandLine.addParameter("rev-parse");
+        myCommandLine.addParameter("HEAD");
+        String s = myCommandLine.toString(); //Debugging
+
+        OSProcessHandler handler = createNewCommandLineProcessor(myCommandLine);
+        handler.startNotify();
+        handler.waitFor();
+        int exitCode = handler.getProcess().exitValue();
+        if(exitCode==0)
+        {
+            latestCommitID = outContent.toString();
+            latestCommitID = latestCommitID.substring(0, latestCommitID.length()-2); //remove last character '\n'
+        }
+        else
+            latestCommitID = INVALID;
     }
 
     public String stashChanges()
     {
+        // This command, save changes as stash and clear them from working dir
         GeneralCommandLine myCommandLine = createGitCommandLine();
         myCommandLine.addParameter("stash");
         String s = myCommandLine.toString(); //Debugging
@@ -162,6 +184,13 @@ public class GitHelper
         }
         else
             return errContent.toString();
+    }
+
+    public String checkoutLatestCommit()
+    {
+        if(latestCommitID==INVALID) return "";
+
+        return checkoutCommitID(latestCommitID);
     }
 
     public String checkoutCommitID(String commitIdAsTime)
