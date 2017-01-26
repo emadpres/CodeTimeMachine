@@ -1,5 +1,7 @@
 package com.reveal.codetimemachine;
 
+import com.github.mauricioaniche.ck.CK;
+import com.github.mauricioaniche.ck.CKReport;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
@@ -46,6 +48,20 @@ public class CodeTimeMachineAction extends AnAction
         // data. For solving this problem we have a high-level Code Time Machine concept which is stored as a map
         // of <projoect, CodeTimeMachine>.
         Project project = e.getProject();
+
+        String content="";
+        try
+        {
+            byte[] bytes = e.getData(LangDataKeys.PSI_FILE).getVirtualFile().contentsToByteArray();
+            content = new String(bytes);
+        } catch (IOException e1)
+        {
+            e1.printStackTrace();
+        }
+        CK ck = new CK();
+
+        //CKReport ckReport = ck.calculateOnSingleFile(content);
+        CKReport ckReport2 = ck.calculate("/Users/emadpres/IdeaProjects/Gomo/src");
 
 
         VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
