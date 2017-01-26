@@ -1,5 +1,9 @@
 package com.reveal.codetimemachine;
 
+import com.github.mauricioaniche.ck.CK;
+import com.github.mauricioaniche.ck.CKNumber;
+import com.github.mauricioaniche.ck.CKReport;
+import com.google.common.io.Files;
 import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;
 import com.intellij.diff.contents.DocumentContent;
@@ -7,15 +11,17 @@ import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.reveal.metrics.Metrics;
-import com.reveal.metrics.MetricCalculationResults;
-import com.reveal.metrics.MetricCalculatorBase;
+import com.reveal.metrics.*;
 
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 ///////// ++ UI ++ /////////
@@ -31,7 +37,9 @@ public class TTMSingleFileView
     private Project project;
     private VirtualFile virtualFile = null;
     private ArrayList<CommitWrapper> commits = null;
-    private ArrayList<MetricCalculationResults> metricResults = null;
+    //private ArrayList<MetricCalculationResults> metricResults = null;
+    private MaxCKNumber maxCKNumber = null;
+    private ArrayList<CKNumber> fullMetricsReport = null;
     ////////////////////////////// UI
     Commits3DView codeHistory3DView = null;
     CommitsBarBase commitsBar = null;
@@ -44,7 +52,7 @@ public class TTMSingleFileView
     int INVALID = -1;
     int firstMarked_cIndex = INVALID, secondMarked_cIndex = INVALID;
 
-    Metrics.Types currentMetricType = Metrics.Types.values()[0];
+    CKNumberReader.MetricTypes currentMetricType = CKNumberReader.MetricTypes.values()[0];
 
     TTMSingleFileView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commits)
     {
@@ -52,11 +60,12 @@ public class TTMSingleFileView
         this.virtualFile = virtualFile;
         this.commits = commits;
         /////
-        metricResults = new ArrayList<>(commits.size());
+        calculateMetricsValue();
+        /*metricResults = new ArrayList<>(commits.size());
         for(int i=0;i<commits.size(); i++)
             metricResults.add(new MetricCalculationResults(commits.get(i).getFileContent(), virtualFile.getName()));
         for( Metrics.Types m: Metrics.Types.values() )
-            calculateMetricResults(m);
+            calculateMetricResults(m);*/
         ////////////////////////////////////////////////////
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
         thisComponent.setBackground(CommonValues.APP_COLOR_THEME);
@@ -76,7 +85,54 @@ public class TTMSingleFileView
         addKeyBindings();
     }
 
-    private void calculateMetricResults(Metrics.Types m)
+    public void calculateMetricsValue()
+    {
+        CK ck = new CK();
+        File file = null;
+        BufferedWriter bw = null;
+        this.maxCKNumber = new MaxCKNumber("","","");
+        this.fullMetricsReport = new ArrayList<>(commits.size());
+        ArrayList<File> dirNames = new ArrayList<>(commits.size());
+
+        try
+        {
+
+            for(int j=0; j< commits.size(); j++)
+            {
+                File tempDir = Files.createTempDir();
+                tempDir.deleteOnExit();
+                dirNames.add(tempDir);
+                //String dirPath = tempDir.getAbsolutePath();
+
+                file = File.createTempFile("temp",".java",dirNames.get(j));
+                file.deleteOnExit();
+                //String path = file.getAbsolutePath();
+
+                CommitWrapper commitWrapper = commits.get(j);
+                bw = new BufferedWriter(new FileWriter(file));
+                bw.write(commitWrapper.getFileContent());
+                bw.close();
+            }
+
+            for(int j=0; j< commits.size(); j++)
+            {
+
+                CKReport report = ck.calculate(dirNames.get(j).getAbsolutePath());
+                CKNumber result = report.all().iterator().next();
+                fullMetricsReport.add(result);
+            }
+
+            for(CKNumber res : fullMetricsReport)
+                maxCKNumber.updateMaxIfNeeded(res);
+
+        } catch (IOException e1)
+        {
+            e1.printStackTrace();
+        }
+        //long end2 = System.nanoTime() - start; //in case of bench mark
+    }
+
+    /*private void calculateMetricResults(Metrics.Types m)
     {
         if(m == Metrics.Types.NONE) return;
 
@@ -84,7 +140,7 @@ public class TTMSingleFileView
         for(int i=0;i<metricResults.size(); i++)
                 calculator.calculate(metricResults.get(i));
         int highestValue = metricResults.get(0).getMetricMaxValue(m);
-    }
+    }*/
 
     private void addKeyBindings()
     {
@@ -370,7 +426,7 @@ public class TTMSingleFileView
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                Metrics.Types[] allMetrics = Metrics.Types.values();
+                CKNumberReader.MetricTypes[] allMetrics = CKNumberReader.MetricTypes.values();
                 int nextMetricIndex = (currentMetricType.ordinal()+1)%allMetrics.length;
                 currentMetricType = allMetrics[nextMetricIndex];
                 codeHistory3DView.setMetricCalculator(currentMetricType);
@@ -428,7 +484,7 @@ public class TTMSingleFileView
 
     private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
     {
-         return new Commits3DView(project, virtualFiles, commits, metricResults, this);
+         return new Commits3DView(project, virtualFiles, commits, fullMetricsReport, maxCKNumber, this);
     }
 
     private CommitsBarBase setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)

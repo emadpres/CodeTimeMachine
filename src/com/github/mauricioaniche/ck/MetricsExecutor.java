@@ -33,7 +33,8 @@ public class MetricsExecutor extends FileASTRequestor {
 		try {
 			ClassInfo info = new ClassInfo();
 			cu.accept(info);
-			if(info.getClassName()==null) return;
+			if(info.getClassName()==null)
+				info.setClassName("whateverClass");
 		
 			result = new CKNumber(sourceFilePath, info.getClassName(), info.getType());
 			

@@ -9,22 +9,22 @@ public class CKNumber {
 	private String className;
 	private String type;
 
-	private int dit;
-	private int noc;
-	private int wmc;
-	private int cbo;
-	private int lcom;
-	private int rfc;
-	private int nom;
-	private int nopm;
-	private int nosm;
+	protected int dit;
+	protected int noc;
+	protected int wmc;
+	protected int cbo;
+	protected int lcom;
+	protected int rfc;
+	protected int nom;
+	protected int nopm;
+	protected int nosm;
 
-	private int nof;
-	private int nopf;
-	private int nosf;
+	protected int nof;
+	protected int nopf;
+	protected int nosf;
 
-	private int nosi;
-	private int loc;
+	protected int nosi;
+	protected int loc;
 	
 	private Map<String, Integer> specific;
 	private boolean error; 

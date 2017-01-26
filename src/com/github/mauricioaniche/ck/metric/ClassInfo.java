@@ -27,7 +27,9 @@ public class ClassInfo extends ASTVisitor {
 		getFullClassName(node.resolveBinding());
 		return false;
 	}
-	
+	public void setClassName(String fakeClassName) {
+		className = fakeClassName;
+	}
 	public String getClassName() {
 		return className;
 	}

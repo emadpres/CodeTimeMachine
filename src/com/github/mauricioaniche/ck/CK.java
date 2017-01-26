@@ -65,22 +65,22 @@ public class CK {
 		
 		MetricsExecutor storage = new MetricsExecutor(() -> metrics());
 		
-		List<List<String>> partitions = Lists.partition(Arrays.asList(javaFiles), MAX_AT_ONCE);
-		log.info("Max partition size: " + MAX_AT_ONCE + ", total partitions=" + partitions.size());
+		//List<List<String>> partitions = Lists.partition(Arrays.asList(javaFiles), MAX_AT_ONCE);
+		//log.info("Max partition size: " + MAX_AT_ONCE + ", total partitions=" + partitions.size());
 
-		for(List<String> partition : partitions) {
+		//for(List<String> partition : partitions) {
 			log.info("Next partition");
 			ASTParser parser = ASTParser.newParser(AST.JLS8);
 			
 			parser.setResolveBindings(true);
-			parser.setBindingsRecovery(true);
+			parser.setBindingsRecovery(false);
 			
 			Map<?, ?> options = JavaCore.getOptions();
 			JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
 			parser.setCompilerOptions(options);
 			parser.setEnvironment(null, srcDirs, null, true);
-			parser.createASTs(partition.toArray(new String[partition.size()]), null, new String[0], storage, null);
-		}
+			parser.createASTs(javaFiles, null, new String[0], storage, null);
+		//}
 		
 		log.info("Finished parsing");
 		return storage.getReport();

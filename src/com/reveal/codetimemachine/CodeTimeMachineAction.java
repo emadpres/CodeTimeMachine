@@ -1,5 +1,9 @@
 package com.reveal.codetimemachine;
 
+import com.github.mauricioaniche.ck.CK;
+import com.github.mauricioaniche.ck.CKNumber;
+import com.github.mauricioaniche.ck.CKReport;
+import com.google.common.io.Files;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
@@ -20,9 +24,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.psi.*;
 import com.intellij.ui.content.Content;
+import com.reveal.metrics.MaxCKNumber;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -139,10 +147,8 @@ public class CodeTimeMachineAction extends AnAction
         toolWindow.getContentManager().addContent(ttm_content);
         toolWindow.setAutoHide(false);
         toolWindow.setAvailable(true,null);
-
-
-
     }
+
 
 
     static public CodeTimeMachine getCodeTimeMachine(Project project)

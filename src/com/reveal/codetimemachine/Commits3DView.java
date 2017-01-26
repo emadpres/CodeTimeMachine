@@ -1,5 +1,6 @@
 package com.reveal.codetimemachine;
 
+import com.github.mauricioaniche.ck.CKNumber;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Document;
@@ -12,6 +13,8 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import com.reveal.metrics.CKNumberReader;
+import com.reveal.metrics.MaxCKNumber;
 import com.reveal.metrics.Metrics;
 import com.reveal.metrics.MetricCalculationResults;
 import org.jetbrains.annotations.NotNull;
@@ -80,18 +83,19 @@ public class Commits3DView extends JComponent implements ComponentListener
     Project project;
     CustomEditorTextField mainEditorWindow = null;
     ArrayList<CommitWrapper> commitList = null;
-    ArrayList<MetricCalculationResults> metricResultsList = null;
+    //ArrayList<MetricCalculationResults> metricResultsList = null;
+    private MaxCKNumber maxCKNumber = null;
+    ArrayList<CKNumber> fullMetricsReport = null;
     VirtualEditorWindow[] virtualEditorWindows = null;
     VirtualFile virtualFile;
 
     final String CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT="Checkout Latest Commit";
     JButton updateActiveFileToThisCommitBtn = null, updateProjectToThisCommitBtn = null, checkoutProjectLatestCommitBtn = null;
 
-    Metrics.Types currentMetric = null;
+    CKNumberReader.MetricTypes currentMetric = null;
 
 
-
-    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList, ArrayList<MetricCalculationResults> metricResultsList, TTMSingleFileView TTMWindow)
+    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList,ArrayList<CKNumber> fullMetricsReport, MaxCKNumber maxCKNumber, TTMSingleFileView TTMWindow)
     {
         super();
 
@@ -99,8 +103,9 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.project = project;
         this.virtualFile = virtualFile;
         this.commitList = commitList;
-        this.currentMetric = Metrics.Types.NONE;
-        this.metricResultsList = metricResultsList;
+        this.currentMetric = CKNumberReader.MetricTypes.NONE;
+        this.maxCKNumber = maxCKNumber;
+        this.fullMetricsReport = fullMetricsReport;
 
         this.setLayout(null);
         this.addComponentListener(this); // Check class definition as : ".. implements ComponentListener"
@@ -419,7 +424,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         for (int i = 0; i< commitList.size() ; i++)
         {
-            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i), metricResultsList.get(i));
+            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i), fullMetricsReport.get(i));
         }
     }
 
@@ -513,8 +518,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         {
             draw_tipOfTimeLine(g2d);
 
-            if(currentMetric != Metrics.Types.NONE)
-                g.drawString(currentMetric.toString(), startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
+            if(currentMetric != CKNumberReader.MetricTypes.NONE)
+                g.drawString( CKNumberReader.MetricTypes_StringRepresntation[currentMetric.ordinal()], startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
 
             for(int i = commitList.size()-1; i>=0; i--)
             {
@@ -578,7 +583,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
 
                 ////////////////////////  (Right) Chart
-                if(currentMetric== Metrics.Types.NONE) continue;
+                if(currentMetric== CKNumberReader.MetricTypes.NONE) continue;
 
                 Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
                 Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentMetric);
@@ -847,7 +852,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
-    public void setMetricCalculator(Metrics.Types newMetric)
+    public void setMetricCalculator(CKNumberReader.MetricTypes newMetric)
     {
         currentMetric = newMetric;
         repaint(); //TODO: why not render() only ? or why not both?
@@ -860,7 +865,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         int cIndex =-1;
         private Color someRandomMetric1Color = Color.BLACK;
         CommitWrapper commitWrapper = null;
-        MetricCalculationResults metricResults = null;
+        CKNumber metricsResult = null;
 
         boolean isVisible=true;
         float depth;
@@ -877,11 +882,11 @@ public class Commits3DView extends JComponent implements ComponentListener
         //private Point chartValuePoint= new Point(0,0);
         ////////
 
-        public VirtualEditorWindow(int index, CommitWrapper commitWrapper, MetricCalculationResults metricResults)
+        public VirtualEditorWindow(int index, CommitWrapper commitWrapper, CKNumber metricsResult)
         {
             this.cIndex = index;
             this.commitWrapper = commitWrapper;
-            this.metricResults = metricResults;
+            this.metricsResult = metricsResult;
 
             if(COLORFUL_MODE_FOR_DEBUGGING || CommonValues.IS_UI_IN_DEBUGGING_MODE)
             {
@@ -893,13 +898,13 @@ public class Commits3DView extends JComponent implements ComponentListener
             }
         }
 
-        public Point getChartValuePoint(Metrics.Types metricType)
+        public Point getChartValuePoint(CKNumberReader.MetricTypes metricType)
         {
             Point p = (Point) chartTimeLinePoint.clone();
             int MAX_UI_HEIGHT = 200;
 
-            float v =  metricResults.getMetricValue(metricType);
-            float vPercent = v*100/metricResults.getMetricMaxValue(metricType);
+            float v = CKNumberReader.getInstance().getValueForMetric(metricsResult,metricType);
+            float vPercent = v*100/CKNumberReader.getInstance().getValueForMetric(maxCKNumber,metricType);
             if(vPercent<45)
                 someRandomMetric1Color = SHARP_GREEN;
             else if(vPercent<80)
