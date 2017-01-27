@@ -18,6 +18,7 @@ import com.reveal.metrics.MaxCKNumber;
 import com.reveal.metrics.Metrics;
 import com.reveal.metrics.MetricCalculationResults;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -47,7 +48,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     static final Color SHARP_GREEN = new Color(91,205,120);
     static final Color SHARP_YELLOW = new Color(216,190,103);
     final Color ACTIVE_WINDOW_COLOR = SHARP_RED;
-
+    final Dimension TIME_LINE_POINT_SIZE = new Dimension(10, 4);
+    final int MAX_CHART_BAR_HEIGHT_PX = 200;
     ///////// ++ UI: 3D Prespective Variables ++ /////////
     final float LAYER_DISTANCE = 0.2f;
     final float LAYERS_DEPTH_ERROR_THRESHOLD = LAYER_DISTANCE/10;
@@ -57,7 +59,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final float EPSILON = 0.01f;
     Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
     Point startPointOfChartTimeLine = new Point(0,0);
-
+    boolean alwaysShowMetricsValue = false;
     Point currentMousePoint = new Point(-100,-100);
     Map<String, Color> authorsColor = null;
     boolean isAuthorsColorMode = false;
@@ -95,7 +97,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     CKNumberReader.MetricTypes currentMetric = null;
 
 
-    public Commits3DView( Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList,ArrayList<CKNumber> fullMetricsReport, MaxCKNumber maxCKNumber, TTMSingleFileView TTMWindow)
+    public Commits3DView(Project project, VirtualFile virtualFile, ArrayList<CommitWrapper> commitList, @Nullable ArrayList<CKNumber> fullMetricsReport,@Nullable MaxCKNumber maxCKNumber, TTMSingleFileView TTMWindow)
     {
         super();
 
@@ -141,6 +143,18 @@ public class Commits3DView extends JComponent implements ComponentListener
         loadMainEditorWindowContent();
 
         componentResized(null); //to "updateTopIdealLayerBoundary()" and then "updateEverythingAfterComponentResize()"
+    }
+
+    public void setMetricsData(ArrayList<CKNumber> fullMetricsReport, MaxCKNumber maxCKNumber)
+    {
+        this.fullMetricsReport = fullMetricsReport;
+        this.maxCKNumber = maxCKNumber;
+        for(int i=0; i<commitList.size(); i++)
+        {
+            virtualEditorWindows[i].metricsResult = fullMetricsReport.get(i);
+            virtualEditorWindows[i].doRenderCalculation_chart();
+        }
+        repaint();
     }
 
     private void preCalculateAuthorsColor()
@@ -340,6 +354,12 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
+    public void toggleAlwaysShowMetricsValue()
+    {
+        alwaysShowMetricsValue = !alwaysShowMetricsValue;
+        repaint();
+    }
+
     private void addMouseListener()
     {
         this.addMouseListener(new MouseListener()
@@ -422,9 +442,14 @@ public class Commits3DView extends JComponent implements ComponentListener
     {
         virtualEditorWindows = new VirtualEditorWindow[commitList.size()];
 
+        CKNumber ckNumber;
         for (int i = 0; i< commitList.size() ; i++)
         {
-            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i), fullMetricsReport.get(i));
+            if(fullMetricsReport != null)
+                ckNumber = fullMetricsReport.get(i);
+            else
+                ckNumber = null;
+            virtualEditorWindows[i] = new VirtualEditorWindow(i /*not cIndex*/, commitList.get(i), ckNumber);
         }
     }
 
@@ -502,147 +527,189 @@ public class Commits3DView extends JComponent implements ComponentListener
     @Override
     protected void paintComponent(Graphics g)
     {
-        Graphics2D g2d = (Graphics2D) g;
-
         super.paintComponent(g);
 
         if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
-        {
-            g.setColor(new Color(0,255,255));
-            g.fillRect(0, 0,getSize().width,getSize().height);
-            g.setColor(new Color(255,0,0));
-            g.fillOval(getSize().width/2-10, getSize().height/2-10,20,20); //Show Center
-        }
+            draw_debuggingInformation(g);
+
 
         if(virtualEditorWindows!=null)
+            draw_main(g);
+    }
+
+    private void draw_main(Graphics g)
+    {
+
+        for(int i = commitList.size()-1; i>=0; i--)
         {
-            draw_tipOfTimeLine(g2d);
+            if (virtualEditorWindows[i].isVisible == false) continue;
+            virtualEditorWindows[i].draw(g);
+        }
 
-            if(currentMetric != CKNumberReader.MetricTypes.NONE)
-                g.drawString( CKNumberReader.MetricTypes_StringRepresntation[currentMetric.ordinal()], startPointOfChartTimeLine.x+10, startPointOfChartTimeLine.y - 30);
+        Graphics2D g2d = (Graphics2D) g;
+        //////// STROKE
+        g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
 
-            for(int i = commitList.size()-1; i>=0; i--)
-            {
-                if(virtualEditorWindows[i].isVisible==false) continue;
-//                if(i==targetLayerIndex)
-//                {
-//                    if(mainEditorWindow!=null)
-//                    {
-//                        mainEditorWindow.paint(g);
-//                        mainEditorWindow.paintComponents(g);
-//                    }
-//                }
-                virtualEditorWindows[i].draw(g);
+        draw_leftTimeline(g2d);
+        draw_rightChart(g2d);
+    }
 
+    private void draw_rightChart(Graphics2D g2d)
+    {
 
+        if(currentMetric == CKNumberReader.MetricTypes.NONE)
+            return;
 
-                ////////////////////////  (Left) TimeLine
-                Point timeLineMyPoint = virtualEditorWindows[i].timeLinePoint;
-                // TimeLine Lines
-                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
-                {
-                    // I'm not the first one in for-loop (OR) I'm not the oldest point of time
-                    Point timeLineNextPoint = virtualEditorWindows[i+1].timeLinePoint; // Line between myPoint and NextPoint (=Newer commit = Closer to Camera)
-                    g.setColor(new Color(TIMELINE_COLOR.getRed(),TIMELINE_COLOR.getGreen(),TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
-                    g.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timeLineNextPoint.x, timeLineNextPoint.y);
-                }
-                // TimeLine Point
-                if(i==targetLayerIndex)
-                    g.setColor(new Color(ACTIVE_WINDOW_COLOR.getRed(),ACTIVE_WINDOW_COLOR.getGreen(),ACTIVE_WINDOW_COLOR.getBlue(),virtualEditorWindows[i].alpha));
-                else if(i == currentMouseHoveredIndex)
-                    //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
-                    g.setColor(MOUSE_HOVERED_COLOR);
-                else
-                    g.setColor(new Color(TIMELINE_COLOR.getRed(),TIMELINE_COLOR.getGreen(),TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
-                g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
-
-                final Dimension TIME_LINE_POINT_SIZE = new Dimension(10,4);
+        Point chartNamePos = (Point) startPointOfChartTimeLine.clone();
+        chartNamePos.x += 40;
+        chartNamePos.y -= 30;
 
 
-                g.fillRoundRect(timeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, timeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
-                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
+        ///// STROKE
+        g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
 
+        // Chart: Metric name
+        g2d.setFont(new Font("Arial", Font.BOLD, 11));
+        g2d.setColor(Color.LIGHT_GRAY);
+        g2d.drawString(CKNumberReader.MetricTypes_StringRepresntation[currentMetric.ordinal()], chartNamePos.x, chartNamePos.y);
 
-
-                if(i==targetLayerIndex)
-                {
-                    g2d.setFont(new Font("Arial",Font.BOLD, 11));
-                    g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 70, timeLineMyPoint.y + 2);
-                    g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x +10, timeLineMyPoint.y + 2);
-                }
-                else if(i==commitList.size()-1 || !CalendarHelper.isSameDay(commitList.get(i).getDate(),commitList.get(i+1).getDate()) )
-                {
-                    g2d.setFont(new Font("Arial",Font.BOLD, 10));
-                    g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 68, timeLineMyPoint.y + 2);
-                }
-                else
-                {
-                    g2d.setFont(new Font("Arial",Font.ITALIC, 9));
-                    g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x - 30, timeLineMyPoint.y + 2);
-                }
-
-
-                ////////////////////////  (Right) Chart
-                if(currentMetric== CKNumberReader.MetricTypes.NONE) continue;
-
-                Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
-                Point chartTimeLineMyValuePoint = virtualEditorWindows[i].getChartValuePoint(currentMetric);
-
-
-                // Chart TimeLine Lines
-                if(i != commitList.size()-1 && virtualEditorWindows[i+1].isVisible)
-                {
-                    // I'm not the first one in for-loop (OR) I'm not the oldest point of time
-                    Point chartTimeLineNextPoint = virtualEditorWindows[i+1].chartTimeLinePoint;
-                    Point chartTimeLineNextValuePoint = virtualEditorWindows[i+1].getChartValuePoint(currentMetric);
-
-                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH/3));
-                    g.setColor(new Color(CHART_TIMELINE_COLOR.getRed(),CHART_TIMELINE_COLOR.getGreen(),CHART_TIMELINE_COLOR.getBlue(),virtualEditorWindows[i].alpha));
-                    //g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
-
-                    g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
-                    if(i != currentMouseHoveredIndex && i+1!=currentMouseHoveredIndex)
-                        g.setColor(new Color(CHART_LINE_COLOR.getRed(), CHART_LINE_COLOR.getGreen(), CHART_LINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
-                    else
-                        //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
-                    g.setColor(MOUSE_HOVERED_COLOR);
-                    g.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
-                }
-
-
-                Color metricC = virtualEditorWindows[i].getMetricColor();
-
-
-                // ChartTimeLine Point
-                if(i == currentMouseHoveredIndex)
-                    //g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
-                    g.setColor(MOUSE_HOVERED_COLOR);
-                else
-                    g.setColor(new Color(metricC.getRed(),metricC.getGreen(),metricC.getBlue(),virtualEditorWindows[i].alpha));
-                g.fillRoundRect(chartTimeLineMyPoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyPoint.y-TIME_LINE_POINT_SIZE.height/2,
-                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height,1,1);
-
-                //Vertical Value Line
-                g.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
-
-                // Point on Value Height
-                g.fillOval(chartTimeLineMyValuePoint.x-TIME_LINE_POINT_SIZE.width/2, chartTimeLineMyValuePoint.y-TIME_LINE_POINT_SIZE.height/2,
-                        TIME_LINE_POINT_SIZE.width,TIME_LINE_POINT_SIZE.height);
-            }
+        // Show "calculating logo" when metrics values are not available
+        if(fullMetricsReport == null)
+        {
+            ImageIcon waitIcon = new ImageIcon(getClass().getResource("/images/wait.gif"));
+            waitIcon.paintIcon(this,g2d,startPointOfChartTimeLine.x+30, startPointOfChartTimeLine.y-70);
+            return;
         }
 
 
-        //g.drawString(debuggingText,20,20);
+        for(int i = commitList.size()-1/*Oldest Commit*/; i>=0/*Most recent Commit*/; i--)
+        {
+            if (virtualEditorWindows[i].isVisible == false) continue;
+
+
+            Point chartTimeLineMyPoint = virtualEditorWindows[i].chartTimeLinePoint;
+            Point chartTimeLineMyValuePoint = virtualEditorWindows[i].chartValuePoint;
+
+
+            // Chart: Timeline segments
+//            if (i != commitList.size() - 1 && virtualEditorWindows[i + 1].isVisible)
+//            {
+//                Point chartTimeLineNextPoint = virtualEditorWindows[i + 1].chartTimeLinePoint;
+//                g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH / 3));
+//                g2d.setColor(new Color(CHART_TIMELINE_COLOR.getRed(), CHART_TIMELINE_COLOR.getGreen(), CHART_TIMELINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+//                g2d.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineNextPoint.x, chartTimeLineNextPoint.y);
+//            }
+
+            // Chart: Segments Connecting ValuePoint ( = "Chart" Segments)
+            if (i != commitList.size() - 1 && virtualEditorWindows[i + 1].isVisible)
+            {
+                Point chartTimeLineNextValuePoint = virtualEditorWindows[i + 1].chartValuePoint;
+
+                if (i != currentMouseHoveredIndex && i + 1 != currentMouseHoveredIndex)
+                    g2d.setColor(new Color(CHART_LINE_COLOR.getRed(), CHART_LINE_COLOR.getGreen(), CHART_LINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                else
+                    g2d.setColor(MOUSE_HOVERED_COLOR); // No transparency. otherwise: g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COwLOR.getBlue(), virtualEditorWindows[i].alpha));
+                g2d.drawLine(chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y, chartTimeLineNextValuePoint.x, chartTimeLineNextValuePoint.y);
+            }
+
+
+            /////// Color Chart Bars
+            Color metricC = virtualEditorWindows[i].getMetricColor();
+            if (i == currentMouseHoveredIndex)
+                g2d.setColor(MOUSE_HOVERED_COLOR);// No transparency. otherwise: g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+            else
+                g2d.setColor(new Color(metricC.getRed(), metricC.getGreen(), metricC.getBlue(), virtualEditorWindows[i].alpha));
+
+            // Chart: Vertical bar - Bottom point
+            g2d.fillRoundRect(chartTimeLineMyPoint.x - TIME_LINE_POINT_SIZE.width / 2, chartTimeLineMyPoint.y - TIME_LINE_POINT_SIZE.height / 2,
+                    TIME_LINE_POINT_SIZE.width, TIME_LINE_POINT_SIZE.height, 1, 1);
+
+            // Chart: Vertical bar
+            g2d.drawLine(chartTimeLineMyPoint.x, chartTimeLineMyPoint.y, chartTimeLineMyValuePoint.x, chartTimeLineMyValuePoint.y);
+
+            // Chart: Vertical bar - Top point
+            g2d.fillOval(chartTimeLineMyValuePoint.x - TIME_LINE_POINT_SIZE.width / 2, chartTimeLineMyValuePoint.y - TIME_LINE_POINT_SIZE.height / 2,
+                    TIME_LINE_POINT_SIZE.width, TIME_LINE_POINT_SIZE.height);
+
+            // Chart: numerical metric value
+            if (alwaysShowMetricsValue || i == currentMouseHoveredIndex)
+            {
+                int value = virtualEditorWindows[i].value;
+                g2d.drawString(Integer.toString(value),chartTimeLineMyValuePoint.x,chartTimeLineMyValuePoint.y-20);
+            }
+
+        }
+    }
+
+    private void draw_leftTimeline(Graphics2D g2d)
+    {
+        draw_tipOfTimeLine(g2d);
+
+        for(int i = commitList.size()-1/*Oldest Commit*/;  i>=0/*Most recent Commit*/; i--)
+        {
+            if (virtualEditorWindows[i].isVisible == false) continue;
+
+            Point timeLineMyPoint = virtualEditorWindows[i].timeLinePoint;
+
+            // Timeline: Segment
+            if (i != commitList.size() - 1 && virtualEditorWindows[i + 1].isVisible)
+            {
+                Point timelineErlierPoint = virtualEditorWindows[i + 1].timeLinePoint; // Line between myPoint and NextPoint (Closer to Camera)
+                g2d.setColor(new Color(TIMELINE_COLOR.getRed(), TIMELINE_COLOR.getGreen(), TIMELINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+                g2d.drawLine(timeLineMyPoint.x, timeLineMyPoint.y, timelineErlierPoint.x, timelineErlierPoint.y);
+            }
+
+            /////// COLOR:  Point & Date
+            if (i == targetLayerIndex)
+                g2d.setColor(new Color(ACTIVE_WINDOW_COLOR.getRed(), ACTIVE_WINDOW_COLOR.getGreen(), ACTIVE_WINDOW_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+            else if (i == currentMouseHoveredIndex)
+                g2d.setColor(MOUSE_HOVERED_COLOR); // No transparency. otherwise: g.setColor(new Color(MOUSE_HOVERED_COLOR.getRed(), MOUSE_HOVERED_COLOR.getGreen(), MOUSE_HOVERED_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+            else
+                g2d.setColor(new Color(TIMELINE_COLOR.getRed(), TIMELINE_COLOR.getGreen(), TIMELINE_COLOR.getBlue(), virtualEditorWindows[i].alpha));
+
+
+            // Timeline: Point
+            g2d.fillRoundRect(timeLineMyPoint.x - TIME_LINE_POINT_SIZE.width / 2, timeLineMyPoint.y - TIME_LINE_POINT_SIZE.height / 2,
+                    TIME_LINE_POINT_SIZE.width, TIME_LINE_POINT_SIZE.height, 1, 1);
+
+            // Timeline: Date next to point
+            if (i == targetLayerIndex)
+            {
+                g2d.setFont(new Font("Arial", Font.BOLD, 11));
+                g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 70, timeLineMyPoint.y + 2);
+                g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x + 15, timeLineMyPoint.y + 2);
+            }
+            else if (i == commitList.size() - 1 || !CalendarHelper.isSameDay(commitList.get(i).getDate(), commitList.get(i + 1).getDate()))
+            {
+                g2d.setFont(new Font("Arial", Font.BOLD, 10));
+                g2d.drawString(CalendarHelper.convertDateToStringYMD(commitList.get(i).getDate()), timeLineMyPoint.x - 68, timeLineMyPoint.y + 2);
+            }
+            else
+            {
+                g2d.setFont(new Font("Arial", Font.ITALIC, 9));
+                g2d.drawString(CalendarHelper.convertDateToTime(commitList.get(i).getDate()), timeLineMyPoint.x - 30, timeLineMyPoint.y + 2);
+            }
+
+        }
+    }
+
+    private void draw_debuggingInformation(Graphics g)
+    {
+        g.setColor(new Color(0,255,255));
+        g.fillRect(0, 0,getSize().width,getSize().height);
+        g.setColor(new Color(255,0,0));
+        g.fillOval(getSize().width/2-10, getSize().height/2-10,20,20); //Show Center
     }
 
     private void draw_tipOfTimeLine(Graphics2D g2d)
     {
-        //// Line from tip of TimeLine (ACTUALLY: startPoint+0.1depth) of time line to Triangle
         g2d.setColor(TIMELINE_COLOR);
         g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
+
+        //// Line from tip of TimeLine (ACTUALLY: startPoint+0.1depth) of time line to Triangle
         g2d.drawLine(startPointOfTimeLine.x, startPointOfTimeLine.y, trianglePoint.x, trianglePoint.y);
 
-        //// Triangle
+        //// Tip Triangle
         int[] triangleVertices_x = new int[]{trianglePoint.x-6,trianglePoint.x-14,trianglePoint.x+4};
         int[] triangleVertices_y = new int[]{trianglePoint.y-2,trianglePoint.y+10,trianglePoint.y+3};
         g2d.fillPolygon(triangleVertices_x, triangleVertices_y, 3);
@@ -852,10 +919,10 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
-    public void setMetricCalculator(CKNumberReader.MetricTypes newMetric)
+    public void displatMetric(CKNumberReader.MetricTypes newMetric)
     {
         currentMetric = newMetric;
-        repaint(); //TODO: why not render() only ? or why not both?
+        render();
     }
 
     protected class VirtualEditorWindow
@@ -878,7 +945,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         boolean isTopBarTempColorValid = false;
         int xCenterDefault, yCenterDefault, wDefault, hDefault;
         Rectangle drawingRect = new Rectangle(0, 0, 0, 0);
-        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0);
+        Point timeLinePoint = new Point(0,0), chartTimeLinePoint = new Point(0,0), chartValuePoint = new Point(0,0);;
+        int value = 0;
         //private Point chartValuePoint= new Point(0,0);
         ////////
 
@@ -896,25 +964,6 @@ public class Commits3DView extends JComponent implements ComponentListener
                 float b = rand.nextFloat();
                 this.myColor = new Color(r,g,b);
             }
-        }
-
-        public Point getChartValuePoint(CKNumberReader.MetricTypes metricType)
-        {
-            Point p = (Point) chartTimeLinePoint.clone();
-            int MAX_UI_HEIGHT = 200;
-
-            float v = CKNumberReader.getInstance().getValueForMetric(metricsResult,metricType);
-            float vPercent = v*100/CKNumberReader.getInstance().getValueForMetric(maxCKNumber,metricType);
-            if(vPercent<45)
-                someRandomMetric1Color = SHARP_GREEN;
-            else if(vPercent<80)
-                someRandomMetric1Color = SHARP_YELLOW;
-            else
-                someRandomMetric1Color = SHARP_RED;
-            float lengthAtWindow = vPercent * MAX_UI_HEIGHT / 100;
-            lengthAtWindow = MyRenderer.getInstance().render3DTo2D((int)lengthAtWindow,depth+MyRenderer.getInstance().BASE_DEPTH);
-            p.y -= (int)lengthAtWindow;
-            return p;
         }
 
         // this function should be called on each size change
@@ -964,8 +1013,6 @@ public class Commits3DView extends JComponent implements ComponentListener
 
         public void doRenderCalculation()
         {
-            float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
-
             //////////////// Alpha
             int newAlpha;
             if(depth>0)
@@ -984,27 +1031,63 @@ public class Commits3DView extends JComponent implements ComponentListener
                 return;
             }
 
-
-
             //////////////// Size
+            float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
             drawingRect.width = MyRenderer.getInstance().render3DTo2D(wDefault, renderingDepth);
             drawingRect.height = MyRenderer.getInstance().render3DTo2D(hDefault, renderingDepth);
             Point p = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             drawingRect.x = p.x - drawingRect.width/2;
             drawingRect.y = p.y - drawingRect.height/2;
 
-
             ////////////// TimeLine
+            doRenderCalculation_timeline();
+
+            ///////////// Chart TimeLine
+            doRenderCalculation_chart();
+
+        }
+
+        private void doRenderCalculation_timeline()
+        {
+            float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
+
             // We also could use "MyRenderer.getInstance().calculateTimeLinePoint()". But it's worthless and that function
             // is designed for external user ( check 'updateTimeLineDrawing()' function)
             timeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             timeLinePoint.x = drawingRect.x - (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
             timeLinePoint.y = drawingRect.y;
+        }
 
-            ///////////// Chart TimeLine
+        public void doRenderCalculation_chart()
+        {
+            float renderingDepth = depth + MyRenderer.getInstance().BASE_DEPTH;
+
             chartTimeLinePoint = MyRenderer.getInstance().render3DTo2D(xCenterDefault, yCenterDefault, renderingDepth);
             chartTimeLinePoint.x = drawingRect.x + drawingRect.width + (int)(MyRenderer.getInstance().TIME_LINE_GAP*drawingRect.width);
             chartTimeLinePoint.y = drawingRect.y;
+
+            chartValuePoint = (Point) chartTimeLinePoint.clone();
+            value = 0;
+
+            if(currentMetric != CKNumberReader.MetricTypes.NONE && metricsResult!=null)
+            {
+                value = CKNumberReader.getInstance().getValueForMetric(metricsResult,currentMetric);
+                int max = CKNumberReader.getInstance().getValueForMetric(maxCKNumber,currentMetric);
+                float valuePercent = 0;
+                if(max!=0)
+                    valuePercent = value*100.0f/max;
+
+                if(valuePercent<45)
+                    someRandomMetric1Color = SHARP_GREEN;
+                else if(valuePercent<80)
+                    someRandomMetric1Color = SHARP_YELLOW;
+                else
+                    someRandomMetric1Color = SHARP_RED;
+
+                float lengthAtWindow = valuePercent * MAX_CHART_BAR_HEIGHT_PX / 100;
+                lengthAtWindow = MyRenderer.getInstance().render3DTo2D((int)lengthAtWindow,depth+MyRenderer.getInstance().BASE_DEPTH);
+                chartValuePoint.y -= (int)lengthAtWindow; //Moving up
+            }
         }
 
         public void setHighlightBorder(boolean newStatus, Color newColor)

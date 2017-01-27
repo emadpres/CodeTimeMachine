@@ -60,19 +60,15 @@ public class TTMSingleFileView
         this.virtualFile = virtualFile;
         this.commits = commits;
         /////
-        calculateMetricsValue();
-        /*metricResults = new ArrayList<>(commits.size());
-        for(int i=0;i<commits.size(); i++)
-            metricResults.add(new MetricCalculationResults(commits.get(i).getFileContent(), virtualFile.getName()));
-        for( Metrics.Types m: Metrics.Types.values() )
-            calculateMetricResults(m);*/
+        this.fullMetricsReport = null;
+        this.maxCKNumber = null;
         ////////////////////////////////////////////////////
         groupLayout = createEmptyJComponentAndReturnGroupLayout();
         thisComponent.setBackground(CommonValues.APP_COLOR_THEME);
         ////////////
         commitsBar = setupUI_createCommitsBar(virtualFile, commits);
         setupUI_createTopLayer(commits);
-        codeHistory3DView = setupUI_createCodeHistory3DView(project, virtualFile, commits);
+        codeHistory3DView = new Commits3DView(project, this.virtualFile, commits, null/*will be initilized by Commits3DHistory::setMetricsData(..)*/, null, this);
         ////////////
         setupLayout();
 
@@ -83,6 +79,18 @@ public class TTMSingleFileView
         //codeHistory3DView.showCommit(0, true); //It's initially at 0
 
         addKeyBindings();
+
+        ///////
+        Runnable r = new Runnable() {
+            public void run() {
+                calculateMetricsValue();
+                codeHistory3DView.setMetricsData(TTMSingleFileView.this.fullMetricsReport,
+                        TTMSingleFileView.this.maxCKNumber);
+            }
+        };
+        // Run it after creating Commits3DHistory. Otherwise the "Commits3DHistory::setMetricsData(..)" may be called
+        // in the middle of initialization and cause bugs.
+        new Thread(r).start();
     }
 
     public void calculateMetricsValue()
@@ -164,8 +172,18 @@ public class TTMSingleFileView
         final String SHOW_ALL_FILES = "showAllFiles";
         final String SHOW_CHANGED_FILES = "showChangedFiles";
         final String TOGGLE_AUTHORS_COLOR_MODE = "toggleAuthorsColorMode";
+        final String TOGGLE_ALWAYS_SHOW_METRICS_VALUE = "toggleAlwaysShowMetricsValue";
 
 
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_V,0), TOGGLE_ALWAYS_SHOW_METRICS_VALUE);
+        thisComponent.getActionMap().put(TOGGLE_ALWAYS_SHOW_METRICS_VALUE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                codeHistory3DView.toggleAlwaysShowMetricsValue();
+            }
+        });
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_T,0), TOGGLE_AUTHORS_COLOR_MODE);
         thisComponent.getActionMap().put(TOGGLE_AUTHORS_COLOR_MODE, new AbstractAction()
@@ -429,7 +447,7 @@ public class TTMSingleFileView
                 CKNumberReader.MetricTypes[] allMetrics = CKNumberReader.MetricTypes.values();
                 int nextMetricIndex = (currentMetricType.ordinal()+1)%allMetrics.length;
                 currentMetricType = allMetrics[nextMetricIndex];
-                codeHistory3DView.setMetricCalculator(currentMetricType);
+                codeHistory3DView.displatMetric(currentMetricType);
             }
         });
 
@@ -480,11 +498,6 @@ public class TTMSingleFileView
         ///////////
 
         showDiff(latestsCommittedRevision, cIndex);
-    }
-
-    private Commits3DView setupUI_createCodeHistory3DView(Project project, VirtualFile virtualFiles, ArrayList<CommitWrapper> commits)
-    {
-         return new Commits3DView(project, virtualFiles, commits, fullMetricsReport, maxCKNumber, this);
     }
 
     private CommitsBarBase setupUI_createCommitsBar(VirtualFile virtualFiles, ArrayList<CommitWrapper> commitsList)
