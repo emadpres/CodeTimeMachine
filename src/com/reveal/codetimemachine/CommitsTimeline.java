@@ -18,7 +18,7 @@ public class CommitsTimeline extends JComponent
     //General Notice: "First commits" means "Oldest commit" and is the last element in commits list.
 
     TTMSingleFileView TTMWindow = null;
-    JBScrollPane scrollComponent = null;
+    CommitsTimelineZoomable scrollComponent = null;
 
     int FIRST_MONTH_OF_YEAR_INDEX = 0;
 
@@ -46,7 +46,7 @@ public class CommitsTimeline extends JComponent
 
     final int INITIAL_ACTIVE_RANGE_MONTH = 3;
 
-    public CommitsTimeline(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow, JBScrollPane scrollComponent)
+    public CommitsTimeline(ArrayList<CommitWrapper> commitList, TTMSingleFileView TTMWindow, CommitsTimelineZoomable scrollComponent)
     {
         super();
         this.commitList = commitList;
@@ -103,14 +103,11 @@ public class CommitsTimeline extends JComponent
 
         int newWidth = line_effectiveLength+50 ;
 
-        Dimension componentDimension = new Dimension(newWidth, scrollComponent.getSize().height);
+        Dimension componentDimension = new Dimension(newWidth, (int)scrollComponent.getSize().getHeight());
         setSize(componentDimension);
         setMaximumSize(componentDimension);
         //setMinimumSize(componentDimension);
         setPreferredSize(componentDimension);
-
-
-
 
         line_effectiveBegin = new Point( (newWidth-line_effectiveLength)/2, getSize().height/2);
     }
@@ -296,15 +293,12 @@ public class CommitsTimeline extends JComponent
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        //g.setColor(new Color(50, 50, 50));
         g.setColor(CommonValues.APP_COLOR_THEME);
-        g.fillRect(0, 0, getSize().width, getSize().height);
+        g.fillRect(0, 0, getSize().width, getSize().height); //Before 'draw_helpingInformation()'
 
-        if (CommonValues.IS_UI_IN_DEBUGGING_MODE)
-        {
-            g.setColor(new Color(255, 0, 0));
-            g.fillOval(getSize().width / 2 - 10, getSize().height / 2 - 10, 20, 20); //Show Center
-        }
+        if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
+            draw_helpingInformation(g2d);
+
 
         g2d.drawString("Date:" +getYearForSector(activeRange_startIndex)+"/"+getMonthForSector(activeRange_startIndex) +"--"
                                     +getYearForSector(activeRange_endIndex)+"/"+getMonthForSector(activeRange_endIndex),50,10);
@@ -314,10 +308,6 @@ public class CommitsTimeline extends JComponent
         draw_highlightActiveMonth(g2d);
         draw_commits3DActiveRange(g2d);
         draw_commits(g2d);
-
-
-        if(CommonValues.IS_UI_IN_DEBUGGING_MODE)
-            draw_helpingInformation(g2d);
     }
 
     private void draw_commits3DActiveRange(Graphics g)
@@ -330,14 +320,19 @@ public class CommitsTimeline extends JComponent
 
     private void draw_helpingInformation(Graphics2D g2d)
     {
+        g2d.setColor(Color.blue);
+        g2d.fillRect(0,0,getWidth(), getHeight());
         g2d.setColor(Color.RED);
         g2d.fillOval(5,5,10,10);
         g2d.setColor(Color.GREEN);
         g2d.fillOval(5,getSize().height-15,10,10);
         g2d.setColor(Color.YELLOW);
         g2d.fillOval(getSize().width-15,5,10,10);
-        g2d.setColor(Color.BLUE);
+        g2d.setColor(Color.RED);
         g2d.fillOval(getSize().width-15,getSize().height-15,10,10);
+        // Center
+        g2d.setColor(new Color(255, 0, 0));
+        g2d.fillOval(getSize().width / 2 - 10, getSize().height / 2 - 10, 20, 20); //Show Center
     }
 
     private void draw_commits(Graphics2D g2d)

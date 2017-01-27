@@ -211,6 +211,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                         document.setText(commitList.get(TTMWindow.activeCommit_cIndex).getFileContent());
                     }
                 };
+
                 ApplicationManager.getApplication().invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -223,7 +224,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     }
                 });
 
-                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
+                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
             }
         });
         updateActiveFileToThisCommitBtn.setFocusable(false);
@@ -259,7 +260,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     gitHelper.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
 
                 checkoutProjectLatestCommitBtn.setText("*"+CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
-                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
+                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
             }
         });
         updateProjectToThisCommitBtn.setFocusable(false);
@@ -281,9 +282,10 @@ public class Commits3DView extends JComponent implements ComponentListener
                 GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
                 gitHelper.checkoutLatestCommit();
                 //gitHelper.applyStash(); not including uncommitted-changes !
-                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
+                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
 
                 checkoutProjectLatestCommitBtn.setText(CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
+
             }
         });
         checkoutProjectLatestCommitBtn.setFocusable(false);
@@ -560,17 +562,15 @@ public class Commits3DView extends JComponent implements ComponentListener
         if(currentMetric == CKNumberReader.MetricTypes.NONE)
             return;
 
-        Point chartNamePos = (Point) startPointOfChartTimeLine.clone();
-        chartNamePos.x += 40;
-        chartNamePos.y -= 30;
-
-
         ///// STROKE
         g2d.setStroke(new BasicStroke(TIME_LINE_WIDTH));
 
         // Chart: Metric name
         g2d.setFont(new Font("Arial", Font.BOLD, 11));
         g2d.setColor(Color.LIGHT_GRAY);
+        Point chartNamePos = (Point) startPointOfChartTimeLine.clone();
+        chartNamePos.x -= 25;
+        chartNamePos.y += 30;
         g2d.drawString(CKNumberReader.MetricTypes_StringRepresntation[currentMetric.ordinal()], chartNamePos.x, chartNamePos.y);
 
         // Show "calculating logo" when metrics values are not available
@@ -867,7 +867,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateTopIdealLayerBoundary()
     {
         final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
-        topIdealLayerDimention = new Dimension(  getSize().width/2, 2*getSize().height/3 /*2/3 of whole vertical*/);
+        topIdealLayerDimention = new Dimension(  3*getSize().width/5, 2*getSize().height/3 /*2/3 of whole vertical*/);
         topIdealLayerDimention.width *= MyRenderer.getInstance().BASE_DEPTH; // because Renderer divide it by BASE_DEPTH
         topIdealLayerDimention.height *= MyRenderer.getInstance().BASE_DEPTH;
 
@@ -886,9 +886,9 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateButtonsAfterComponentResize()
     {
-        updateActiveFileToThisCommitBtn.setBounds(100,550,100,27);
-        updateProjectToThisCommitBtn.setBounds(100,600,120,27);
-        checkoutProjectLatestCommitBtn.setBounds(100,500,120,27);
+        updateActiveFileToThisCommitBtn.setBounds(80,550,100,27);
+        updateProjectToThisCommitBtn.setBounds(80,600,120,27);
+        checkoutProjectLatestCommitBtn.setBounds(80,500,120,27);
     }
 
     private void updateTimeLineDrawing()

@@ -12,7 +12,7 @@ public abstract class CommitsBarBase
 
     protected TTMSingleFileView TTMWindow = null;
 
-    public static Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(140/*including scroll-handle of CommitsView scrollContainer*/, Toolkit.getDefaultToolkit().getScreenSize().height);
+    public static Dimension COMMITS_BAR_VIEW_DIMENSION = new Dimension(140/*including scroll-handle of CommitsView scrollContainer*/, Toolkit.getDefaultToolkit().getScreenSize().height*3/*It doesn't matter how big you set, the layout automatically fit the whole window correctly*/);
 
     protected ArrayList<CommitWrapper> commitList /* Most recent commit at 0*/;
 

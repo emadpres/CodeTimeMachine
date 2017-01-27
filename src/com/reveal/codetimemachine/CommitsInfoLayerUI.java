@@ -108,9 +108,11 @@ public class CommitsInfoLayerUI extends LayerUI<JComponent> implements ImageObse
 
         g2d.setFont(BOLDER_FONT);
         g2d.setColor(TEXT_COLOR);
-        int n =  DrawingHelper.howManyCharFitsInWidth(g2d,s2, w-k-LEFT_MARGIN-RIGHT_MARGIN);
+        int maxAvailableWidth = w-k-LEFT_MARGIN-RIGHT_MARGIN;
+        if(maxAvailableWidth<5/*something near 0*/) return;// otherwise the below 'n-3' would be negative and cause bugs.
+        int n =  DrawingHelper.howManyCharFitsInWidth(g2d,s2, maxAvailableWidth);
         if(n<s2.length())
-            s2 = s2.substring(0,n-3/*for ...*/)+"...";
+            s2 = s2.substring(0,n-3/*for "..."*/)+"...";
         g2d.drawString(s2,LEFT_TEXT_MARGIN,Y);
 
 
