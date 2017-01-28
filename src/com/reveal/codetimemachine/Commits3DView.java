@@ -224,7 +224,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     }
                 });
 
-                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
             }
         });
         updateActiveFileToThisCommitBtn.setFocusable(false);
@@ -260,7 +260,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                     gitHelper.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
 
                 checkoutProjectLatestCommitBtn.setText("*"+CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
-                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
             }
         });
         updateProjectToThisCommitBtn.setFocusable(false);
@@ -282,9 +282,8 @@ public class Commits3DView extends JComponent implements ComponentListener
                 GitHelper gitHelper = CodeTimeMachineAction.getCodeTimeMachine(project).getGitHelper();
                 gitHelper.checkoutLatestCommit();
                 //gitHelper.applyStash(); not including uncommitted-changes !
-                //CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null); => Key-binding Stops working
-
                 checkoutProjectLatestCommitBtn.setText(CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
+                CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
 
             }
         });
