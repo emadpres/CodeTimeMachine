@@ -21,7 +21,6 @@ public class CodeTimeMachine
         gitHelper = new GitHelper(project);
 
         toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine ", true/*Can close tabs?*/, ToolWindowAnchor.RIGHT);
-        toolWindow.setType(ToolWindowType.WINDOWED,null); // make it window, and not docked or anything else
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/appIcon.png"));
         toolWindow.setIcon(icon);
     }
