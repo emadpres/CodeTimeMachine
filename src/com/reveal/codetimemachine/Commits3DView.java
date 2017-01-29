@@ -11,8 +11,10 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
+import com.intellij.util.ui.JBUI;
 import com.reveal.metrics.CKNumberReader;
 import com.reveal.metrics.MaxCKNumber;
 import com.reveal.metrics.Metrics;
@@ -22,6 +24,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.Timer;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
@@ -93,6 +97,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     final String CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT="Checkout Latest Commit";
     JButton updateActiveFileToThisCommitBtn = null, updateProjectToThisCommitBtn = null, checkoutProjectLatestCommitBtn = null;
+    ComboBox syncComboBox = null;
 
     CKNumberReader.MetricTypes currentMetric = null;
 
@@ -117,6 +122,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         preCalculateAuthorsColor();
         setupUI_mainEditorWindow();
         setupUI_buttons();
+        setupUI_syncCombobox();
         setupUI_virtualWindows();
         initialVirtualWindowsVisualizations(); // initial 3D Variables
 
@@ -195,6 +201,60 @@ public class Commits3DView extends JComponent implements ComponentListener
         setupUI_buttons_checkoutProjectLatestCommit();
     }
 
+    private void setupUI_syncCombobox()
+    {
+        syncComboBox = new ComboBox(); //Note: if you add two same item (like "1" and "1" strings) it becomes buggy.
+        syncComboBox.addItem("Sync..");
+        syncComboBox.addPopupMenuListener(new PopupMenuListener()
+        {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e)
+            {
+                syncComboBox.removeAll();
+                ArrayList<String> allOpenFiles = CodeTimeMachineAction.getCodeTimeMachine(project).getOpenFileNames();
+                for(String s: allOpenFiles)
+                {
+                    syncComboBox.addItem(s);
+                }
+
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
+            {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e)
+            {
+            }
+        });
+
+        syncComboBox.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                // 0-based
+                int selectedIndex = syncComboBox.getSelectedIndex();
+                ArrayList<CommitWrapper> activeCommits = CodeTimeMachineAction.getCodeTimeMachine(project).getActiveCommits();
+                CommitWrapper selectedCommitToSyncWith = activeCommits.get(selectedIndex);
+                ///////// Find nearest date
+                Date d = selectedCommitToSyncWith.getDate();
+                //////// fly to there
+                long time = d.getTime();//fake
+
+            }
+        });
+
+        //syncComboBox.addActionListener() //Despite the new selected item is diff, this function will be called for new item
+        //syncComboBox.addItemListener() // In case of selecting a diff item, this function always called twice: DESELECTED and SELECTED.
+
+        syncComboBox.setFocusable(false);
+        syncComboBox.setOpaque(false);
+        this.add(syncComboBox); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
+    }
     private void setupUI_buttons_updateActiveFile()
     {
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTime.png"));
@@ -885,9 +945,10 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateButtonsAfterComponentResize()
     {
+        syncComboBox.setBounds(80,400,100,27);
+        checkoutProjectLatestCommitBtn.setBounds(80,500,120,27);
         updateActiveFileToThisCommitBtn.setBounds(80,550,100,27);
         updateProjectToThisCommitBtn.setBounds(80,600,120,27);
-        checkoutProjectLatestCommitBtn.setBounds(80,500,120,27);
     }
 
     private void updateTimeLineDrawing()

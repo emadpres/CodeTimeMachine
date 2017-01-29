@@ -35,8 +35,8 @@ public class TTMSingleFileView
     //////////////////////////////
     private JPanel thisComponent;
     private Project project;
-    private VirtualFile virtualFile = null;
-    private ArrayList<CommitWrapper> commits = null;
+    public VirtualFile virtualFile = null;
+    public ArrayList<CommitWrapper> commits = null;
     //private ArrayList<MetricCalculationResults> metricResults = null;
     private MaxCKNumber maxCKNumber = null;
     private ArrayList<CKNumber> fullMetricsReport = null;

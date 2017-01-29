@@ -107,9 +107,6 @@ public class CodeTimeMachineAction extends AnAction
 
 
 
-
-
-
             /// Sort by Date all commits
             Collections.sort(subjectAndTestClassCommitsList[i], new Comparator<CommitWrapper>()
             {
@@ -131,25 +128,10 @@ public class CodeTimeMachineAction extends AnAction
         }
 
 
-        ToolWindow toolWindow = getCodeTimeMachine(project).getToolWindow();
-
-
-        String contentName = "";
-        contentName += chosenVirtualFiles[0].getNameWithoutExtension();
-        for(int i=1; i< chosenVirtualFiles.length; i++)
-        {
-            contentName += " vs. ";
-            contentName += chosenVirtualFiles[1].getNameWithoutExtension();
-        }
-
+        String contentName = chosenVirtualFiles[0].getName();
         TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenVirtualFiles[0], subjectAndTestClassCommitsList[0]);
-        Content ttm_content = toolWindow.getContentManager().getFactory().createContent(mainWindow.getComponent(), contentName, true);
-        toolWindow.getContentManager().addContent(ttm_content);
-        toolWindow.setAutoHide(false);
-        toolWindow.setAvailable(true,null);
+        getCodeTimeMachine(project).addNewContent(mainWindow, contentName);
     }
-
-
 
     static public CodeTimeMachine getCodeTimeMachine(Project project)
     {
