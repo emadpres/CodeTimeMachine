@@ -204,7 +204,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void setupUI_syncCombobox()
     {
         syncComboBox = new ComboBox(); //Note: if you add two same item (like "1" and "1" strings) it becomes buggy.
-        syncComboBox.addItem("Sync..");
+        final String SYNC_COMBO_BOX_DEFAULT_TEXT = "Sync...";
+        syncComboBox.addItem(SYNC_COMBO_BOX_DEFAULT_TEXT);
         syncComboBox.addPopupMenuListener(new PopupMenuListener()
         {
             @Override
@@ -214,6 +215,10 @@ public class Commits3DView extends JComponent implements ComponentListener
                 ArrayList<String> allOpenFiles = CodeTimeMachineAction.getCodeTimeMachine(project).getOpenFileNames();
                 for(String s: allOpenFiles)
                 {
+//                    if(s.equals(virtualFile.getName()))
+//                        // we don't show outself
+//                        continue;
+
                     syncComboBox.addItem(s);
                 }
 
@@ -222,7 +227,8 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
             {
-
+                syncComboBox.removeAllItems();
+                syncComboBox.addItem(SYNC_COMBO_BOX_DEFAULT_TEXT);
             }
 
             @Override
@@ -242,24 +248,37 @@ public class Commits3DView extends JComponent implements ComponentListener
                     // By the way, for one item, sync doesn't make sense.
                     return;
 
+                String s = syncComboBox.getSelectedItem().toString();
+                if(s.equals(virtualFile.getName()))
+                    // We selected ourself. //TODO: Don't show me in the list.
+                    return;
+
                 // 0-based
                 int selectedIndex = syncComboBox.getSelectedIndex();
 
                 ArrayList<CommitWrapper> activeCommits = CodeTimeMachineAction.getCodeTimeMachine(project).getActiveCommits();
                 CommitWrapper selectedCommitToSyncWith = activeCommits.get(selectedIndex);
+
                 ///////// Find nearest date
                 Date targetDate = selectedCommitToSyncWith.getDate();
-                int theLastCommitJustBeforeTargetCommit_cIndex = 0;
+                int theLastCommitJustBeforeTargetCommit_cIndex = -1;
                 for(int i=0; i<commitList.size(); i++)
                 {
-                    if(commitList.get(i).getDate().after(targetDate))
+                    if(commitList.get(i).getDate().before(targetDate))
                     {
                         theLastCommitJustBeforeTargetCommit_cIndex = i;
                         break;
                     }
                 }
+
+                if(theLastCommitJustBeforeTargetCommit_cIndex==-1)
+                    // it means, target commit is older than the oldest commit in crrent file
+                    theLastCommitJustBeforeTargetCommit_cIndex = commitList.size()-1;
+
                 //////// fly to there
-                showCommit(theLastCommitJustBeforeTargetCommit_cIndex, true);
+                TTMWindow.activeCommit_cIndex = theLastCommitJustBeforeTargetCommit_cIndex;
+                TTMWindow.commitsBar.setActiveCommit_cIndex();
+                TTMWindow.navigateToCommit(ClassType.SUBJECT_CLASS,theLastCommitJustBeforeTargetCommit_cIndex);
 
             }
         });

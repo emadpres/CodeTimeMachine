@@ -10,6 +10,7 @@ import com.intellij.ui.content.Content;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 // The CodeTimeMachine represents the plugin window per project
 // and contains one ToolWindow.
@@ -75,4 +76,12 @@ public class CodeTimeMachine
         }
         return activeCommits;
     }
+
+//    public CommitWrapper getActiveCommits(int singleViewIndex)
+//    {
+//        int activeCommit_cIndex = singleViews.get(singleViewIndex).activeCommit_cIndex;
+//        CommitWrapper activeCommit = singleViews.get(singleViewIndex).commits.get(activeCommit_cIndex);
+//        return activeCommit;
+//    }
+
 }
