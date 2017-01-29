@@ -108,6 +108,7 @@ public class CodeTimeMachineAction extends AnAction
 
 
             /// Sort by Date all commits
+            // index 0 will contain most recent commit
             Collections.sort(subjectAndTestClassCommitsList[i], new Comparator<CommitWrapper>()
             {
                 @Override

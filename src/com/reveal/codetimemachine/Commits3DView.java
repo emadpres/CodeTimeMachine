@@ -210,7 +210,7 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e)
             {
-                syncComboBox.removeAll();
+                syncComboBox.removeAllItems();
                 ArrayList<String> allOpenFiles = CodeTimeMachineAction.getCodeTimeMachine(project).getOpenFileNames();
                 for(String s: allOpenFiles)
                 {
@@ -236,14 +236,30 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void actionPerformed(ActionEvent e)
             {
+                if(syncComboBox.getItemCount()<=1)
+                    // We ignore the call which is happening after adding first item in fill-up-with-open-files process.
+                    // Check here for problem: http://stackoverflow.com/questions/28960142/listener-gets-fired-only-once-after-adding-all-items-in-jcombobox-though-fireint
+                    // By the way, for one item, sync doesn't make sense.
+                    return;
+
                 // 0-based
                 int selectedIndex = syncComboBox.getSelectedIndex();
+
                 ArrayList<CommitWrapper> activeCommits = CodeTimeMachineAction.getCodeTimeMachine(project).getActiveCommits();
                 CommitWrapper selectedCommitToSyncWith = activeCommits.get(selectedIndex);
                 ///////// Find nearest date
-                Date d = selectedCommitToSyncWith.getDate();
+                Date targetDate = selectedCommitToSyncWith.getDate();
+                int theLastCommitJustBeforeTargetCommit_cIndex = 0;
+                for(int i=0; i<commitList.size(); i++)
+                {
+                    if(commitList.get(i).getDate().after(targetDate))
+                    {
+                        theLastCommitJustBeforeTargetCommit_cIndex = i;
+                        break;
+                    }
+                }
                 //////// fly to there
-                long time = d.getTime();//fake
+                showCommit(theLastCommitJustBeforeTargetCommit_cIndex, true);
 
             }
         });
