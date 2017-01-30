@@ -110,7 +110,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         this.project = project;
         this.virtualFile = virtualFile;
         this.commitList = commitList;
-        this.currentMetric = CKNumberReader.MetricTypes.NONE;
+        this.currentMetric = CKNumberReader.MetricTypes.loc;
         this.maxCKNumber = maxCKNumber;
         this.fullMetricsReport = fullMetricsReport;
 
