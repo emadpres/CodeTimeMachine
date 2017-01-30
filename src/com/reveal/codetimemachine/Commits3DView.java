@@ -14,11 +14,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
-import com.intellij.util.ui.JBUI;
 import com.reveal.metrics.CKNumberReader;
 import com.reveal.metrics.MaxCKNumber;
 import com.reveal.metrics.Metrics;
-import com.reveal.metrics.MetricCalculationResults;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,8 +68,9 @@ public class Commits3DView extends JComponent implements ComponentListener
     /////
     int topLayerIndex=0, targetLayerIndex=0 /*if equals to topLayerIndex it means no animation is running*/;
     float topLayerOffset;
-    Dimension topIdealLayerDimention = new Dimension(0,0);
+    Dimension topIdealLayerDimention_doubled = new Dimension(0,0);//Important: the dimension of toplayer is double. because the Renderer divide it by BASE_DEPTH
     Point topIdealLayerCenterPos = new Point(0,0);
+    int topIdealLayer_left_x, topIdealLayer_right_x, topIdealLayer_bottom_y, topIdealLayer_top_y;
     final int INVALID = -1;
     int lastBorderHighlighted_VirtualWindowIndex =-1, currentMouseHoveredIndex =INVALID;
     ///////// ++ UI
@@ -375,7 +374,7 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void setupUI_buttons_checkoutProjectLatestCommit()
     {
-        ImageIcon icon = new ImageIcon(getClass().getResource("/images/travelTimeProject.png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/checkout.png"));
 
         checkoutProjectLatestCommitBtn = new JButton(CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT,icon);
         checkoutProjectLatestCommitBtn.addActionListener(new ActionListener()
@@ -561,8 +560,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateVirtualWindowsBoundaryAfterComponentResize()
     {
         int xCenter, yCenter, w, h;
-        w = topIdealLayerDimention.width;
-        h = topIdealLayerDimention.height;
+        w = topIdealLayerDimention_doubled.width;
+        h = topIdealLayerDimention_doubled.height;
         xCenter = topIdealLayerCenterPos.x;
         yCenter = topIdealLayerCenterPos.y;
 
@@ -970,11 +969,16 @@ public class Commits3DView extends JComponent implements ComponentListener
     private void updateTopIdealLayerBoundary()
     {
         final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
-        topIdealLayerDimention = new Dimension(  3*getSize().width/5, 2*getSize().height/3 /*2/3 of whole vertical*/);
-        topIdealLayerDimention.width *= MyRenderer.getInstance().BASE_DEPTH; // because Renderer divide it by BASE_DEPTH
-        topIdealLayerDimention.height *= MyRenderer.getInstance().BASE_DEPTH;
+        topIdealLayerDimention_doubled = new Dimension(  3*getSize().width/5, 2*getSize().height/3 /*2/3 of whole vertical*/);
+        topIdealLayerDimention_doubled.width *= MyRenderer.getInstance().BASE_DEPTH;
+        topIdealLayerDimention_doubled.height *= MyRenderer.getInstance().BASE_DEPTH;
 
         topIdealLayerCenterPos = new Point(centerOfThisComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
+
+        topIdealLayer_left_x =  topIdealLayerCenterPos.x - topIdealLayerDimention_doubled.width/4;
+        topIdealLayer_right_x =  topIdealLayerCenterPos.x + topIdealLayerDimention_doubled.width/4;
+        topIdealLayer_bottom_y =  topIdealLayerCenterPos.y + topIdealLayerDimention_doubled.height/4;
+        topIdealLayer_top_y =  topIdealLayerCenterPos.y - topIdealLayerDimention_doubled.height/4;
         ////
         updateEverythingAfterComponentResize();
     }
@@ -989,21 +993,35 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateButtonsAfterComponentResize()
     {
-        syncComboBox.setBounds(80,400,100,27);
-        checkoutProjectLatestCommitBtn.setBounds(80,500,120,27);
-        updateActiveFileToThisCommitBtn.setBounds(80,550,100,27);
-        updateProjectToThisCommitBtn.setBounds(80,600,120,27);
+        final int HEIGHT = 26;
+        final int GAP_FROM_BOTTOM = 20;
+        ////////// Right-hand side
+        // Top
+        syncComboBox.setBounds(topIdealLayer_right_x+10,topIdealLayer_bottom_y-2*HEIGHT-GAP_FROM_BOTTOM,
+                                100,HEIGHT);
+        // Bottom
+        checkoutProjectLatestCommitBtn.setBounds(topIdealLayer_right_x+10,topIdealLayer_bottom_y-HEIGHT-GAP_FROM_BOTTOM,
+                200,HEIGHT);
+        ////////// Left-hand side
+        // Top
+        final int W3 = 100;
+        updateActiveFileToThisCommitBtn.setBounds(topIdealLayer_left_x-W3-10,topIdealLayer_bottom_y-2*HEIGHT-GAP_FROM_BOTTOM,
+                W3,HEIGHT);
+        // Bottom
+        final int W4 = 120;
+        updateProjectToThisCommitBtn.setBounds(topIdealLayer_left_x-W4-10,topIdealLayer_bottom_y-HEIGHT-GAP_FROM_BOTTOM,
+                W4,HEIGHT);
     }
 
     private void updateTimeLineDrawing()
     {
         startPointOfTimeLine = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
-                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                                        topIdealLayerDimention_doubled.width, topIdealLayerDimention_doubled.height,
                                                                         0.05f+MyRenderer.getInstance().BASE_DEPTH);
 
 
         Point aLittleAfterstartPointOfTimeLine = MyRenderer.getInstance().calculateTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
-                                                                        topIdealLayerDimention.width, topIdealLayerDimention.height,
+                                                                        topIdealLayerDimention_doubled.width, topIdealLayerDimention_doubled.height,
                                                                         +0.4f+MyRenderer.getInstance().BASE_DEPTH);
 
         int deltaX = startPointOfTimeLine.x - aLittleAfterstartPointOfTimeLine.x;
@@ -1013,7 +1031,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         trianglePoint.y += deltaY;
 
         startPointOfChartTimeLine = MyRenderer.getInstance().calculateChartTimeLinePoint(topIdealLayerCenterPos.x, topIdealLayerCenterPos.y,
-                topIdealLayerDimention.width, topIdealLayerDimention.height,
+                topIdealLayerDimention_doubled.width, topIdealLayerDimention_doubled.height,
                 0+MyRenderer.getInstance().BASE_DEPTH);
     }
 
