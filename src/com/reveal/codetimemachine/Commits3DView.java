@@ -1275,19 +1275,30 @@ public class Commits3DView extends JComponent implements ComponentListener
             g2.setClip(rectangleToDrawIn);
             if(cIndex ==topLayerIndex)
             {
-                g2.setFont(new Font("Courier", Font.BOLD, 10));
+                g2.setFont(new Font("Arial", Font.BOLD, 10));
                 text = getTopBarMessage();
                 //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: --  "+ "Alpha: "+alpha;
-                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+8);
+                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+10);
                 String path = virtualFile.getPath();
-                path = fit(path, 70, g2);
+                int maxPossible = DrawingHelper.howManyCharFitsInWidth(g2,path, 2*drawingRect.width/3 /*in 2/3 width*/ );
+                if(maxPossible<path.length())
+                {
+                    int extraCharacterCount = path.length() - maxPossible;
+                    int cropFrom = path.indexOf('/', extraCharacterCount);
+                    if(cropFrom!=-1)
+                        path = "..."+path.substring(cropFrom);
+                    else
+                        // If window's width be little => maxPossible->0 => path.indexOf(..) found nothing: -1 => HERE
+                        path = virtualFile.getName();
+                }
+                //path = fit(path, 70, g2);
                 text = new String(path);
-                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+18);
+                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+20);
             }
             else
             {
                 float fontSize = 20.f/(MyRenderer.getInstance().BASE_DEPTH+depth);
-                g2.setFont(new Font("Courier", Font.BOLD, (int)fontSize));
+                g2.setFont(new Font("Arial", Font.BOLD, (int)fontSize));
                 text = getTopBarMessage();
                 //text = "I: "+cIndex+"Depth = "+ Float.toString(depth)+ "FontSize: "+fontSize + "Alpha: "+alpha;
                 DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+15);
@@ -1349,10 +1360,8 @@ public class Commits3DView extends JComponent implements ComponentListener
         private String fit(String s, int maxCharacterCount, Graphics g)
         {
             String result = s;
-            int extraCharacterCount = result.length() - maxCharacterCount;
-            int cropFrom = result.indexOf('/', extraCharacterCount);
-            result = result.substring(cropFrom);
-            result = "..."+result;
+
+
             return result;
         }
 
