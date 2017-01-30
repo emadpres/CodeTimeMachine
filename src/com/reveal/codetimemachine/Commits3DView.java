@@ -84,7 +84,8 @@ public class Commits3DView extends JComponent implements ComponentListener
     final Color CHART_TIMELINE_COLOR = TIMELINE_COLOR;//new Color(255,255,0);
     final Color CHART_LINE_COLOR = Color.WHITE;
     ////////
-
+    private ArrayList<SingleViewInformation> allSingleViewsInformation = null;
+    private boolean comboBoxFillUpPorcess = false;
     TTMSingleFileView TTMWindow = null;
     Project project;
     CustomEditorTextField mainEditorWindow = null;
@@ -211,24 +212,35 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e)
             {
+                comboBoxFillUpPorcess = true;
                 syncComboBox.removeAllItems();
-                ArrayList<String> allOpenFiles = CodeTimeMachineAction.getCodeTimeMachine(project).getOpenFileNames();
-                for(String s: allOpenFiles)
-                {
-//                    if(s.equals(virtualFile.getName()))
-//                        // we don't show outself
-//                        continue;
+                ArrayList<SingleViewInformation> temp_all_includingMe = CodeTimeMachineAction.getCodeTimeMachine(project).getAllSingleViewsInformation();
+                String myFileName = virtualFile.getName();
 
-                    syncComboBox.addItem(s);
+                allSingleViewsInformation = new ArrayList<>(temp_all_includingMe.size()-1/*except me*/);
+                for(SingleViewInformation svi: temp_all_includingMe)
+                {
+                    if(svi.toString().equals(myFileName))
+                        // Don't show me
+                        continue;
+                    allSingleViewsInformation.add(svi);
                 }
+
+                for(SingleViewInformation svi: allSingleViewsInformation)
+                {
+                    syncComboBox.addItem(svi);
+                }
+                comboBoxFillUpPorcess = false;
 
             }
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
             {
+                comboBoxFillUpPorcess = true;
                 syncComboBox.removeAllItems();
                 syncComboBox.addItem(SYNC_COMBO_BOX_DEFAULT_TEXT);
+                comboBoxFillUpPorcess = false;
             }
 
             @Override
@@ -242,29 +254,26 @@ public class Commits3DView extends JComponent implements ComponentListener
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if(syncComboBox.getItemCount()<=1)
+                if(comboBoxFillUpPorcess )
                     // We ignore the call which is happening after adding first item in fill-up-with-open-files process.
                     // Check here for problem: http://stackoverflow.com/questions/28960142/listener-gets-fired-only-once-after-adding-all-items-in-jcombobox-though-fireint
                     // By the way, for one item, sync doesn't make sense.
                     return;
 
-                String s = syncComboBox.getSelectedItem().toString();
-                if(s.equals(virtualFile.getName()))
-                    // We selected ourself. //TODO: Don't show me in the list.
-                    return;
+                if(allSingleViewsInformation.size()==0) return;
 
                 // 0-based
                 int selectedIndex = syncComboBox.getSelectedIndex();
 
-                ArrayList<CommitWrapper> activeCommits = CodeTimeMachineAction.getCodeTimeMachine(project).getActiveCommits();
-                CommitWrapper selectedCommitToSyncWith = activeCommits.get(selectedIndex);
+
+                CommitWrapper selectedCommitToSyncWith = allSingleViewsInformation.get(selectedIndex).getActiveCommit();
 
                 ///////// Find nearest date
                 Date targetDate = selectedCommitToSyncWith.getDate();
                 int theLastCommitJustBeforeTargetCommit_cIndex = -1;
                 for(int i=0; i<commitList.size(); i++)
                 {
-                    if(commitList.get(i).getDate().before(targetDate))
+                    if( commitList.get(i).getDate().equals(targetDate) || commitList.get(i).getDate().before(targetDate))
                     {
                         theLastCommitJustBeforeTargetCommit_cIndex = i;
                         break;

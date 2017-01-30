@@ -51,37 +51,35 @@ public class CodeTimeMachine
         singleViews.add(singleView);
     }
 
-    public ArrayList<String> getOpenFileNames()
+//    public ArrayList<String> getOpenFileNames()
+//    {
+//        int contentsCount = getToolWindow().getContentManager().getContentCount();
+//        ArrayList<String> allOpenFileNames = new ArrayList<>(contentsCount);
+//        for (int i=0; i<contentsCount; i++)
+//        {
+//            String fileName = singleViews.get(i).virtualFile.getName();
+//            allOpenFileNames.add(fileName);
+//        }
+//        return allOpenFileNames;
+//    }
+
+    public ArrayList<SingleViewInformation> getAllSingleViewsInformation()
     {
         int contentsCount = getToolWindow().getContentManager().getContentCount();
-        ArrayList<String> allOpenFileNames = new ArrayList<>(contentsCount);
+        ArrayList<SingleViewInformation> singleViewsInformation = new ArrayList<>(contentsCount);
+
         for (int i=0; i<contentsCount; i++)
         {
             String fileName = singleViews.get(i).virtualFile.getName();
-            allOpenFileNames.add(fileName);
-        }
-        return allOpenFileNames;
-    }
 
-    public ArrayList<CommitWrapper> getActiveCommits()
-    {
-        int contentsCount = getToolWindow().getContentManager().getContentCount();
-        ArrayList<CommitWrapper> activeCommits = new ArrayList<>(contentsCount);
-
-        for (int i=0; i<contentsCount; i++)
-        {
             int activeCommit_cIndex = singleViews.get(i).activeCommit_cIndex;
             CommitWrapper activeCommit = singleViews.get(i).commits.get(activeCommit_cIndex);
-            activeCommits.add(activeCommit);
-        }
-        return activeCommits;
-    }
 
-//    public CommitWrapper getActiveCommits(int singleViewIndex)
-//    {
-//        int activeCommit_cIndex = singleViews.get(singleViewIndex).activeCommit_cIndex;
-//        CommitWrapper activeCommit = singleViews.get(singleViewIndex).commits.get(activeCommit_cIndex);
-//        return activeCommit;
-//    }
+
+            SingleViewInformation svi = new SingleViewInformation(activeCommit, fileName);
+            singleViewsInformation.add(svi);
+        }
+        return singleViewsInformation;
+    }
 
 }

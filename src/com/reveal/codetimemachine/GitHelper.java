@@ -183,6 +183,8 @@ public class GitHelper
             return outContent.toString();
         }
         else
+            // If there was no uncommitted changes,
+            // We reach here by calling backupAllChangesAsStash() [includes: 1.stashChanges() and 2.applyStash()]
             return errContent.toString();
     }
 
