@@ -1,17 +1,15 @@
-<idea-plugin version="2">
+<idea-plugin version="1.0">
   <id>com.reveal.codetimemachine</id>
   <name>Code Time Machine</name>
   <version>1.0</version>
-  <vendor email="emad.aghajani@usi.ch" url="http://reveal.inf.usi.ch//">REVEAL Research Group</vendor>
+  <vendor email="emad.aghajani@usi.ch" url="http://reveal.inf.usi.ch">REVEAL Research Group</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      The <em>Code Time Machine</em> is a lightweight IDE plugin which uses visualization techniques to depict the history of any chosen ﬁle augmented with information mined from the underlying versioning system. Inspired by Apple’s Time Machine, this tool allows both developers and the system itself to seamlessly move through time.
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      First release.
     ]]>
   </change-notes>
 
