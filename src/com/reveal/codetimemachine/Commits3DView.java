@@ -945,11 +945,13 @@ public class Commits3DView extends JComponent implements ComponentListener
             public void run()
             {
                 mainEditorWindow.setText(content);
+                mainEditorWindow.getEditor().getScrollingModel().scroll(0,0);
+                // To solve the white screen problem (earlier, I resized the window to solve the problem)
+                mainEditorWindow.revalidate();
             }
         });
 
         updateMainEditorWindowBoundaryAfterComponentResize();
-        //mainEditorWindow.getEditor().getScrollingModel().scroll(0,0);
         mainEditorWindow.setVisible(true);
 
     }
@@ -1041,7 +1043,7 @@ public class Commits3DView extends JComponent implements ComponentListener
         repaint();
     }
 
-    public void displatMetric(CKNumberReader.MetricTypes newMetric)
+    public void displayMetric(CKNumberReader.MetricTypes newMetric)
     {
         currentMetric = newMetric;
         render();
@@ -1291,9 +1293,7 @@ public class Commits3DView extends JComponent implements ComponentListener
                         // If window's width be little => maxPossible->0 => path.indexOf(..) found nothing: -1 => HERE
                         path = virtualFile.getName();
                 }
-                //path = fit(path, 70, g2);
-                text = new String(path);
-                DrawingHelper.drawStringCenter(g2, text, drawingRect.x+drawingRect.width/2, drawingRect.y+20);
+                DrawingHelper.drawStringCenter(g2, path, drawingRect.x+drawingRect.width/2, drawingRect.y+20);
             }
             else
             {
@@ -1330,18 +1330,6 @@ public class Commits3DView extends JComponent implements ComponentListener
             g2d.fillRect(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
         }
 
-        public int getMetricValue(Metrics.Types metric)
-        {
-            /*switch (metric)
-            {
-                case METRIC1:
-                    return someRandomMetric1;
-                case METRIC2:
-                    return  someRandomMetric2;
-            }*/
-            return 0;
-        }
-
         public Color getMetricColor()
         {
             return someRandomMetric1Color;
@@ -1356,15 +1344,6 @@ public class Commits3DView extends JComponent implements ComponentListener
                 text = new String("Commit "+commitWrapper.getCommitID());
             return text;
         }
-
-        private String fit(String s, int maxCharacterCount, Graphics g)
-        {
-            String result = s;
-
-
-            return result;
-        }
-
 
     } // End of VirtualEditorWindow class
 

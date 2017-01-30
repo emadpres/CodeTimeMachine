@@ -17,12 +17,14 @@ import com.reveal.metrics.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import javax.swing.Timer;
 
 ///////// ++ UI ++ /////////
 ///////// ++ UI -- /////////
@@ -167,7 +169,8 @@ public class TTMSingleFileView
         final String DECREASE_RENDERER_Y_OFFSET = "decreaseRendererYOffset";
         final String MARK_AS_FIRST = "markAsFirst";
         final String MARK_AS_SECOND = "markAsSecond";
-        final String TOGGLE_CHART_TYPE = "toggleChartType";
+        final String NEXT_CHART_TYPE = "nextChartType";
+        final String PREV_CHART_TYPE = "prevChartType";
         final String TOGGLE_COMMITS_BAR_TYPE = "toggleCommitsBarType";
         final String SHOW_ALL_FILES = "showAllFiles";
         final String SHOW_CHANGED_FILES = "showChangedFiles";
@@ -438,8 +441,22 @@ public class TTMSingleFileView
             }
         });
 
-        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C,0), TOGGLE_CHART_TYPE);
-        thisComponent.getActionMap().put(TOGGLE_CHART_TYPE, new AbstractAction()
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Z,0), PREV_CHART_TYPE);
+        thisComponent.getActionMap().put(PREV_CHART_TYPE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                CKNumberReader.MetricTypes[] allMetrics = CKNumberReader.MetricTypes.values();
+                int nextMetricIndex = (currentMetricType.ordinal()-1);
+                if(nextMetricIndex<0) nextMetricIndex = allMetrics.length-1;
+                currentMetricType = allMetrics[nextMetricIndex];
+                codeHistory3DView.displayMetric(currentMetricType);
+            }
+        });
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_X,0), NEXT_CHART_TYPE);
+        thisComponent.getActionMap().put(NEXT_CHART_TYPE, new AbstractAction()
         {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -447,9 +464,10 @@ public class TTMSingleFileView
                 CKNumberReader.MetricTypes[] allMetrics = CKNumberReader.MetricTypes.values();
                 int nextMetricIndex = (currentMetricType.ordinal()+1)%allMetrics.length;
                 currentMetricType = allMetrics[nextMetricIndex];
-                codeHistory3DView.displatMetric(currentMetricType);
+                codeHistory3DView.displayMetric(currentMetricType);
             }
         });
+
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F,0), TOGGLE_COMMITS_BAR_TYPE);
         thisComponent.getActionMap().put(TOGGLE_COMMITS_BAR_TYPE, new AbstractAction()
