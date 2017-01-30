@@ -3,9 +3,7 @@ package com.reveal.codetimemachine;
 import com.github.mauricioaniche.ck.CKNumber;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.EditorSettings;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
@@ -945,9 +943,17 @@ public class Commits3DView extends JComponent implements ComponentListener
             public void run()
             {
                 mainEditorWindow.setText(content);
-                mainEditorWindow.getEditor().getScrollingModel().scroll(0,0);
+                //mainEditorWindow.setCaretPosition(0);
+                if(mainEditorWindow.getEditor()!=null)
+                {
+                    // We scroll top after each setText(..) (that make scroll go down). But we don't like to be animated.
+                    // Calling this once in initialization of Editor doesn't work. so we call it every time before scrolling.
+                    mainEditorWindow.getEditor().getScrollingModel().disableAnimation();
+                    mainEditorWindow.getEditor().getScrollingModel().scroll(0, 0);
+                }
                 // To solve the white screen problem (earlier, I resized the window to solve the problem)
                 mainEditorWindow.revalidate();
+
             }
         });
 
