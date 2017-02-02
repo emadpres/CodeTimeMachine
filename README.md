@@ -3,4 +3,7 @@ The Code Time Machine is a lightweight IDE plugin which uses visualization techn
 
 
 # Known issues
-1. Navigating using keyboard ('W' and 'S') just after scrolling in text editor, apply text-scrolling data for navigating further.
+1. #Bug Navigating using keyboard ('W' and 'S') just after scrolling in text editor, apply text-scrolling data for navigating further.
+2. #Bug Initially, The CommitsList show all commits instead of Timeline's active range.
+3. the tool doesn't support already deleted files.
+4. the tool potentially doesn't support rename action, and loses tracking file history at rename point.
