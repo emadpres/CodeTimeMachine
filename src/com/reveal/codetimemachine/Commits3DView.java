@@ -976,12 +976,12 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     private void updateTopIdealLayerBoundary()
     {
-        final int FREE_SPACE_VERTICAL = 100, FREE_SPACE_HORIZONTAL = 60;
-        topIdealLayerDimention_doubled = new Dimension(  3*getSize().width/5, 2*getSize().height/3 /*2/3 of whole vertical*/);
+        final int BOTTOM_FREE_SPACE_VERTICAL = 20;
+        topIdealLayerDimention_doubled = new Dimension(  3*getSize().width/5, 2*getSize().height/3 /*2/3 of whole vertical*/ - BOTTOM_FREE_SPACE_VERTICAL);
         topIdealLayerDimention_doubled.width *= MyRenderer.getInstance().BASE_DEPTH;
         topIdealLayerDimention_doubled.height *= MyRenderer.getInstance().BASE_DEPTH;
 
-        topIdealLayerCenterPos = new Point(centerOfThisComponent.x, 2*getSize().height/3 /*Fit from bottom*/);
+        topIdealLayerCenterPos = new Point(centerOfThisComponent.x, 2*getSize().height/3 - BOTTOM_FREE_SPACE_VERTICAL /*Fit from bottom minus BOTTOM_FREE_SPACE_VERTICAL*/);
 
         topIdealLayer_left_x =  topIdealLayerCenterPos.x - topIdealLayerDimention_doubled.width/4;
         topIdealLayer_right_x =  topIdealLayerCenterPos.x + topIdealLayerDimention_doubled.width/4;
