@@ -39,7 +39,6 @@ import java.util.*;
 public class CodeTimeMachineAction extends AnAction
 {
     final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
-    final int MAX_NUM_OF_FILES = 2;
     //////////////////////////////
 
     static Map<Project, CodeTimeMachine> runningCodeTimeMachines = new HashMap<>();
@@ -60,17 +59,19 @@ public class CodeTimeMachineAction extends AnAction
         if(chosenVirtualFiles[0] == null)
             chosenVirtualFiles = selectVirtualFiles_manually(project);
 
-        if(chosenVirtualFiles == null || chosenVirtualFiles.length==0 || chosenVirtualFiles.length > MAX_NUM_OF_FILES)
+        if(chosenVirtualFiles == null || chosenVirtualFiles.length==0)
             return;
 
         VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider(project);
-        ArrayList<List<VcsFileRevision>> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles);
 
-        ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[2];
+        ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[chosenVirtualFiles.length];
         CommitWrapper aCommitWrapper = null;
         for(int i=0; i< chosenVirtualFiles.length; i++)
         {
-            int realCommitsSize = _fileRevisionsLists.get(i).size();
+
+            List<VcsFileRevision> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles[i]);
+
+            int realCommitsSize = _fileRevisionsLists.size();
             subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
 
 
@@ -88,23 +89,22 @@ public class CodeTimeMachineAction extends AnAction
             }
 
             String mostRecentCommitContent = "";
-            if(_fileRevisionsLists.get(i).size()>0)
-                mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(i).get(0));
+            if (_fileRevisionsLists.size() > 0)
+                mostRecentCommitContent = VcsFileRevisionHelper.getContent(_fileRevisionsLists.get(0));
 
-            if(! mostRecentCommitContent.equals(currentContent) )
+            if (!mostRecentCommitContent.equals(currentContent))
             {
-                final String UNCOMMITED_CHANGE_TEXT  = "Uncommitted Changes";
-                aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT,new Date(),UNCOMMITED_CHANGE_TEXT, -1);
-                subjectAndTestClassCommitsList[i].add(0,aCommitWrapper);
+                final String UNCOMMITED_CHANGE_TEXT = "Uncommitted Changes";
+                aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT, new Date(), UNCOMMITED_CHANGE_TEXT, -1);
+                subjectAndTestClassCommitsList[i].add(0, aCommitWrapper);
             }
 
             ///// Other Real
-            for(int j=0; j< realCommitsSize; j++)
+            for (int j = 0; j < realCommitsSize; j++)
             {
-                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(i).get(j),-1);
+                aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(j), -1);
                 subjectAndTestClassCommitsList[i].add(aCommitWrapper);
             }
-
 
 
             /// Sort by Date all commits
@@ -120,18 +120,15 @@ public class CodeTimeMachineAction extends AnAction
 
 
             // Assign cIndex
-            for(int j=0; j< subjectAndTestClassCommitsList[i].size(); j++)
+            for (int j = 0; j < subjectAndTestClassCommitsList[i].size(); j++)
             {
                 subjectAndTestClassCommitsList[i].get(j).cIndex = j;
             }
 
-
+            String contentName = chosenVirtualFiles[i].getName();
+            TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenVirtualFiles[i], subjectAndTestClassCommitsList[i]);
+            getCodeTimeMachine(project).addNewContent(mainWindow, contentName);
         }
-
-
-        String contentName = chosenVirtualFiles[0].getName();
-        TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenVirtualFiles[0], subjectAndTestClassCommitsList[0]);
-        getCodeTimeMachine(project).addNewContent(mainWindow, contentName);
     }
 
     static public CodeTimeMachine getCodeTimeMachine(Project project)
@@ -181,24 +178,21 @@ public class CodeTimeMachineAction extends AnAction
                 "All packages in selected module", Messages.getInformationIcon());
     }
 
-    private ArrayList<List<VcsFileRevision>> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile[] chosenVirtualFiles)
+    private List<VcsFileRevision> getRevisionListForSubjectAndTestClass(VcsHistoryProvider myGitVcsHistoryProvider, VirtualFile virtualFiles)
     {
-        ArrayList<List<VcsFileRevision>> _fileRevisionsLists = new ArrayList<>(chosenVirtualFiles.length);
 
-        for(int i = 0; i< chosenVirtualFiles.length; i++)
+        FilePath filePathOn = VcsContextFactory.SERVICE.getInstance().createFilePathOn(virtualFiles);
+        VcsHistorySession sessionFor = null;
+        try
         {
-            FilePath filePathOn = VcsContextFactory.SERVICE.getInstance().createFilePathOn(chosenVirtualFiles[i]);
-            VcsHistorySession sessionFor = null;
-            try
-            {
-                sessionFor = myGitVcsHistoryProvider.createSessionFor(filePathOn);
-            } catch (VcsException e1)
-            {
-                e1.printStackTrace();
-            }
-            _fileRevisionsLists.add(sessionFor.getRevisionList());
+            sessionFor = myGitVcsHistoryProvider.createSessionFor(filePathOn);
+        } catch (VcsException e1)
+        {
+            e1.printStackTrace();
         }
-        return _fileRevisionsLists;
+        List<VcsFileRevision> revisionList = sessionFor.getRevisionList();
+
+        return revisionList;
     }
 
     private VcsHistoryProvider getGitHistoryProvider(Project project)
