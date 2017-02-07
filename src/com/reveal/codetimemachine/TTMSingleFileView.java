@@ -176,7 +176,18 @@ public class TTMSingleFileView
         final String SHOW_CHANGED_FILES = "showChangedFiles";
         final String TOGGLE_AUTHORS_COLOR_MODE = "toggleAuthorsColorMode";
         final String TOGGLE_ALWAYS_SHOW_METRICS_VALUE = "toggleAlwaysShowMetricsValue";
+        final String TOGGLE_INFO_DISPLAYING_TYPE = "toggleInfoDisplayingType";
 
+
+        thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Q,0), TOGGLE_INFO_DISPLAYING_TYPE);
+        thisComponent.getActionMap().put(TOGGLE_INFO_DISPLAYING_TYPE, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                commitsInfoLayerUI.toggleInfoDisplayingType();
+            }
+        });
 
         thisComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_V,0), TOGGLE_ALWAYS_SHOW_METRICS_VALUE);
         thisComponent.getActionMap().put(TOGGLE_ALWAYS_SHOW_METRICS_VALUE, new AbstractAction()
