@@ -310,6 +310,8 @@ public class Commits3DView extends JComponent implements ComponentListener
                 final Runnable readRunner = new Runnable() {
                     @Override
                     public void run() {
+
+                        updateVirtualFileIfNeeded();
                         Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
                         document.setText(commitList.get(TTMWindow.activeCommit_cIndex).getFileContent());
                     }
@@ -400,23 +402,20 @@ public class Commits3DView extends JComponent implements ComponentListener
 
     void updateVirtualFileIfNeeded()
     {
-        Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
         // if after reverting project, package names or ... changes the virtualFile path get invalid.
         // So we search for the new path of file.
         // Since we assume filename has not changed, we use valid part of old virtualFile (the filename).
-        if(document==null)
+        if(virtualFile.isValid()==false)
         {
             PsiFile[] filesByName = FilenameIndex.getFilesByName(project, virtualFile.getName(), new EverythingGlobalScope(project));
             if(filesByName.length>0)
             {
                 virtualFile = filesByName[0].getVirtualFile();
-                document = FileDocumentManager.getInstance().getDocument(virtualFile);
-
-                if(document == null)
-                {
-                    // It means that the filename has also changed.
-                    //#TODO: in such case, we can't renew virtualFile variable.
-                }
+            }
+            else
+            {
+                // It means that the filename has also changed.
+                //#TODO: in such case, we can't renew virtualFile variable.
             }
         }
     }
