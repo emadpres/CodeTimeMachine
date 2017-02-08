@@ -11,10 +11,12 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.EverythingGlobalScope;
+import com.intellij.psi.search.FilenameIndex;
 import com.intellij.ui.EditorTextField;
 import com.reveal.metrics.CKNumberReader;
 import com.reveal.metrics.MaxCKNumber;
-import com.reveal.metrics.Metrics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -360,6 +362,8 @@ public class Commits3DView extends JComponent implements ComponentListener
                 else
                     gitHelper.checkoutCommitID(commitList.get(TTMWindow.activeCommit_cIndex).getCommitID());
 
+                updateVirtualFileIfNeeded();
+
                 checkoutProjectLatestCommitBtn.setText("*"+CHECKOUT_LATEST_PROJECT_COMMIT_BUTTON_TEXT);
                 CodeTimeMachineAction.getCodeTimeMachine(project).getToolWindow().hide(null);
             }
@@ -392,6 +396,29 @@ public class Commits3DView extends JComponent implements ComponentListener
         checkoutProjectLatestCommitBtn.setForeground(SHARP_YELLOW);
         checkoutProjectLatestCommitBtn.setOpaque(false);
         this.add(checkoutProjectLatestCommitBtn); // As there's no layout, we should set Bound it. we'll do this in "ComponentResized()" event
+    }
+
+    void updateVirtualFileIfNeeded()
+    {
+        Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+        // if after reverting project, package names or ... changes the virtualFile path get invalid.
+        // So we search for the new path of file.
+        // Since we assume filename has not changed, we use valid part of old virtualFile (the filename).
+        if(document==null)
+        {
+            PsiFile[] filesByName = FilenameIndex.getFilesByName(project, virtualFile.getName(), new EverythingGlobalScope(project));
+            if(filesByName.length>0)
+            {
+                virtualFile = filesByName[0].getVirtualFile();
+                document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+                if(document == null)
+                {
+                    // It means that the filename has also changed.
+                    //#TODO: in such case, we can't renew virtualFile variable.
+                }
+            }
+        }
     }
 
     private void addMouseMotionListener()
