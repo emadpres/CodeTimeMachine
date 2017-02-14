@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class MyRenderer
 {
-    float Y_OFFSET_FACTOR = 250;
+    float Y_OFFSET_FACTOR = 190;
     final float BASE_DEPTH = 2.0f; // Min:1.0 // ?? maybe 0
     final float TIME_LINE_GAP = 0.1f;
     private static final MyRenderer instance = new MyRenderer();

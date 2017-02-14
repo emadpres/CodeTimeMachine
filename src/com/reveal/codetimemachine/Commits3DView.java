@@ -55,7 +55,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     ///////// ++ UI: 3D Prespective Variables ++ /////////
     final float LAYER_DISTANCE = 0.2f;
     final float LAYERS_DEPTH_ERROR_THRESHOLD = LAYER_DISTANCE/10;
-    float maxVisibleDepth = 2f;
+    float maxVisibleDepth = 6.8f;
     final float MIN_VISIBLE_DEPTH = -LAYER_DISTANCE;
     final float MAX_VISIBLE_DEPTH_CHANGE_VALUE = 0.3f;
     final float EPSILON = 0.01f;
