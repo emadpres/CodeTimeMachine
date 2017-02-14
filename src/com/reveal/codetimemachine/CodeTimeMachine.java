@@ -5,12 +5,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.openapi.wm.ToolWindowType;
 import com.intellij.ui.content.Content;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 // The CodeTimeMachine represents the plugin window per project
 // and contains one ToolWindow.
@@ -27,7 +25,7 @@ public class CodeTimeMachine
 
         gitHelper = new GitHelper(project);
 
-        toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine ", true/*Can close tabs?*/, ToolWindowAnchor.RIGHT);
+        toolWindow = ToolWindowManager.getInstance(project).registerToolWindow("Code Time Machine ", false/*Can close tabs?*/, ToolWindowAnchor.RIGHT);
         ImageIcon icon = new ImageIcon(getClass().getResource("/images/appIcon.png"));
         toolWindow.setIcon(icon);
         toolWindow.setAutoHide(false);
@@ -47,7 +45,6 @@ public class CodeTimeMachine
     {
         Content ttm_content = toolWindow.getContentManager().getFactory().createContent(singleView.getComponent(), contentName, true);
         toolWindow.getContentManager().addContent(ttm_content);
-        //toolWindow.setAvailable(true,null);
         singleViews.add(singleView);
     }
 
