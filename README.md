@@ -9,5 +9,5 @@ To install using pre-built  binary, first download [the latest release](https://
 ### Source code
 First clone the project. Follow the [Setting Up a Development Environment](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started.html) guideline to setup the IntelliJ IDE for plugin development. Now you should be able to compile the project (requires Java 1.8) and run it. In the end, deploy the project by following the [Deploying a Plugin](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/deploying_plugin.html) tutorial.
 
-## Issues
+### Issues
 For known issues, please check [the issues](https://github.com/Emadpres/CodeTimeMachine/issues).
