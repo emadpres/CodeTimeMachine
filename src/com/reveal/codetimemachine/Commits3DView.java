@@ -61,7 +61,7 @@ public class Commits3DView extends JComponent implements ComponentListener
     final float EPSILON = 0.01f;
     Point startPointOfTimeLine = new Point(0,0), trianglePoint = new Point(0,0);
     Point startPointOfChartTimeLine = new Point(0,0);
-    boolean alwaysShowMetricsValue = false;
+    boolean alwaysShowMetricsValue = true;
     Point currentMousePoint = new Point(-100,-100);
     Map<String, Color> authorsColor = null;
     boolean isAuthorsColorMode = false;
