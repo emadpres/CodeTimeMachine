@@ -1,9 +1,6 @@
 package com.reveal.codetimemachine;
 
-import com.github.mauricioaniche.ck.CK;
-import com.github.mauricioaniche.ck.CKNumber;
-import com.github.mauricioaniche.ck.CKReport;
-import com.google.common.io.Files;
+
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
@@ -21,20 +18,17 @@ import com.intellij.openapi.vcs.history.VcsHistoryProvider;
 import com.intellij.openapi.vcs.history.VcsHistorySession;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.psi.*;
-import com.intellij.ui.content.Content;
-import com.reveal.metrics.MaxCKNumber;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
+
+
 
 /**
  * Created by emadpres on 11/23/16.
+ * Some notes about plugin.xml: https://intellij-support.jetbrains.com/hc/en-us/community/posts/206761495-How-to-add-items-to-a-tab-context-menu-
  */
 public class CodeTimeMachineAction extends AnAction
 {
@@ -55,24 +49,22 @@ public class CodeTimeMachineAction extends AnAction
         Project project = e.getProject();
 
 
-        VirtualFile[] chosenVirtualFiles = selectVirtualFiles_auto(e);
-        if(chosenVirtualFiles[0] == null)
-            chosenVirtualFiles = selectVirtualFiles_manually(project);
+        ArrayList<VirtualFile> chosenJavaVirtualFiles = selectJavaVirtualFiles_auto(e);
 
-        if(chosenVirtualFiles == null || chosenVirtualFiles.length==0)
-            return;
 
         VcsHistoryProvider myGitVcsHistoryProvider = getGitHistoryProvider(project);
+        if(myGitVcsHistoryProvider == null)
+            return; // It means project doesn't have "Git".
 
-        ArrayList<CommitWrapper>[] subjectAndTestClassCommitsList = new ArrayList[chosenVirtualFiles.length];
+        ArrayList<CommitWrapper>[] javaFilesCommitsList = new ArrayList[chosenJavaVirtualFiles.size()];
         CommitWrapper aCommitWrapper = null;
-        for(int i=0; i< chosenVirtualFiles.length; i++)
+        for(int i=0; i< chosenJavaVirtualFiles.size(); i++)
         {
 
-            List<VcsFileRevision> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenVirtualFiles[i]);
+            List<VcsFileRevision> _fileRevisionsLists = getRevisionListForSubjectAndTestClass(myGitVcsHistoryProvider, chosenJavaVirtualFiles.get(i));
 
             int realCommitsSize = _fileRevisionsLists.size();
-            subjectAndTestClassCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
+            javaFilesCommitsList[i] = new ArrayList<>(realCommitsSize + 1);
 
 
             int cIndex = 0;
@@ -81,7 +73,7 @@ public class CodeTimeMachineAction extends AnAction
             String currentContent = "";
             try
             {
-                byte[] currentBytes = chosenVirtualFiles[i].contentsToByteArray();
+                byte[] currentBytes = chosenJavaVirtualFiles.get(i).contentsToByteArray();
                 currentContent = new String(currentBytes);
             } catch (IOException e1)
             {
@@ -96,20 +88,20 @@ public class CodeTimeMachineAction extends AnAction
             {
                 final String UNCOMMITED_CHANGE_TEXT = "Uncommitted Changes";
                 aCommitWrapper = new CommitWrapper(currentContent, UNCOMMITED_CHANGE_TEXT, new Date(), UNCOMMITED_CHANGE_TEXT, -1);
-                subjectAndTestClassCommitsList[i].add(0, aCommitWrapper);
+                javaFilesCommitsList[i].add(0, aCommitWrapper);
             }
 
             ///// Other Real
             for (int j = 0; j < realCommitsSize; j++)
             {
                 aCommitWrapper = new CommitWrapper(_fileRevisionsLists.get(j), -1);
-                subjectAndTestClassCommitsList[i].add(aCommitWrapper);
+                javaFilesCommitsList[i].add(aCommitWrapper);
             }
 
 
             /// Sort by Date all commits
             // index 0 will contain most recent commit
-            Collections.sort(subjectAndTestClassCommitsList[i], new Comparator<CommitWrapper>()
+            Collections.sort(javaFilesCommitsList[i], new Comparator<CommitWrapper>()
             {
                 @Override
                 public int compare(CommitWrapper o1, CommitWrapper o2)
@@ -120,13 +112,13 @@ public class CodeTimeMachineAction extends AnAction
 
 
             // Assign cIndex
-            for (int j = 0; j < subjectAndTestClassCommitsList[i].size(); j++)
+            for (int j = 0; j < javaFilesCommitsList[i].size(); j++)
             {
-                subjectAndTestClassCommitsList[i].get(j).cIndex = j;
+                javaFilesCommitsList[i].get(j).cIndex = j;
             }
 
-            String contentName = chosenVirtualFiles[i].getName();
-            TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenVirtualFiles[i], subjectAndTestClassCommitsList[i]);
+            String contentName = chosenJavaVirtualFiles.get(i).getName();
+            TTMSingleFileView mainWindow = new TTMSingleFileView(project, chosenJavaVirtualFiles.get(i), javaFilesCommitsList[i]);
             getCodeTimeMachine(project).addNewContent(mainWindow, contentName);
         }
     }
@@ -223,15 +215,36 @@ public class CodeTimeMachineAction extends AnAction
         return chosenVirtualFiles;
     }
 
-    private VirtualFile[] selectVirtualFiles_auto(AnActionEvent e)
+    private ArrayList<VirtualFile> selectJavaVirtualFiles_auto(AnActionEvent e)
     {
-        VirtualFile[] chosenVirtualFiles = new VirtualFile[1];
+        // If you run this action from Tools menu, and some file is open in Editor, the file will be retrieved.
+        // If you run this action from ProjectView by right-clicking on some files, all selected files will be retrieved.
+        // otherwise (i.e. right clicking on some empty space in Project View, or when there is no open file in Editor) it is null.
+        VirtualFile[] files = e.getData(LangDataKeys.VIRTUAL_FILE_ARRAY);
 
-        if(e.getData(LangDataKeys.PSI_FILE) != null)
-            chosenVirtualFiles[0] = e.getData(LangDataKeys.PSI_FILE).getVirtualFile();
+        ArrayList<VirtualFile> onlyJavaFiles = new ArrayList<>();
+
+        if(files==null)
+            return onlyJavaFiles;
+
+        for(int i=0; i<files.length; i++)
+        {
+            if(files[i].getFileType().getDefaultExtension() == "java")
+                onlyJavaFiles.add(files[i]);
+        }
+
+        return onlyJavaFiles;
+    }
+
+    @Override
+    public void update(AnActionEvent e)
+    {
+        ArrayList<VirtualFile> files = selectJavaVirtualFiles_auto(e);
+
+
+        if(files.size()==0)
+            e.getPresentation().setEnabled(false);
         else
-            chosenVirtualFiles[0] = null;
-
-        return chosenVirtualFiles;
+            e.getPresentation().setEnabled(true);
     }
 }

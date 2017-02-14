@@ -31,6 +31,7 @@
     <action id="showCodeTimeMachine" class="com.reveal.codetimemachine.CodeTimeMachineAction"
             text="Open CodeTimeMachine" description="Open CodeTimeMachine">
       <add-to-group group-id="ToolsMenu" anchor="first"/>
+      <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
       <keyboard-shortcut keymap="$default" first-keystroke="shift meta L"/>
     </action>
   </actions>
