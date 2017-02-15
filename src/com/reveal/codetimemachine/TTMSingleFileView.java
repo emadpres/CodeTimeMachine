@@ -76,7 +76,7 @@ public class TTMSingleFileView
 
         ///// Initialing
         activeCommit_cIndex = 0 ;
-        commitsBar.updateCommitsList(this.commits);
+        //commitsBar.updateCommitsList(this.commits); // Timeline already initialized CommitsBar with its active range
         commitsBar.setActiveCommit_cIndex();
         //codeHistory3DView.showCommit(0, true); //It's initially at 0
 
