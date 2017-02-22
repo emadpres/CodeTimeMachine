@@ -26,15 +26,8 @@ import java.util.*;
 
 
 
-/**
- * Created by emadpres on 11/23/16.
- * Some notes about plugin.xml: https://intellij-support.jetbrains.com/hc/en-us/community/posts/206761495-How-to-add-items-to-a-tab-context-menu-
- */
 public class CodeTimeMachineAction extends AnAction
 {
-    final boolean AUTOMATICALLY_CHOOSE_SAMPLE_FILES = false;
-    //////////////////////////////
-
     static Map<Project, CodeTimeMachine> runningCodeTimeMachines = new HashMap<>();
 
 
@@ -199,18 +192,9 @@ public class CodeTimeMachineAction extends AnAction
     {
         VirtualFile[] chosenVirtualFiles = null;
 
-        if(AUTOMATICALLY_CHOOSE_SAMPLE_FILES)
-        {
-            chosenVirtualFiles = new VirtualFile[2];
-            chosenVirtualFiles[0] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/Vector/src/com/math/vector/Vector.java"));
-            chosenVirtualFiles[1] = LocalFileSystem.getInstance().findFileByIoFile(new File("/Users/emadpres/IdeaProjects/Vector/testSrc/com/math/vector/VectorTest.java"));
-        }
-        else
-        {
-            chosenVirtualFiles = FileChooser.chooseFiles(
-                    new FileChooserDescriptor(true, false, false, false, false, true),
-                    project, null);
-        }
+        chosenVirtualFiles = FileChooser.chooseFiles(
+                new FileChooserDescriptor(true, false, false, false, false, true),
+                project, null);
 
         return chosenVirtualFiles;
     }
