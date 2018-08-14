@@ -9,7 +9,7 @@ The *Code Time Machine* is a lightweight IntelliJ IDE plugin which uses visualiz
 ## Code Time Machine In Action
 A short video which demonstrates how the tool works in practice:
 
-[![Code Time Machine In Action](http://img.youtube.com/vi/AJ7poccpwxg/maxresdefault.jpg)](http://www.youtube.com/watch?v=AJ7poccpwxg "Code Time Machine In Action")
+[![Code Time Machine In Action](http://img.youtube.com/vi/AJ7poccpwxg/maxresdefault.jpg)](https://www.youtube.com/watch?v=cBctQbjlAFY "Code Time Machine In Action")
 
 ## Installation
 ### Binary
