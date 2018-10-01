@@ -1,5 +1,7 @@
 # Code Time Machine
-The *Code Time Machine* is a lightweight IntelliJ IDE plugin which uses visualization techniques to depict the history of any chosen file augmented with information mined from the underlying versioning system. Inspired by Apple’s Time Machine, this tool allows both developers and the system itself to seamlessly move through time.
+The **Code Time Machine** is a lightweight IntelliJ IDE plugin which uses visualization techniques to depict the history of any chosen file augmented with information mined from the underlying versioning system. Inspired by Apple’s Time Machine, this tool allows both developers and the system itself to seamlessly move through time.
+
+Read more about the tool and its use-cases at ["The Code Time Machine" paper](http://www.inf.usi.ch/phd/aghajani/resources/papers/agha2017a.pdf), published at International Conference on Program Comprehension (ICPC) 2017, by [Emad Aghajani](http://www.inf.usi.ch/phd/aghajani), [Andrea Mocci](http://www.inf.usi.ch/postdoc/mocci), [Gabriele Bavota](http://www.inf.usi.ch/faculty/bavota) and [Michele Lanza](http://www.inf.usi.ch/faculty/lanza).
 
 ## Screenshots
 
@@ -9,7 +11,7 @@ The *Code Time Machine* is a lightweight IntelliJ IDE plugin which uses visualiz
 ## Code Time Machine In Action
 A short video which demonstrates how the tool works in practice:
 
-[![Code Time Machine In Action](https://img.youtube.com/vi/cBctQbjlAFY/maxresdefault.jpg)](https://www.youtube.com/watch?v=cBctQbjlAFY "Code Time Machine In Action")
+[![Code Time Machine In Action](./screens/youtube-preview.jpg)](https://www.youtube.com/watch?v=cBctQbjlAFY "Code Time Machine In Action")
 
 ## Installation
 ### Binary
