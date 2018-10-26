@@ -14,11 +14,11 @@ There are two possible workflows for building IntelliJ IDEA plugins. The recomme
 
 # II. [Creating a Plugin Project](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/creating_plugin_project.html)
 ### To Create an IntelliJ Platform Plugin Project
-- On the main menu, choose File | New | Project. The New Project wizard starts.
-- Set IntelliJ Platform Plugin project type
+- On the main menu, choose `File | New | Project`. The New Project wizard starts.
+- Select `IntelliJ Platform Plugin` project type
 ### Or, to Create an IntelliJ Platform Plugin Module (inside an **existing** non-plugin project)
-- Select File | New | Module and choose the IntelliJ Platform Plugin module type
-- Go to File | Project Structure and select the newly created IntelliJ Platform SDK as the default SDK for the plugin module
+- Select `File | New | Module` and choose the `IntelliJ Platform Plugin` module type
+- Go to `File | Project Structure` and select the newly created IntelliJ Platform SDK (section I) as the default SDK for the plugin module
 
 
 # [Deploying a Plugin](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/deploying_plugin.html)
