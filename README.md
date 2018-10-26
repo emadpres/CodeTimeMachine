@@ -15,10 +15,15 @@ A short video which demonstrates how the tool works in practice:
 
 ## Installation
 ### Binary
-To install using pre-built  binary, first download [the latest release](https://github.com/Emadpres/CodeTimeMachine/releases/latest). Then, go to IntelliJ IDE > Preference > Plugin > install plugin from Hard.
+To install using pre-built  binary, first download [the latest release](https://github.com/Emadpres/CodeTimeMachine/releases/latest). Then, go to `IntelliJ IDE | Preference | Plugin | install plugin from Hard`.
 
 ### Source code
-First clone the project. Follow the [Setting Up a Development Environment](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html) guideline to setup the IntelliJ IDE for plugin development (You can also use [a copy](docs/IntelliJ-Setting-Up-Development-Environment.pdf) that I created for offline use). Now you should be able to compile the project (requires Java 1.8+) and run it. In the end, deploy the project by following the [Deploying a Plugin](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/deploying_plugin.html) tutorial.
+- **Using in-project IDEA project files**:
+After cloning and opening the project via IntelliJ IDEA, you need to follow [Setting Up a Development Environment](./docs/setup-and-deploy) section. Afterwards, create a new `Run | Edit Configuration | + | Plugin` and use the newly created *IntelliJ Platform SDK* as the SDK (requires Java 1.8+).
+- **Creating the project from scratch**:
+Follow both [Setting Up a Development Environment and Creating a Plugin Project](./docs/setup-and-deploy) steps and copy relevant files (sources, resources, ...) to corresponding folders in your own project. (Please open an [issue](https://github.com/Emadpres/CodeTimeMachine/issues) if you face any issue)
+
+In the end, deploy the project by following the [Deploying a Plugin](./docs/setup-and-deploy) section.
 
 ## Keyboard short keys
 - `Q` : Switch between information display modes
