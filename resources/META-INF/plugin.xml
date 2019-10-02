@@ -1,4 +1,4 @@
-<idea-plugin version="1.0">
+<idea-plugin>
   <id>com.reveal.codetimemachine</id>
   <name>Code Time Machine</name>
   <version>1.2</version>
