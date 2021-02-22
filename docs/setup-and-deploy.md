@@ -6,11 +6,11 @@ There are two possible workflows for building IntelliJ IDEA plugins. The recomme
 - **Get IntelliJ IDEA CE source code** on your local computer. For detailed instructions refer to the Getting IntelliJ IDEA Community Edition Source Code section of [Check Out And Build Community Edition](https://github.com/JetBrains/intellij-community/blob/master/README.md). Note that building IntelliJ IDEA CE from source code step in this link is not required for plugin development.
 - **Plugin DevKit plugin** must be [enabled in IntelliJ IDEA](https://www.jetbrains.com/help/idea/managing-plugins.html)
 - **Configuring IntelliJ Platform SDK**
--- Create a new IntelliJ Platform SDK under `File | Project Structure`
--- Specify the installation folder of IntelliJ IDEA Community Edition as the home directory. (`C:\Program Files\JetBrains\IntelliJ IDEA 142.3050.1` or `/Applications/IntelliJ IDEA CE.app/Contents`)
--- Select **1.8** as the default Java SDK
--- In the `Sourcepath` tab of the `Platform Setting | SDKs` settings, click the Add button and Specify the **source code** directory for the IntelliJ IDEA Community Edition.
--- In the same section, specify the **Sandbox Home** directory path (like `/Users/emadpres/Library/Caches/IdeaIC2017.3/plugins-sandbox`)
+  - Create a new IntelliJ Platform SDK under `File | Project Structure`
+  - Specify the installation folder of IntelliJ IDEA Community Edition as the home directory. (`C:\Program Files\JetBrains\IntelliJ IDEA 142.3050.1` or `/Applications/IntelliJ IDEA CE.app/Contents`)
+  - Select **1.8** as the default Java SDK
+  - In the `Sourcepath` tab of the `Platform Setting | SDKs` settings, click the Add button and Specify the **source code** directory for the IntelliJ IDEA Community Edition.
+  - In the same section, specify the **Sandbox Home** directory path (like `/Users/emadpres/Library/Caches/IdeaIC2017.3/plugins-sandbox`)
 
 # II. [Creating a Plugin Project](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/creating_plugin_project.html)
 ### To Create an IntelliJ Platform Plugin Project
