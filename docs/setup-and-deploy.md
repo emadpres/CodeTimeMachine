@@ -1,16 +1,19 @@
 # [Setting Up a Development Environment for Plugin development](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/using_dev_kit.html)
-There are two possible workflows for building IntelliJ IDEA plugins. The recommended workflow for new projects is to use *Gradle*. For existing projects, the old workflow using *Plugin DevKit* is still supported.
-**Plugin DevKit** is an IntelliJ plugin that provides support for developing IntelliJ plugins using IntelliJ IDEA’s own build system. Here we explain how to setup your enviroment to use this paradigm.
+There are two possible workflows for building IntelliJ IDEA plugins:
+1. **Gradle**: The recommended workflow for new projects is to use _Gradle_.
+2. **Plugin DevKit**: For existing projects, the old workflow using Plugin DevKit is still supported. Plugin DevKit is an IntelliJ plugin that provides support for developing IntelliJ plugins using IntelliJ IDEA’s own build system. Here we explain how to setup your enviroment to use this paradigm.
 
 ## I. [Setting Up a Development Environment](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html)
-- **Get IntelliJ IDEA CE source code** on your local computer. For detailed instructions refer to the Getting IntelliJ IDEA Community Edition Source Code section of [Check Out And Build Community Edition](https://github.com/JetBrains/intellij-community/blob/master/README.md). Note that building IntelliJ IDEA CE from source code step in this link is not required for plugin development.
-- **Plugin DevKit plugin** must be [enabled in IntelliJ IDEA](https://www.jetbrains.com/help/idea/managing-plugins.html)
-- **Configuring IntelliJ Platform SDK**
-  - Create a new IntelliJ Platform SDK under `File | Project Structure`
-  - Specify the installation folder of IntelliJ IDEA Community Edition as the home directory. (`C:\Program Files\JetBrains\IntelliJ IDEA 142.3050.1` or `/Applications/IntelliJ IDEA CE.app/Contents`)
-  - Select **1.8** as the default Java SDK
-  - In the `Sourcepath` tab of the `Platform Setting | SDKs` settings, click the Add button and Specify the **source code** directory for the IntelliJ IDEA Community Edition.
-  - In the same section, specify the **Sandbox Home** directory path (like `/Users/emadpres/Library/Caches/IdeaIC2017.3/plugins-sandbox`)
+1. Make sure `Plugin DevKit` plugin is installed.
+2. In project Structure (`File | Project Structure`) windows, under `Project SDK`:
+    1. Select `Add SDK > IntelliJ Platform Plugin SDK ...`
+       - If no `JDK` is yet setup for the project, you will be intruppted and you have to first set it up with `Add SDK > JDK...`.
+    2. Specify the installation folder of IntelliJ IDEA (**NOT** the source code): `/Applications/IntelliJ IDEA CE.app/Contents` or `C:\Program Files\JetBrains\IntelliJ IDEA 142.3050.1`
+    3. Select your desired Java version
+3. In the same section, specify the Sandbox Home directory path,  like: `/Users/emadpres/Library/Caches/IdeaIC2017.3/plugins-sandbox`
+4. (optional) In `Project Structure | Platform Setting | SDKs` section, select IntelliJ IDEA from the list. Under _Sourcepath_ tab, click the Add button and Specify the **source code** directory for the IntelliJ IDEA Community Edition.
+    - You will find the _IntelliJ IDEA CE_ source code [here](https://github.com/JetBrains/intellij-community)
+
 
 # II. [Creating a Plugin Project](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/creating_plugin_project.html)
 ### To Create an IntelliJ Platform Plugin Project
